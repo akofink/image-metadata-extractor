@@ -285,7 +285,7 @@ fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64
             // Check for GPS coordinates
             match f.tag {
                 Tag::GPSLatitude => {
-                    if let Some(lat) = parse_gps_coordinate(&f, &exifreader) {
+                    if let Some(lat) = parse_gps_coordinate(f, &exifreader) {
                         if let Some((_, lon)) = gps_coords {
                             gps_coords = Some((lat, lon));
                         } else {
@@ -294,7 +294,7 @@ fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64
                     }
                 }
                 Tag::GPSLongitude => {
-                    if let Some(lon) = parse_gps_coordinate(&f, &exifreader) {
+                    if let Some(lon) = parse_gps_coordinate(f, &exifreader) {
                         if let Some((lat, _)) = gps_coords {
                             gps_coords = Some((lat, lon));
                         } else {
@@ -312,7 +312,7 @@ fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64
             if let Some(lat_ref_field) = exifreader.get_field(Tag::GPSLatitudeRef, In::PRIMARY) {
                 if let Value::Ascii(ref vec) = lat_ref_field.value {
                     if let Some(lat_ref) = vec.first() {
-                        if lat_ref.len() > 0 && lat_ref[0] == b'S' {
+                        if !lat_ref.is_empty() && lat_ref[0] == b'S' {
                             lat = -lat;
                         }
                     }
@@ -323,7 +323,7 @@ fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64
             if let Some(lon_ref_field) = exifreader.get_field(Tag::GPSLongitudeRef, In::PRIMARY) {
                 if let Value::Ascii(ref vec) = lon_ref_field.value {
                     if let Some(lon_ref) = vec.first() {
-                        if lon_ref.len() > 0 && lon_ref[0] == b'W' {
+                        if !lon_ref.is_empty() && lon_ref[0] == b'W' {
                             lon = -lon;
                         }
                     }
@@ -458,7 +458,7 @@ fn generate_txt(data: &ImageData) -> String {
     if let (Some(width), Some(height)) = (data.width, data.height) {
         txt.push_str(&format!("Dimensions: {}x{} pixels\n", width, height));
     }
-    txt.push_str("\n");
+    txt.push('\n');
 
     // GPS data
     if let Some((lat, lon)) = data.gps_coords {
