@@ -1,0 +1,19 @@
+[package]
+name = "image-metadata-extractor"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+yew = { version = "0.21", features = ["csr"] }
+web-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+image = { version = "0.24", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
+kamadak-exif = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+gloo-file = "0.3"
