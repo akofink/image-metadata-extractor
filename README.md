@@ -43,7 +43,7 @@ This application allows users to upload images and extract comprehensive metadat
 
 - **Rust**: Install via [rustup.rs](https://rustup.rs/)
 - **wasm-pack**: Install with `cargo install wasm-pack`
-- **Basic HTTP Server**: Any static file server (Python's `http.server`, Node's `serve`, etc.)
+- **HTTP Server**: Node.js for `npx` (recommended) or Python for `http.server`
 
 ### Getting Started
 
@@ -70,14 +70,14 @@ This application allows users to upload images and extract comprehensive metadat
 
 5. **Serve locally:**
    ```bash
-   # Option 1: Python
+   # Option 1: Node.js (npx - installs automatically)
+   npx -y serve -s . -p 8000
+   
+   # Option 2: Python (usually pre-installed)
    python -m http.server 8000
    
-   # Option 2: Node.js (install with: npm install -g serve)
-   serve -s . -p 8000
-   
-   # Option 3: Rust (install with: cargo install basic-http-server)
-   basic-http-server -a 0.0.0.0:8000
+   # Option 3: Rust (install once)
+   cargo install basic-http-server && basic-http-server -a 0.0.0.0:8000
    ```
 
 6. **Open in browser:**
