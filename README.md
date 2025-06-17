@@ -70,8 +70,8 @@ This application allows users to upload images and extract comprehensive metadat
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/akofink/image-metadata.git
-   cd image-metadata
+   git clone https://github.com/akofink/image-metadata-extractor.git
+   cd image-metadata-extractor
    ```
 
 2. **Install dependencies:**
@@ -127,8 +127,8 @@ This application allows users to upload images and extract comprehensive metadat
 
 1. **Clone and build:**
    ```bash
-   git clone https://github.com/akofink/image-metadata.git
-   cd image-metadata
+   git clone https://github.com/akofink/image-metadata-extractor.git
+   cd image-metadata-extractor
    wasm-pack build --target web --dev
    ```
 
