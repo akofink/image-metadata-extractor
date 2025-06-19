@@ -208,6 +208,22 @@ pub fn app() -> Html {
                     }
                 }
             }
+            
+            <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px;">
+                <p>
+                    {"Built with ❤️ using Rust + WebAssembly • "} 
+                    <a href="https://github.com/akofink/image-metadata-extractor" target="_blank" style="color: #007bff; text-decoration: none;">
+                        {"Open Source"}
+                    </a>
+                    {" • Privacy-First (No Server Uploads)"}
+                </p>
+                <p style="margin-top: 8px; font-size: 12px;">
+                    {"© 2024 Image Metadata Extractor • "} 
+                    <a href="mailto:contact@image-metadata-extractor.com" style="color: #007bff; text-decoration: none;">
+                        {"Contact"}
+                    </a>
+                </p>
+            </footer>
         </div>
     }
 }
