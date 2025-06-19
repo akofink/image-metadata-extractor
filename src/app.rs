@@ -73,7 +73,8 @@ pub fn app() -> Html {
     };
 
     html! {
-        <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="min-height: 100vh; display: flex; flex-direction: column;">
+            <div style="max-width: 800px; margin: 0 auto; padding: 20px; flex: 1;">
             <h1>{"Image Metadata Extractor"}</h1>
 
             <div style="margin: 20px 0;">
@@ -208,8 +209,9 @@ pub fn app() -> Html {
                     }
                 }
             }
+            </div>
             
-            <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px;">
+            <footer style="margin-top: auto; padding: 20px 0; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px; background-color: #f8f9fa;">
                 <p>
                     {"Built with ❤️ using Rust + WebAssembly • "} 
                     <a href="https://github.com/akofink/image-metadata-extractor" target="_blank" style="color: #007bff; text-decoration: none;">
