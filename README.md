@@ -81,6 +81,7 @@ This application allows users to upload images and extract comprehensive metadat
 ### Prerequisites
 
 - **Rust**: Install via [rustup.rs](https://rustup.rs/)
+- **Rustfmt & Clippy**: Automatically installed via `rust-toolchain.toml` on first `cargo` run
 - **wasm-pack**: Install with `cargo install wasm-pack`
 - **HTTP Server**: Node.js for `npx` (recommended) or Python for `http.server`
 
@@ -96,8 +97,8 @@ This application allows users to upload images and extract comprehensive metadat
    ```bash
    # Install pre-commit hooks for code quality
    make setup-hooks
-   
-   # Check dependencies
+
+   # Check dependencies (installs clippy/rustfmt on first run)
    make check
    ```
 
@@ -178,6 +179,7 @@ This automatically runs code checks, formatting, and linting on every commit, en
    git clone https://github.com/akofink/image-metadata-extractor.git
    cd image-metadata-extractor
    make setup-hooks  # Install code quality hooks
+   make check        # Verify toolchain and dependencies
    ```
 
 2. **Build and serve:**
