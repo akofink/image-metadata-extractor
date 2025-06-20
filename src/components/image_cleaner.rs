@@ -19,7 +19,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
             let filename = data.name.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
-                if let Some(file_extension) = filename.split('.').last() {
+                if let Some(file_extension) = filename.split('.').next_back() {
                     // Convert data URL to bytes
                     if let Some(base64_data) = data_url.strip_prefix("data:image/") {
                         if let Some(comma_pos) = base64_data.find(',') {
