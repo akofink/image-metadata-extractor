@@ -114,7 +114,13 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                             <h3>{"GPS Location"}</h3>
                             <p><strong>{"Latitude: "}</strong>{lat}</p>
                             <p><strong>{"Longitude: "}</strong>{lon}</p>
-                            <p><a href={format!("https://maps.google.com/maps?q={},{}", lat, lon)} target="_blank">{"View on Google Maps"}</a></p>
+                            <p>
+                                <a href={format!("https://maps.google.com/maps?q={},{}", lat, lon)} target="_blank">{"Google Maps"}</a>
+                                {" | "}
+                                <a href={format!("https://maps.apple.com/?ll={},{}", lat, lon)} target="_blank">{"Apple Maps"}</a>
+                                {" | "}
+                                <a href={format!("https://www.openstreetmap.org/?mlat={}&mlon={}", lat, lon)} target="_blank">{"OpenStreetMap"}</a>
+                            </p>
                         </div>
                     }
                 } else {

@@ -56,7 +56,15 @@ pub fn generate_txt(data: &ImageData) -> String {
         txt.push_str(&format!("Latitude: {}\n", lat));
         txt.push_str(&format!("Longitude: {}\n", lon));
         txt.push_str(&format!(
-            "Google Maps: https://maps.google.com/maps?q={},{}\n\n",
+            "Google Maps: https://maps.google.com/maps?q={},{}\n",
+            lat, lon
+        ));
+        txt.push_str(&format!(
+            "Apple Maps: https://maps.apple.com/?ll={},{}\n",
+            lat, lon
+        ));
+        txt.push_str(&format!(
+            "OpenStreetMap: https://www.openstreetmap.org/?mlat={}&mlon={}\n\n",
             lat, lon
         ));
     }

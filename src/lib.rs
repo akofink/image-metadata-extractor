@@ -2,10 +2,10 @@ mod app;
 mod binary_cleaner;
 mod components;
 pub mod exif;
-mod export;
+pub mod export;
 pub mod image_cleaner;
 mod metadata_info;
-mod types;
+pub mod types;
 mod utils;
 
 use app::App;
