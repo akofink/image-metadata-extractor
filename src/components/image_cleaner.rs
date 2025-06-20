@@ -11,7 +11,6 @@ pub struct ImageCleanerProps {
 
 #[function_component(ImageCleaner)]
 pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
-
     let download_cleaned_image_cb = {
         let data = props.image_data.clone();
 
@@ -25,22 +24,31 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                     if let Some(base64_data) = data_url.strip_prefix("data:image/") {
                         if let Some(comma_pos) = base64_data.find(',') {
                             let base64_content = &base64_data[comma_pos + 1..];
-                            if let Ok(file_bytes) = general_purpose::STANDARD.decode(base64_content) {
+                            if let Ok(file_bytes) = general_purpose::STANDARD.decode(base64_content)
+                            {
                                 match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
                                     Ok(cleaned_bytes) => {
                                         // Create cleaned filename
                                         let cleaned_filename = filename
                                             .strip_suffix(&format!(".{}", file_extension))
                                             .unwrap_or(&filename)
-                                            .to_string() + "_cleaned." + file_extension;
-                                        
+                                            .to_string()
+                                            + "_cleaned."
+                                            + file_extension;
+
                                         // Download cleaned file
                                         let mime_type = format!("image/{}", file_extension);
-                                        download_binary_file(&cleaned_bytes, &cleaned_filename, &mime_type);
+                                        download_binary_file(
+                                            &cleaned_bytes,
+                                            &cleaned_filename,
+                                            &mime_type,
+                                        );
                                         return;
                                     }
                                     Err(e) => {
-                                        web_sys::console::log_1(&format!("Binary cleaning failed: {}", e).into());
+                                        web_sys::console::log_1(
+                                            &format!("Binary cleaning failed: {}", e).into(),
+                                        );
                                         return;
                                     }
                                 }
@@ -48,7 +56,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                         }
                     }
                 }
-                
+
                 web_sys::console::log_1(&"Failed to process file for binary cleaning".into());
             });
         })

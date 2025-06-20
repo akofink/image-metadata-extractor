@@ -1,5 +1,5 @@
-use little_exif::metadata::Metadata;
 use little_exif::filetype::FileExtension;
+use little_exif::metadata::Metadata;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -19,7 +19,7 @@ impl BinaryCleaner {
     /// This preserves original image quality while stripping all metadata
     pub fn clean_metadata(file_data: &[u8], file_extension: &str) -> Result<Vec<u8>, String> {
         let mut cleaned_data = file_data.to_vec();
-        
+
         match file_extension.to_lowercase().as_str() {
             "jpg" | "jpeg" => Self::clean_jpeg_metadata(&mut cleaned_data),
             "png" => Self::clean_png_metadata(&mut cleaned_data),
@@ -32,7 +32,10 @@ impl BinaryCleaner {
             // Non-image formats that can contain metadata
             "pdf" => Self::clean_pdf_metadata(&mut cleaned_data),
             "svg" => Self::clean_svg_metadata(&mut cleaned_data),
-            _ => Err(format!("Unsupported format for binary cleaning: {}", file_extension)),
+            _ => Err(format!(
+                "Unsupported format for binary cleaning: {}",
+                file_extension
+            )),
         }
     }
 
@@ -43,7 +46,7 @@ impl BinaryCleaner {
             Ok(_) => console_log!("Cleared APP12 segment"),
             Err(e) => console_log!("APP12 clear warning: {:?}", e),
         }
-        
+
         match Metadata::clear_app13_segment(data, FileExtension::JPEG) {
             Ok(_) => console_log!("Cleared APP13 segment"),
             Err(e) => console_log!("APP13 clear warning: {:?}", e),
@@ -75,7 +78,7 @@ impl BinaryCleaner {
             }
 
             let marker = data[i + 1];
-            
+
             match marker {
                 // Start of Scan - image data follows, copy rest of file
                 0xDA => {
@@ -191,13 +194,18 @@ impl BinaryCleaner {
             }
 
             let chunk_id = &data[i..i + 4];
-            let chunk_size = u32::from_le_bytes([data[i + 4], data[i + 5], data[i + 6], data[i + 7]]);
+            let chunk_size =
+                u32::from_le_bytes([data[i + 4], data[i + 5], data[i + 6], data[i + 7]]);
             let chunk_name = String::from_utf8_lossy(chunk_id);
-            
+
             // Ensure chunk size is reasonable
-            let padded_size = if chunk_size % 2 == 1 { chunk_size + 1 } else { chunk_size };
+            let padded_size = if chunk_size % 2 == 1 {
+                chunk_size + 1
+            } else {
+                chunk_size
+            };
             let total_chunk_size = 8 + padded_size as usize;
-            
+
             if i + total_chunk_size > data.len() {
                 break;
             }
@@ -346,7 +354,7 @@ impl BinaryCleaner {
             Ok(_) => console_log!("Cleared TIFF APP12 segment"),
             Err(e) => console_log!("TIFF APP12 clear warning: {:?}", e),
         }
-        
+
         match Metadata::clear_app13_segment(data, FileExtension::TIFF) {
             Ok(_) => console_log!("Cleared TIFF APP13 segment"),
             Err(e) => console_log!("TIFF APP13 clear warning: {:?}", e),
@@ -362,7 +370,7 @@ impl BinaryCleaner {
             Ok(_) => console_log!("Cleared HEIF APP12 segment"),
             Err(e) => console_log!("HEIF APP12 clear warning: {:?}", e),
         }
-        
+
         match Metadata::clear_app13_segment(data, FileExtension::HEIF) {
             Ok(_) => console_log!("Cleared HEIF APP13 segment"),
             Err(e) => console_log!("HEIF APP13 clear warning: {:?}", e),
@@ -387,7 +395,7 @@ impl BinaryCleaner {
     /// Clean PDF metadata by removing info dictionary and XMP
     fn clean_pdf_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
         let data_str = String::from_utf8_lossy(data);
-        
+
         // Basic PDF header check
         if !data_str.starts_with("%PDF-") {
             return Err("Invalid PDF file".to_string());
@@ -396,11 +404,11 @@ impl BinaryCleaner {
         // This is a simplified implementation - real PDF metadata removal
         // would require a proper PDF parser to handle the document structure
         console_log!("PDF metadata cleaning is basic - consider using specialized PDF tools");
-        
+
         // For now, just return the original data with a warning
         // A full implementation would need to parse PDF objects and remove:
         // - /Info dictionary
-        // - /Metadata streams  
+        // - /Metadata streams
         // - /XMP packets
         Ok(data.clone())
     }
@@ -408,7 +416,7 @@ impl BinaryCleaner {
     /// Clean SVG metadata by removing metadata elements
     fn clean_svg_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
         let data_str = String::from_utf8_lossy(data);
-        
+
         // Basic SVG check
         if !data_str.contains("<svg") {
             return Err("Invalid SVG file".to_string());
@@ -416,22 +424,22 @@ impl BinaryCleaner {
 
         // Remove common metadata elements
         let mut cleaned = data_str.to_string();
-        
+
         // Remove metadata elements (simplified regex-like approach)
         // In a real implementation, you'd want to use proper XML parsing
         cleaned = cleaned
             .lines()
             .filter(|line| {
                 let line_lower = line.to_lowercase();
-                !line_lower.contains("<metadata") && 
-                !line_lower.contains("</metadata>") &&
-                !line_lower.contains("xmlns:dc=") &&
-                !line_lower.contains("xmlns:cc=") &&
-                !line_lower.contains("xmlns:rdf=") &&
-                !line_lower.contains("<rdf:") &&
-                !line_lower.contains("</rdf:") &&
-                !line_lower.contains("<dc:") &&
-                !line_lower.contains("<cc:")
+                !line_lower.contains("<metadata")
+                    && !line_lower.contains("</metadata>")
+                    && !line_lower.contains("xmlns:dc=")
+                    && !line_lower.contains("xmlns:cc=")
+                    && !line_lower.contains("xmlns:rdf=")
+                    && !line_lower.contains("<rdf:")
+                    && !line_lower.contains("</rdf:")
+                    && !line_lower.contains("<dc:")
+                    && !line_lower.contains("<cc:")
             })
             .collect::<Vec<&str>>()
             .join("\n");
