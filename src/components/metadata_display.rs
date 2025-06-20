@@ -43,7 +43,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
 
     // Calculate global select/deselect state
     let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
-    let all_selected = selected_metadata.len() == all_keys.len() && !all_keys.is_empty();
+    let _all_selected = selected_metadata.len() == all_keys.len() && !all_keys.is_empty();
 
     html! {
         <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
@@ -90,7 +90,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                         // Calculate per-category select/deselect state
                         let category_keys: HashSet<String> = items.iter().map(|(key, _)| (*key).clone()).collect();
                         let category_selected_count = category_keys.iter().filter(|key| selected_metadata.contains(*key)).count();
-                        let all_category_selected = category_selected_count == category_keys.len();
+                        let _all_category_selected = category_selected_count == category_keys.len();
                         
                         html! {
                             <div key={*category} style="margin-bottom: 20px;">
