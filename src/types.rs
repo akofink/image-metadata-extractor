@@ -5,6 +5,8 @@ use std::collections::{HashMap, HashSet};
 pub struct ImageData {
     pub name: String,
     pub size: u64,
+    #[serde(skip)]
+    pub mime_type: String,
     #[serde(skip)] // Don't include data URL in exports
     pub data_url: String,
     pub width: Option<u32>,
@@ -32,6 +34,7 @@ impl ImageData {
         Self {
             name: self.name.clone(),
             size: if include_basic_info { self.size } else { 0 },
+            mime_type: self.mime_type.clone(),
             data_url: self.data_url.clone(), // Always keep for display
             width: if include_basic_info { self.width } else { None },
             height: if include_basic_info {

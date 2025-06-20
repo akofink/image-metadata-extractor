@@ -31,6 +31,7 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     Ok(ImageData {
         name,
         size,
+        mime_type: mime_type.clone(),
         data_url,
         width: Some(width),
         height: Some(height),
