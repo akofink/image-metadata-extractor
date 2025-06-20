@@ -73,6 +73,11 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
         })
     };
 
+    // Only show export section if there's metadata to export
+    if data.exif_data.is_empty() && data.gps_coords.is_none() && data.width.is_none() && data.height.is_none() {
+        return html! {};
+    }
+
     html! {
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #ffeaa7;">
             <h3>{"📊 Export Metadata"}</h3>
@@ -83,31 +88,55 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
             <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
                 <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"Include in Export:"}</h4>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                        <input
-                            type="checkbox"
-                            checked={*include_basic_info}
-                            onchange={{
-                                let include_basic_info = include_basic_info.clone();
-                                Callback::from(move |_| include_basic_info.set(!*include_basic_info))
-                            }}
-                        />
-                        {"File Info (name, size, dimensions)"}
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                        <input
-                            type="checkbox"
-                            checked={*include_gps}
-                            onchange={{
-                                let include_gps = include_gps.clone();
-                                Callback::from(move |_| include_gps.set(!*include_gps))
-                            }}
-                        />
-                        {"GPS Location"}
-                    </label>
+                    {
+                        // Only show file info checkbox if file has meaningful info to export
+                        if data.width.is_some() || data.height.is_some() {
+                            html! {
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input
+                                        type="checkbox"
+                                        checked={*include_basic_info}
+                                        onchange={{
+                                            let include_basic_info = include_basic_info.clone();
+                                            Callback::from(move |_| include_basic_info.set(!*include_basic_info))
+                                        }}
+                                    />
+                                    {
+                                        if data.width.is_some() && data.height.is_some() {
+                                            "File Info (name, size, dimensions)"
+                                        } else {
+                                            "File Info (name, size)"
+                                        }
+                                    }
+                                </label>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
+                    {
+                        // Only show GPS checkbox if GPS data exists
+                        if data.gps_coords.is_some() {
+                            html! {
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input
+                                        type="checkbox"
+                                        checked={*include_gps}
+                                        onchange={{
+                                            let include_gps = include_gps.clone();
+                                            Callback::from(move |_| include_gps.set(!*include_gps))
+                                        }}
+                                    />
+                                    {"GPS Location"}
+                                </label>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
                 </div>
                 <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                    {format!("{} EXIF fields selected", selected_metadata.len())}
+                    {format!("{} metadata fields selected", selected_metadata.len())}
                     {" • Use checkboxes above to select specific metadata"}
                 </div>
             </div>
