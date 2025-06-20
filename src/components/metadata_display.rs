@@ -53,7 +53,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                 </button>
             </div>
 
-            <div style="max-height: 400px; overflow-y: auto;">
+            <div>
                 {
                     sorted_categories.iter().map(|(category, items)| {
                         html! {
@@ -69,8 +69,8 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                         let on_change = props.on_metadata_selection_change.clone();
 
                                         html! {
-                                            <div key={(*key).clone()} style="margin-bottom: 8px; padding: 5px; border-radius: 3px; background: rgba(255,255,255,0.5);">
-                                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                            <div key={(*key).clone()} style="margin-bottom: 12px; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.5);">
+                                                <div style="display: flex; align-items: flex-start; gap: 12px;">
                                                     <input
                                                         type="checkbox"
                                                         checked={is_selected}

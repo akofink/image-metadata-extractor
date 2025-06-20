@@ -50,43 +50,50 @@ pub fn app() -> Html {
 
     html! {
         <div style="min-height: 100vh; display: flex; flex-direction: column;">
-            <div style="max-width: 800px; margin: 0 auto; padding: 20px; flex: 1;">
+            <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
                 <h1>{"Image Metadata Extractor"}</h1>
 
                 <FileUpload on_file_loaded={on_file_loaded} />
 
-                {
-                    if let Some(ref data) = *image_data {
-                        html! {
-                            <div>
-                                <ImageDisplay
-                                    image_data={data.clone()}
-                                    is_expanded={*is_expanded}
-                                    on_image_click={on_image_click}
-                                />
+                // Main content area with consistent layout
+                <div style="margin-top: 20px;">
+                    {
+                        if let Some(ref data) = *image_data {
+                            html! {
+                                <div style="opacity: 1; transition: opacity 0.3s ease-in-out;">
+                                    <ImageDisplay
+                                        image_data={data.clone()}
+                                        is_expanded={*is_expanded}
+                                        on_image_click={on_image_click}
+                                    />
 
-                                <MetadataDisplay
-                                    image_data={data.clone()}
-                                    selected_metadata={(*selected_metadata).clone()}
-                                    show_explanations={*show_explanations}
-                                    on_metadata_selection_change={on_metadata_selection_change}
-                                    on_toggle_explanations={on_toggle_explanations}
-                                />
+                                    <MetadataDisplay
+                                        image_data={data.clone()}
+                                        selected_metadata={(*selected_metadata).clone()}
+                                        show_explanations={*show_explanations}
+                                        on_metadata_selection_change={on_metadata_selection_change}
+                                        on_toggle_explanations={on_toggle_explanations}
+                                    />
 
-                                <ImageCleaner image_data={data.clone()} />
+                                    <ImageCleaner image_data={data.clone()} />
 
-                                <MetadataExport
-                                    image_data={data.clone()}
-                                    selected_metadata={(*selected_metadata).clone()}
-                                />
-                            </div>
-                        }
-                    } else {
-                        html! {
-                            <p style="color: #666;">{"Select an image file to view its metadata"}</p>
+                                    <MetadataExport
+                                        image_data={data.clone()}
+                                        selected_metadata={(*selected_metadata).clone()}
+                                    />
+                                </div>
+                            }
+                        } else {
+                            html! {
+                                <div style="text-align: center; padding: 40px 20px; color: #666; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6;">
+                                    <div style="font-size: 48px; margin-bottom: 16px;">{"📷"}</div>
+                                    <p style="font-size: 18px; margin-bottom: 8px;">{"Select an image to get started"}</p>
+                                    <p style="font-size: 14px; margin: 0;">{"Upload JPEG, PNG, GIF, or WebP files to extract metadata"}</p>
+                                </div>
+                            }
                         }
                     }
-                }
+                </div>
             </div>
 
             <footer style="margin-top: auto; padding: 20px 0; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px; background-color: #f8f9fa;">

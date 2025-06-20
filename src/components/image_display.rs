@@ -40,7 +40,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                     <img
                         src={data.data_url.clone()}
                         alt={data.name.clone()}
-                        style={format!("max-width: 300px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
+                        style={format!("width: 100%; max-width: 300px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
                             if is_expanded { "" } else { "box-shadow: 0 2px 8px rgba(0,0,0,0.1);" })}
                         onclick={on_image_click}
                     />
