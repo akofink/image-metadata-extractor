@@ -7,6 +7,7 @@ use yew::prelude::*;
 pub struct FileUploadProps {
     pub on_file_loaded: Callback<ImageData>,
     pub trigger_file_input: Callback<Callback<()>>,
+    pub on_error: Callback<String>,
 }
 
 #[function_component(FileUpload)]
@@ -15,14 +16,21 @@ pub fn file_upload(props: &FileUploadProps) -> Html {
 
     let on_file_change = {
         let on_file_loaded = props.on_file_loaded.clone();
+        let on_error = props.on_error.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             if let Some(files) = input.files() {
                 if let Some(file) = files.get(0) {
                     let on_file_loaded = on_file_loaded.clone();
+                    let on_error = on_error.clone();
                     wasm_bindgen_futures::spawn_local(async move {
-                        if let Ok(data) = process_file(file).await {
-                            on_file_loaded.emit(data);
+                        match process_file(file).await {
+                            Ok(data) => on_file_loaded.emit(data),
+                            Err(e) => {
+                                let msg =
+                                    e.as_string().unwrap_or_else(|| "Unknown error".to_string());
+                                on_error.emit(msg);
+                            }
                         }
                     });
                 }
@@ -73,6 +81,7 @@ mod tests {
         let props = FileUploadProps {
             on_file_loaded,
             trigger_file_input,
+            on_error: Callback::noop(),
         };
 
         let _rendered = html! {
@@ -92,11 +101,13 @@ mod tests {
         let props1 = FileUploadProps {
             on_file_loaded: on_file_loaded.clone(),
             trigger_file_input: trigger_file_input.clone(),
+            on_error: Callback::noop(),
         };
 
         let props2 = FileUploadProps {
             on_file_loaded: on_file_loaded.clone(),
             trigger_file_input: trigger_file_input.clone(),
+            on_error: Callback::noop(),
         };
 
         // Test that props implement PartialEq correctly
@@ -115,6 +126,7 @@ mod tests {
         let props = FileUploadProps {
             on_file_loaded,
             trigger_file_input,
+            on_error: Callback::noop(),
         };
 
         // The component should render successfully without infinite loops
