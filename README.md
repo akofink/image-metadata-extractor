@@ -14,6 +14,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Categorized display**: Organized by Camera Settings, GPS, Technical, etc.
 - **Comprehensive coverage**: All standard EXIF tags and values
 - **Smart explanations**: Toggle-able descriptions for each metadata field
+- **Auto-select on upload**: All metadata fields are selected by default
 
 ### 🖼️ **Image Display**
 - **Smart thumbnails**: Compact 300x200px display for better page layout
@@ -29,9 +30,11 @@ This application allows users to upload images and extract comprehensive metadat
 ### 📊 **Advanced Export Capabilities**
 - **Selective export**: Choose exactly which metadata fields to include
 - **Multiple formats**: JSON, CSV, and human-readable text
-- **File info options**: Include/exclude file details and GPS data
+- **File info options**: Toggle filename, size, and dimensions
 - **Smart filtering**: Visual checkboxes for granular control
 - **Auto-generated filenames**: Convenient downloads with descriptive names
+- **Select/deselect all**: Quickly toggle entire metadata sets
+- **Disabled export when empty**: Buttons stay inactive until something is selected
 
 ### 📱 **Enhanced User Experience**
 - **Organized metadata**: Alphabetically sorted categories and fields
@@ -242,6 +245,8 @@ This automatically runs code checks, formatting, and linting on every commit, en
 - **Multiple formats**: JSON for developers, CSV for analysis, TXT for reports
 - **Real-time preview**: See field count and selection status
 - **Auto-generated filenames**: Descriptive names based on original filename
+- **Select/deselect all**: Toggle all fields globally or by category
+- **Disabled export when empty**: Buttons enable only when something is selected
 
 ### User Interface Excellence
 - **Component architecture**: Modular, maintainable codebase

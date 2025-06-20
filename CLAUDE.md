@@ -143,6 +143,10 @@ The build process generates the `pkg/` directory containing:
 - **Selective Export**: Choose specific metadata fields via checkboxes
 - **Smart Filtering**: Include/exclude file info and GPS data independently
 - **Auto-naming**: Descriptive filenames based on original image name
+- **Select/Deselect All**: Quickly toggle all fields globally or per category
+- **Disabled When Empty**: Export buttons remain inactive until a field or option is chosen
+- **File Info Toggle**: Control inclusion of filename, size and dimensions
+- **Clean JSON Output**: Empty values are omitted from exports
 
 ### User Interface
 - **Mobile-Optimized**: Responsive design with touch-friendly interactions
@@ -151,6 +155,7 @@ The build process generates the `pkg/` directory containing:
 - **Smart Explanations**: Toggle-able field descriptions and help text
 - **Stable Layout**: No content jumping or jarring transitions
 - **Accessibility**: Keyboard navigation and screen reader support
+- **Auto-select on Upload**: All metadata fields start selected for quick export
 
 ### Privacy & Performance
 - **Client-Side Only**: No server communication - complete privacy
