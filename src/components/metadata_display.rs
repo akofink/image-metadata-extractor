@@ -41,26 +41,100 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
         items.sort_by_key(|(key, _)| key.as_str());
     }
 
+    // Calculate global select/deselect state
+    let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
+    let all_selected = selected_metadata.len() == all_keys.len() && !all_keys.is_empty();
+
     html! {
         <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">{"Metadata"}</h3>
-                <button
-                    onclick={props.on_toggle_explanations.clone()}
-                    style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;"
-                >
-                    {if show_explanations { "Hide Info" } else { "Show Info" }}
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 5px;">
+                        <button
+                            onclick={{
+                                let on_change = props.on_metadata_selection_change.clone();
+                                let all_keys = all_keys.clone();
+                                Callback::from(move |_| {
+                                    on_change.emit(all_keys.clone());
+                                })
+                            }}
+                            style="background: #28a745; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;"
+                        >
+                            {"Select All"}
+                        </button>
+                        <button
+                            onclick={{
+                                let on_change = props.on_metadata_selection_change.clone();
+                                Callback::from(move |_| {
+                                    on_change.emit(HashSet::new());
+                                })
+                            }}
+                            style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;"
+                        >
+                            {"Deselect All"}
+                        </button>
+                    </div>
+                    <button
+                        onclick={props.on_toggle_explanations.clone()}
+                        style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                    >
+                        {if show_explanations { "Hide Info" } else { "Show Info" }}
+                    </button>
+                </div>
             </div>
 
             <div>
                 {
                     sorted_categories.iter().map(|(category, items)| {
+                        // Calculate per-category select/deselect state
+                        let category_keys: HashSet<String> = items.iter().map(|(key, _)| (*key).clone()).collect();
+                        let category_selected_count = category_keys.iter().filter(|key| selected_metadata.contains(*key)).count();
+                        let all_category_selected = category_selected_count == category_keys.len();
+                        
                         html! {
                             <div key={*category} style="margin-bottom: 20px;">
-                                <h4 style="margin: 0 0 10px 0; color: #555; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-                                    {*category}
-                                </h4>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                                    <h4 style="margin: 0; color: #555; font-size: 14px;">
+                                        {*category}
+                                    </h4>
+                                    <div style="display: flex; gap: 3px;">
+                                        <button
+                                            onclick={{
+                                                let on_change = props.on_metadata_selection_change.clone();
+                                                let selected_metadata = selected_metadata.clone();
+                                                let category_keys = category_keys.clone();
+                                                Callback::from(move |_| {
+                                                    let mut current = selected_metadata.clone();
+                                                    for key in &category_keys {
+                                                        current.insert(key.clone());
+                                                    }
+                                                    on_change.emit(current);
+                                                })
+                                            }}
+                                            style="background: #28a745; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;"
+                                        >
+                                            {"All"}
+                                        </button>
+                                        <button
+                                            onclick={{
+                                                let on_change = props.on_metadata_selection_change.clone();
+                                                let selected_metadata = selected_metadata.clone();
+                                                let category_keys = category_keys.clone();
+                                                Callback::from(move |_| {
+                                                    let mut current = selected_metadata.clone();
+                                                    for key in &category_keys {
+                                                        current.remove(key);
+                                                    }
+                                                    on_change.emit(current);
+                                                })
+                                            }}
+                                            style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;"
+                                        >
+                                            {"None"}
+                                        </button>
+                                    </div>
+                                </div>
                                 {
                                     items.iter().map(|(key, value)| {
                                         let is_selected = selected_metadata.contains(*key);
