@@ -29,9 +29,8 @@ help:
 	@echo ""
 
 # Development build (fast, with debug info) - default
-pkg: src/**/*.rs Cargo.toml Cargo.lock
+pkg: install src/**/*.rs Cargo.toml Cargo.lock
 	@echo "🔨 Building for development..."
-	cargo build --test "component_tests"
 	wasm-pack build --target web --dev
 	@echo "✅ Development build complete!"
 
@@ -96,14 +95,15 @@ test-wasm-chrome:
 test-all: test test-wasm-all-browsers
 
 # Run clippy linting
-lint: build
+lint:
 	@echo "🔍 Running clippy linting..."
 	cargo clippy -- -D warnings
 	@echo "✅ Linting complete!"
 
 # Generate code coverage report
-coverage: build
+coverage:
 	@echo "📈 Generating coverage report..."
+	cargo test --no-run --all-features
 	cargo llvm-cov --html
 	@echo "✅ Coverage report generated!"
 

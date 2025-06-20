@@ -1,3 +1,5 @@
+use base64::Engine;
+use base64::engine::general_purpose;
 use exif::Rational;
 use exif::{Field, In, Tag, Value};
 use image_metadata_extractor::exif::{
@@ -68,7 +70,7 @@ fn test_parse_gps_coordinate() {
             Rational { num: 0, denom: 1 },
         ]),
     };
-    let img = base64::decode(JPG_B64).unwrap();
+    let img = general_purpose::STANDARD.decode(JPG_B64).unwrap();
     let dummy = exif::Reader::new()
         .read_from_container(&mut Cursor::new(&img))
         .unwrap();
@@ -90,7 +92,7 @@ fn test_parse_gps_coordinate() {
 
 #[test]
 fn test_extract_exif_data_gps() {
-    let bytes = base64::decode(JPG_B64).unwrap();
+    let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
     let (map, gps) = extract_exif_data(&bytes);
     assert!(!map.is_empty());
     let (lat, lon) = gps.unwrap();
