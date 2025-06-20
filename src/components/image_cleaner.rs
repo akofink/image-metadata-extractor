@@ -20,8 +20,10 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
 
     {
         let selected_format = selected_format.clone();
-        use_effect_with(props.image_data.mime_type.clone(), move |mime_type| {
+        let mime_type = props.image_data.mime_type.clone();
+        use_effect_with(mime_type.clone(), move |_| {
             if mime_type.starts_with("image/png") {
+
                 selected_format.set("png".to_string());
             } else {
                 selected_format.set("jpeg".to_string());
