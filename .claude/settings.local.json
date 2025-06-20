@@ -3,7 +3,9 @@
     "allow": [
       "Bash(make:*)",
       "Bash(cargo doc:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

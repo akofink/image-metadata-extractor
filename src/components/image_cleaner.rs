@@ -1,5 +1,4 @@
 use crate::binary_cleaner::BinaryCleaner;
-use crate::image_cleaner::{create_cleaned_image, download_cleaned_image};
 use crate::types::ImageData;
 use crate::utils::download_binary_file;
 use base64::{Engine as _, engine::general_purpose};
@@ -44,17 +43,12 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
 
     let download_cleaned_image_cb = {
         let data = props.image_data.clone();
-        let image_quality = image_quality.clone();
-        let selected_format = selected_format.clone();
 
         Callback::from(move |_| {
             let data_url = data.data_url.clone();
             let filename = data.name.clone();
-            let quality = *image_quality;
-            let format = (*selected_format).clone();
 
             wasm_bindgen_futures::spawn_local(async move {
-                // Try binary cleaning first
                 if let Some(file_extension) = filename.split('.').last() {
                     // Convert data URL to bytes
                     if let Some(base64_data) = data_url.strip_prefix("data:image/") {
@@ -75,7 +69,8 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                                         return;
                                     }
                                     Err(e) => {
-                                        web_sys::console::log_1(&format!("Binary cleaning failed: {}, falling back to Canvas", e).into());
+                                        web_sys::console::log_1(&format!("Binary cleaning failed: {}", e).into());
+                                        return;
                                     }
                                 }
                             }
@@ -83,12 +78,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                     }
                 }
                 
-                // Fallback to Canvas-based cleaning
-                if let Ok((cleaned_data_url, cleaned_filename)) =
-                    create_cleaned_image(&data_url, &filename, quality, &format).await
-                {
-                    download_cleaned_image(&cleaned_data_url, &cleaned_filename);
-                }
+                web_sys::console::log_1(&"Failed to process file for binary cleaning".into());
             });
         })
     };
