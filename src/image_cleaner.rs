@@ -1,5 +1,5 @@
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 pub async fn create_cleaned_image(
@@ -20,11 +20,11 @@ pub async fn create_cleaned_image(
     let promise = js_sys::Promise::new(&mut |resolve, _reject| {
         let img_clone = img.clone();
         let resolve_clone = resolve.clone();
-        
+
         let onload = Closure::wrap(Box::new(move || {
             resolve_clone.call0(&JsValue::NULL).unwrap();
         }) as Box<dyn FnMut()>);
-        
+
         img_clone.set_onload(Some(onload.as_ref().unchecked_ref()));
         onload.forget(); // Keep the closure alive
     });
@@ -41,7 +41,7 @@ pub async fn create_cleaned_image(
     let canvas: HtmlCanvasElement = document
         .create_element("canvas")?
         .dyn_into::<HtmlCanvasElement>()?;
-    
+
     canvas.set_width(width);
     canvas.set_height(height);
 
@@ -57,7 +57,7 @@ pub async fn create_cleaned_image(
     // Determine output format and extension based on user selection
     let (mime_type, extension) = match format {
         "png" => ("image/png", "png"),
-        "jpeg" | _ => ("image/jpeg", "jpg"),
+        _ => ("image/jpeg", "jpg"), // Default to JPEG for any other format
     };
 
     // Get the data URL for download
