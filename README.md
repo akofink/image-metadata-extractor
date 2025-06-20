@@ -8,7 +8,7 @@ This application allows users to upload images and extract comprehensive metadat
 
 ### 📋 **Metadata Extraction**
 - **EXIF data**: Camera settings, timestamps, camera model, lens info, etc.
-- **GPS coordinates**: Location data with Google Maps integration
+- **GPS coordinates**: Location data with Google Maps, Apple Maps, and OpenStreetMap links
 - **Image dimensions**: Width, height, and technical specifications
 - **File information**: Size, format, and basic properties
 - **Categorized display**: Organized by Camera Settings, GPS, Technical, etc.
@@ -227,7 +227,7 @@ This automatically runs code checks, formatting, and linting on every commit, en
 - **Camera Information**: Make, model, lens details
 - **Shooting Parameters**: ISO, aperture, shutter speed, focal length
 - **Timestamps**: Creation date, modification date
-- **GPS Location**: Latitude, longitude with Google Maps links
+- **GPS Location**: Latitude, longitude with Google Maps, Apple Maps, and OpenStreetMap links
 - **Technical Details**: Color space, orientation, resolution
 - **Software Information**: Camera firmware, editing software
 - **Organized categories**: Alphabetically sorted for consistent display
