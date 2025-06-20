@@ -1,7 +1,7 @@
 # Image Metadata Extractor - Makefile
 # Convenient commands for development and deployment
 
-.PHONY: help build build-dev build-release clean check test lint format serve install
+.PHONY: help build build-dev build-release clean check test lint format serve install setup-hooks
 
 # Default target
 all: build
@@ -19,6 +19,7 @@ help:
 	@echo "  make format      - Format code with cargo fmt"
 	@echo "  make clean       - Clean build artifacts"
 	@echo "  make install     - Install wasm-pack if missing"
+	@echo "  make setup-hooks - Install git pre-commit hooks"
 	@echo ""
 
 # Development build (fast, with debug info)
@@ -88,6 +89,20 @@ dev: check format lint build-dev
 
 # Production workflow - full checks and optimized build  
 prod: check test lint format build-release
+
+# Install git pre-commit hooks
+setup-hooks:
+	@echo "🪝 Setting up git pre-commit hooks..."
+	@echo '#!/bin/bash' > .git/hooks/pre-commit
+	@echo 'set -e' >> .git/hooks/pre-commit
+	@echo 'echo "🔍 Running pre-commit checks..."' >> .git/hooks/pre-commit
+	@echo 'make check && make format && make lint' >> .git/hooks/pre-commit
+	@echo 'git add -u  # Add any formatting changes' >> .git/hooks/pre-commit
+	@echo 'echo "✅ Pre-commit checks passed!"' >> .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "✅ Pre-commit hooks installed!"
+	@echo "   • Hooks will run automatically on each commit"
+	@echo "   • Runs: make check && make format && make lint"
 
 # Quick deployment check
 deploy-check: prod
