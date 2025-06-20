@@ -7,6 +7,7 @@ pub struct ImageDisplayProps {
     pub image_data: ImageData,
     pub is_expanded: bool,
     pub on_image_click: Callback<web_sys::MouseEvent>,
+    pub on_upload_new: Option<Callback<web_sys::MouseEvent>>,
 }
 
 #[function_component(ImageDisplay)]
@@ -40,7 +41,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                     <img
                         src={data.data_url.clone()}
                         alt={data.name.clone()}
-                        style={format!("width: 100%; max-width: 300px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
+                        style={format!("width: 100%; max-width: 300px; max-height: 200px; object-fit: contain; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
                             if is_expanded { "" } else { "box-shadow: 0 2px 8px rgba(0,0,0,0.1);" })}
                         onclick={on_image_click}
                     />
@@ -49,7 +50,24 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
             </div>
 
             <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                <h3>{"File Information"}</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">{"File Information"}</h3>
+                    {
+                        if let Some(on_upload_new) = &props.on_upload_new {
+                            html! {
+                                <button
+                                    onclick={on_upload_new.clone()}
+                                    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease;"
+                                    class="upload-new-button"
+                                >
+                                    {"📁 Upload New Image"}
+                                </button>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
+                </div>
                 <p><strong>{"Name: "}</strong>{&data.name}</p>
                 <p><strong>{"Size: "}</strong>{format_file_size(data.size)}</p>
                 {

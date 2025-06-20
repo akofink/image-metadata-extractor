@@ -65,6 +65,15 @@ pub fn app() -> Html {
         })
     };
 
+    let on_upload_new = {
+        let file_input_trigger = file_input_trigger.clone();
+        Callback::from(move |_: web_sys::MouseEvent| {
+            if let Some(ref trigger) = *file_input_trigger {
+                trigger.emit(());
+            }
+        })
+    };
+
     html! {
         <div style="min-height: 100vh; display: flex; flex-direction: column;">
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
@@ -85,6 +94,7 @@ pub fn app() -> Html {
                                         image_data={data.clone()}
                                         is_expanded={*is_expanded}
                                         on_image_click={on_image_click}
+                                        on_upload_new={Some(on_upload_new)}
                                     />
 
                                     <MetadataDisplay
