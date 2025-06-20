@@ -18,23 +18,49 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let uint8_array = Uint8Array::new(&array_buffer);
     let bytes = uint8_array.to_vec();
 
-    // Determine MIME type from file or image bytes
+    // Determine MIME type from file or guess from extension/content
     let mut mime_type = file.type_();
     if mime_type.is_empty() {
+        // Try image format detection first
         mime_type = match image::guess_format(&bytes) {
             Ok(image::ImageFormat::Png) => "image/png".into(),
             Ok(image::ImageFormat::Jpeg) => "image/jpeg".into(),
             Ok(image::ImageFormat::Gif) => "image/gif".into(),
             Ok(image::ImageFormat::WebP) => "image/webp".into(),
-            _ => "application/octet-stream".into(),
+            _ => {
+                // Guess from file extension for non-image files
+                let name_lower = name.to_lowercase();
+                if name_lower.ends_with(".pdf") {
+                    "application/pdf".into()
+                } else if name_lower.ends_with(".svg") {
+                    "image/svg+xml".into()
+                } else if name_lower.ends_with(".tiff") || name_lower.ends_with(".tif") {
+                    "image/tiff".into()
+                } else if name_lower.ends_with(".heif") || name_lower.ends_with(".heic") {
+                    "image/heif".into()
+                } else if name_lower.ends_with(".avif") {
+                    "image/avif".into()
+                } else if name_lower.ends_with(".jxl") {
+                    "image/jxl".into()
+                } else {
+                    "application/octet-stream".into()
+                }
+            }
         };
     }
 
     // Create data URL
     let data_url = format!("data:{};base64,{}", mime_type, base64_encode(&bytes));
 
-    // Get image dimensions
-    let (width, height) = get_image_dimensions(&bytes)?;
+    // Get dimensions (only for image files)
+    let (width, height) = if mime_type.starts_with("image/") && mime_type != "image/svg+xml" {
+        match get_image_dimensions(&bytes) {
+            Ok(dims) => (Some(dims.0), Some(dims.1)),
+            Err(_) => (None, None), // Non-image or unsupported format
+        }
+    } else {
+        (None, None) // Non-image files don't have pixel dimensions
+    };
 
     // Extract EXIF data
     let (exif_data, gps_coords) = extract_exif_data(&bytes);
@@ -44,8 +70,8 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
         size,
         mime_type: mime_type.clone(),
         data_url,
-        width: Some(width),
-        height: Some(height),
+        width,
+        height,
         exif_data,
         gps_coords,
     })

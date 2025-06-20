@@ -77,7 +77,7 @@ pub fn app() -> Html {
     html! {
         <div style="min-height: 100vh; display: flex; flex-direction: column;">
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
-                <h1>{"Image Metadata Extractor"}</h1>
+                <h1>{"File Metadata Extractor"}</h1>
 
                 <FileUpload
                     on_file_loaded={on_file_loaded}
@@ -119,9 +119,9 @@ pub fn app() -> Html {
                                     onclick={on_placeholder_click}
                                     style="text-align: center; padding: 40px 20px; color: #666; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6; cursor: pointer; transition: all 0.2s ease; hover:background-color: #e9ecef; hover:border-color: #007bff;"
                                 >
-                                    <div style="font-size: 48px; margin-bottom: 16px;">{"📷"}</div>
-                                    <p style="font-size: 18px; margin-bottom: 8px; font-weight: 500;">{"Click here to select an image"}</p>
-                                    <p style="font-size: 14px; margin: 0;">{"Upload JPEG, PNG, GIF, or WebP files to extract metadata"}</p>
+                                    <div style="font-size: 48px; margin-bottom: 16px;">{"📁"}</div>
+                                    <p style="font-size: 18px; margin-bottom: 8px; font-weight: 500;">{"Click here to select a file"}</p>
+                                    <p style="font-size: 14px; margin: 0;">{"Upload images, PDFs, SVGs, and more to extract metadata"}</p>
                                 </div>
                             }
                         }
@@ -138,7 +138,7 @@ pub fn app() -> Html {
                     {" • Privacy-First (No Server Uploads)"}
                 </p>
                 <p style="margin-top: 8px; font-size: 12px;">
-                    {"© 2024 Image Metadata Extractor • "}
+                    {"© 2024 File Metadata Extractor • "}
                     <a href="mailto:contact@image-metadata-extractor.com" style="color: #007bff; text-decoration: none;">
                         {"Contact"}
                     </a>

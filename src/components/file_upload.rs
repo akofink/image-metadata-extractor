@@ -49,7 +49,7 @@ pub fn file_upload(props: &FileUploadProps) -> Html {
         <input
             ref={input_ref}
             type="file"
-            accept="image/*,.tiff,.tif,.heif,.heic,.avif,.jxl,.pdf,.svg"
+            accept="image/*,application/pdf,image/svg+xml,image/tiff,image/heif,image/avif,image/jxl,.tiff,.tif,.heif,.heic,.avif,.jxl,.pdf,.svg"
             onchange={on_file_change}
             style="display: none;"
         />
