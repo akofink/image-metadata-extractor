@@ -1,6 +1,6 @@
 use crate::image_cleaner::{create_cleaned_image, download_cleaned_image};
 use crate::types::ImageData;
-use web_sys::Event;
+use web_sys::{Event, HtmlSelectElement};
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -11,7 +11,7 @@ pub struct ImageCleanerProps {
 #[function_component(ImageCleaner)]
 pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
     let image_quality = use_state(|| 0.9);
-    let initial_format = if props.image_data.mime_type == "image/png" {
+    let initial_format = if props.image_data.mime_type.starts_with("image/png") {
         "png".to_string()
     } else {
         "jpeg".to_string()
@@ -22,7 +22,8 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
         let selected_format = selected_format.clone();
         let mime_type = props.image_data.mime_type.clone();
         use_effect_with(mime_type.clone(), move |_| {
-            if mime_type == "image/png" {
+            if mime_type.starts_with("image/png") {
+
                 selected_format.set("png".to_string());
             } else {
                 selected_format.set("jpeg".to_string());
@@ -115,7 +116,7 @@ fn format_selector(props: &FormatSelectorProps) -> Html {
     let on_change = {
         let on_format_change = props.on_format_change.clone();
         Callback::from(move |e: Event| {
-            let select: web_sys::HtmlInputElement = e.target_unchecked_into();
+            let select: HtmlSelectElement = e.target_unchecked_into();
             on_format_change.emit(select.value());
         })
     };
@@ -124,12 +125,11 @@ fn format_selector(props: &FormatSelectorProps) -> Html {
         <label style="display: flex; align-items: center; gap: 5px;">
             {"Output Format:"}
             <select
-                value={props.selected_format.clone()}
                 onchange={on_change}
                 style="margin-left: 5px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 3px;"
             >
-                <option value="jpeg">{"JPEG (smaller file)"}</option>
-                <option value="png">{"PNG (lossless)"}</option>
+                <option value="jpeg" selected={props.selected_format == "jpeg"}>{"JPEG (smaller file)"}</option>
+                <option value="png" selected={props.selected_format == "png"}>{"PNG (lossless)"}</option>
             </select>
         </label>
     }

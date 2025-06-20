@@ -18,8 +18,19 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let uint8_array = Uint8Array::new(&array_buffer);
     let bytes = uint8_array.to_vec();
 
+    // Determine MIME type from file or image bytes
+    let mut mime_type = file.type_();
+    if mime_type.is_empty() {
+        mime_type = match image::guess_format(&bytes) {
+            Ok(image::ImageFormat::Png) => "image/png".into(),
+            Ok(image::ImageFormat::Jpeg) => "image/jpeg".into(),
+            Ok(image::ImageFormat::Gif) => "image/gif".into(),
+            Ok(image::ImageFormat::WebP) => "image/webp".into(),
+            _ => "application/octet-stream".into(),
+        };
+    }
+
     // Create data URL
-    let mime_type = file.type_();
     let data_url = format!("data:{};base64,{}", mime_type, base64_encode(&bytes));
 
     // Get image dimensions
