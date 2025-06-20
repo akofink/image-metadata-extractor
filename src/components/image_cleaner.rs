@@ -11,7 +11,24 @@ pub struct ImageCleanerProps {
 #[function_component(ImageCleaner)]
 pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
     let image_quality = use_state(|| 0.9);
-    let selected_format = use_state(|| "jpeg".to_string());
+    let initial_format = if props.image_data.mime_type.starts_with("image/png") {
+        "png".to_string()
+    } else {
+        "jpeg".to_string()
+    };
+    let selected_format = use_state(|| initial_format);
+
+    {
+        let selected_format = selected_format.clone();
+        use_effect_with(props.image_data.mime_type.clone(), move |mime_type| {
+            if mime_type.starts_with("image/png") {
+                selected_format.set("png".to_string());
+            } else {
+                selected_format.set("jpeg".to_string());
+            }
+            || ()
+        });
+    }
 
     let download_cleaned_image_cb = {
         let data = props.image_data.clone();
