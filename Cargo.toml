@@ -12,7 +12,7 @@ categories = ["multimedia::images", "web-programming", "wasm"]
 authors = ["Image Metadata Extractor Contributors"]
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 yew = { version = "0.21", features = ["csr"] }

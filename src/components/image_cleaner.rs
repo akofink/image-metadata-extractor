@@ -13,6 +13,10 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
     let image_quality = use_state(|| 0.9);
     let initial_format = if props.image_data.mime_type.starts_with("image/png") {
         "png".to_string()
+    } else if props.image_data.mime_type.starts_with("image/webp") {
+        "webp".to_string()
+    } else if props.image_data.mime_type.starts_with("image/gif") {
+        "gif".to_string()
     } else {
         "jpeg".to_string()
     };
@@ -23,8 +27,11 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
         let mime_type = props.image_data.mime_type.clone();
         use_effect_with(mime_type.clone(), move |_| {
             if mime_type.starts_with("image/png") {
-
                 selected_format.set("png".to_string());
+            } else if mime_type.starts_with("image/webp") {
+                selected_format.set("webp".to_string());
+            } else if mime_type.starts_with("image/gif") {
+                selected_format.set("gif".to_string());
             } else {
                 selected_format.set("jpeg".to_string());
             }
@@ -130,6 +137,8 @@ fn format_selector(props: &FormatSelectorProps) -> Html {
             >
                 <option value="jpeg" selected={props.selected_format == "jpeg"}>{"JPEG (smaller file)"}</option>
                 <option value="png" selected={props.selected_format == "png"}>{"PNG (lossless)"}</option>
+                <option value="webp" selected={props.selected_format == "webp"}>{"WebP"}</option>
+                <option value="gif" selected={props.selected_format == "gif"}>{"GIF"}</option>
             </select>
         </label>
     }
