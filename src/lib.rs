@@ -1,4 +1,5 @@
 mod app;
+mod components;
 mod exif;
 mod export;
 mod image_cleaner;
