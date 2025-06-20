@@ -28,7 +28,7 @@ help:
 	@echo ""
 
 # Development build (fast, with debug info) - default
-pkg: src/*.rs Cargo.toml Cargo.lock
+pkg: src/**/*.rs Cargo.toml Cargo.lock
 	@echo "🔨 Building for development..."
 	wasm-pack build --target web --dev
 	@echo "✅ Development build complete!"

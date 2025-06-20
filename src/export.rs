@@ -35,8 +35,8 @@ pub fn generate_csv(data: &ImageData) -> String {
 
 pub fn generate_txt(data: &ImageData) -> String {
     let mut txt = String::new();
-    txt.push_str("IMAGE METADATA REPORT\n");
-    txt.push_str("=====================\n\n");
+    txt.push_str("FILE METADATA REPORT\n");
+    txt.push_str("====================\n\n");
 
     // Basic file info
     txt.push_str("FILE INFORMATION\n");
@@ -63,15 +63,15 @@ pub fn generate_txt(data: &ImageData) -> String {
 
     // EXIF data
     if !data.exif_data.is_empty() {
-        txt.push_str("EXIF METADATA\n");
-        txt.push_str("-------------\n");
+        txt.push_str("METADATA\n");
+        txt.push_str("--------\n");
         for (key, value) in &data.exif_data {
             txt.push_str(&format!("{}: {}\n", key, value));
         }
     } else {
-        txt.push_str("EXIF METADATA\n");
-        txt.push_str("-------------\n");
-        txt.push_str("No EXIF data found in this image\n");
+        txt.push_str("METADATA\n");
+        txt.push_str("--------\n");
+        txt.push_str("No metadata found in this file\n");
     }
 
     txt

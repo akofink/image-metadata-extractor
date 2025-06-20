@@ -21,8 +21,8 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
     if data.exif_data.is_empty() {
         return html! {
             <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; color: #666;">
-                <h3>{"EXIF Metadata"}</h3>
-                <p>{"No EXIF data found in this image"}</p>
+                <h3>{"Metadata"}</h3>
+                <p>{"No metadata found in this file"}</p>
             </div>
         };
     }
@@ -44,7 +44,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
     html! {
         <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">{"EXIF Metadata"}</h3>
+                <h3 style="margin: 0;">{"Metadata"}</h3>
                 <button
                     onclick={props.on_toggle_explanations.clone()}
                     style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;"
