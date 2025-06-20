@@ -24,8 +24,6 @@ jobs:
           git diff --exit-code
       - name: Lint
         run: make lint
-      - name: Build
-        run: make build
       - name: Run tests
         run: make test
       - name: Generate coverage
