@@ -216,7 +216,7 @@ This automatically runs code checks, formatting, and linting on every commit, en
 - **PNG**: Lossless format for maximum quality retention
 - **WebP**: Modern format for smaller file sizes
 - **GIF**: Basic format for simple animations or compatibility
-- **Format conversion**: Input PNG/GIF/WebP → Output JPEG/PNG/GIF/WebP
+- **Format conversion**: Input JPEG/PNG/GIF/WebP → Output JPEG/PNG/GIF/WebP
 
 ## Features in Detail
 
