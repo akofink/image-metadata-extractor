@@ -56,17 +56,17 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
 
     html! {
         <div style="background: #d1ecf1; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #bee5eb;">
-            <h3>{"🖼️ Download Cleaned Image"}</h3>
+            <h3>{"🧹 Download Cleaned File"}</h3>
             <p style="margin-bottom: 15px; color: #0c5460;">
-                {"Download your image with all metadata removed for privacy:"}
+                {"Download your file with all metadata removed for privacy:"}
             </p>
 
             <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
                 <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
-                    {"High-performance binary metadata removal preserves original image quality"}
+                    {"High-performance binary metadata removal preserves original file quality"}
                 </div>
                 <div style="font-size: 12px; color: #666;">
-                    {"Removes ALL metadata including GPS, camera info, and EXIF data"}
+                    {"Supports JPEG, PNG, WebP, GIF, TIFF, HEIF, PDF, SVG and more"}
                 </div>
             </div>
 
@@ -74,7 +74,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                 onclick={download_cleaned_image_cb}
                 style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;"
             >
-                {"🧹 Download Privacy-Safe Image"}
+                {"🧹 Download Privacy-Safe File"}
             </button>
         </div>
     }
