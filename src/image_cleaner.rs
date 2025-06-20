@@ -2,6 +2,15 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
+pub fn output_format(format: &str) -> (&'static str, &'static str) {
+    match format {
+        "png" => ("image/png", "png"),
+        "webp" => ("image/webp", "webp"),
+        "gif" => ("image/gif", "gif"),
+        _ => ("image/jpeg", "jpg"),
+    }
+}
+
 pub async fn create_cleaned_image(
     image_data_url: &str,
     filename: &str,
@@ -55,10 +64,7 @@ pub async fn create_cleaned_image(
     context.draw_image_with_html_image_element(&img, 0.0, 0.0)?;
 
     // Determine output format and extension based on user selection
-    let (mime_type, extension) = match format {
-        "png" => ("image/png", "png"),
-        _ => ("image/jpeg", "jpg"), // Default to JPEG for any other format
-    };
+    let (mime_type, extension) = output_format(format);
 
     // Get the data URL for download
     let data_url = if mime_type == "image/jpeg" {

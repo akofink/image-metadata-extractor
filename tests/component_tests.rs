@@ -71,3 +71,14 @@ fn test_component_lifecycle_safety() {
     // If we reach here without panicking, the test passes
     assert!(true);
 }
+
+#[test]
+#[allow(dead_code)]
+fn test_output_format_mapping() {
+    use image_metadata_extractor::image_cleaner::output_format;
+
+    assert_eq!(output_format("webp"), ("image/webp", "webp"));
+    assert_eq!(output_format("gif"), ("image/gif", "gif"));
+    assert_eq!(output_format("png"), ("image/png", "png"));
+    assert_eq!(output_format("anything"), ("image/jpeg", "jpg"));
+}

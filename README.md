@@ -214,7 +214,9 @@ This automatically runs code checks, formatting, and linting on every commit, en
 ### Cleaned Image Formats
 - **JPEG**: Adjustable quality (30%-100%) for size optimization
 - **PNG**: Lossless format for maximum quality retention
-- **Format conversion**: Input PNG → Output JPEG or Input JPEG → Output PNG
+- **WebP**: Modern format for smaller file sizes
+- **GIF**: Basic format for simple animations or compatibility
+- **Format conversion**: Input PNG/GIF/WebP → Output JPEG/PNG/GIF/WebP
 
 ## Features in Detail
 

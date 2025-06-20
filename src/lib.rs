@@ -2,7 +2,7 @@ mod app;
 mod components;
 mod exif;
 mod export;
-mod image_cleaner;
+pub mod image_cleaner;
 mod metadata_info;
 mod types;
 mod utils;
