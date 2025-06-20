@@ -78,6 +78,12 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
         return html! {};
     }
 
+    // Calculate if there's anything to export
+    let has_metadata = !selected_metadata.is_empty();
+    let has_file_info = *include_basic_info; // File info always includes at least name/size
+    let has_gps = *include_gps && data.gps_coords.is_some();
+    let has_anything_to_export = has_metadata || has_file_info || has_gps;
+
     html! {
         <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #ffeaa7;">
             <h3>{"📊 Export Metadata"}</h3>
@@ -89,29 +95,25 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                 <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"Include in Export:"}</h4>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     {
-                        // Only show file info checkbox if file has meaningful info to export
-                        if data.width.is_some() || data.height.is_some() {
-                            html! {
-                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                    <input
-                                        type="checkbox"
-                                        checked={*include_basic_info}
-                                        onchange={{
-                                            let include_basic_info = include_basic_info.clone();
-                                            Callback::from(move |_| include_basic_info.set(!*include_basic_info))
-                                        }}
-                                    />
-                                    {
-                                        if data.width.is_some() && data.height.is_some() {
-                                            "File Info (name, size, dimensions)"
-                                        } else {
-                                            "File Info (name, size)"
-                                        }
+                        // Always show file info checkbox since we always have name and size
+                        html! {
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input
+                                    type="checkbox"
+                                    checked={*include_basic_info}
+                                    onchange={{
+                                        let include_basic_info = include_basic_info.clone();
+                                        Callback::from(move |_| include_basic_info.set(!*include_basic_info))
+                                    }}
+                                />
+                                {
+                                    if data.width.is_some() && data.height.is_some() {
+                                        "File Info (name, size, dimensions)"
+                                    } else {
+                                        "File Info (name, size)"
                                     }
-                                </label>
-                            }
-                        } else {
-                            html! {}
+                                }
+                            </label>
                         }
                     }
                     {
@@ -143,20 +145,41 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
 
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button
-                    onclick={export_json}
-                    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;"
+                    onclick={if has_anything_to_export { export_json.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export {
+                            "background: #007bff; color: white; cursor: pointer;"
+                        } else {
+                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                        }
+                    )}
                 >
                     {"📄 JSON"}
                 </button>
                 <button
-                    onclick={export_csv}
-                    style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;"
+                    onclick={if has_anything_to_export { export_csv.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export {
+                            "background: #28a745; color: white; cursor: pointer;"
+                        } else {
+                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                        }
+                    )}
                 >
                     {"📊 CSV"}
                 </button>
                 <button
-                    onclick={export_txt}
-                    style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;"
+                    onclick={if has_anything_to_export { export_txt.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export {
+                            "background: #6c757d; color: white; cursor: pointer;"
+                        } else {
+                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                        }
+                    )}
                 >
                     {"📝 Text"}
                 </button>
