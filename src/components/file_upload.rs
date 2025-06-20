@@ -30,15 +30,19 @@ pub fn file_upload(props: &FileUploadProps) -> Html {
         })
     };
 
-    // Set up trigger callback for external clicking
+    // Set up trigger callback for external clicking (only once)
     {
         let input_ref = input_ref.clone();
-        let trigger_callback = Callback::from(move |_| {
-            if let Some(input) = input_ref.cast::<HtmlInputElement>() {
-                input.click();
-            }
+        let trigger_file_input = props.trigger_file_input.clone();
+        use_effect_with((), move |_| {
+            let trigger_callback = Callback::from(move |_| {
+                if let Some(input) = input_ref.cast::<HtmlInputElement>() {
+                    input.click();
+                }
+            });
+            trigger_file_input.emit(trigger_callback);
+            || ()
         });
-        props.trigger_file_input.emit(trigger_callback);
     }
 
     html! {
