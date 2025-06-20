@@ -1,10 +1,11 @@
 # Image Metadata Extractor - Makefile
 # Convenient commands for development and deployment
 
-.PHONY: help build build-dev build-release clean check test lint format serve install setup-hooks
+# Phony targets that don't create files
+.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check
 
 # Default target
-all: build
+all: pkg
 
 # Show available commands
 help:
@@ -26,19 +27,26 @@ help:
 	@echo "  make setup-hooks - Install git pre-commit hooks"
 	@echo ""
 
-# Development build (fast, with debug info)
-build: build-dev
-
-build-dev:
+# Development build (fast, with debug info) - default
+pkg: src/*.rs Cargo.toml Cargo.lock
 	@echo "🔨 Building for development..."
 	wasm-pack build --target web --dev
 	@echo "✅ Development build complete!"
 
+# Alias for default build
+build: pkg
+
+# Development build alias
+build-dev: pkg
+
 # Production build (optimized, smaller size)
-build-release:
+pkg-release: src/*.rs Cargo.toml Cargo.lock
 	@echo "🚀 Building for production..."
 	wasm-pack build --target web --release
 	@echo "✅ Production build complete!"
+
+# Alias for production build
+build-release: pkg-release
 
 # Start local development server
 serve:
@@ -113,10 +121,10 @@ install:
 	@echo "✅ wasm-pack ready!"
 
 # Development workflow - check, format, lint, then build
-dev: check format lint build-dev
+dev: check format lint pkg
 
 # Production workflow - full checks and optimized build  
-prod: check test-all lint format build-release
+prod: check test-all lint format pkg-release
 
 # Install git pre-commit hooks
 setup-hooks:
@@ -133,7 +141,7 @@ setup-hooks:
 	@echo "   • Runs: make check && make test && make format && make lint"
 
 # Quick deployment check
-deploy-check: prod
+deploy-check: pkg-release
 	@echo "🚀 Ready for deployment!"
 	@echo "   • Code checked and tested"
 	@echo "   • Production build complete"
