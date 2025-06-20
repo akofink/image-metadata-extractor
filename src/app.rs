@@ -12,6 +12,7 @@ pub fn app() -> Html {
     let is_expanded = use_state(|| false);
     let selected_metadata = use_state(HashSet::<String>::new);
     let show_explanations = use_state(|| false);
+    let file_input_trigger = use_state(|| None::<Callback<()>>);
 
     let on_file_loaded = {
         let image_data = image_data.clone();
@@ -48,12 +49,31 @@ pub fn app() -> Html {
         })
     };
 
+    let on_trigger_file_input = {
+        let file_input_trigger = file_input_trigger.clone();
+        Callback::from(move |trigger: Callback<()>| {
+            file_input_trigger.set(Some(trigger));
+        })
+    };
+
+    let on_placeholder_click = {
+        let file_input_trigger = file_input_trigger.clone();
+        Callback::from(move |_: web_sys::MouseEvent| {
+            if let Some(ref trigger) = *file_input_trigger {
+                trigger.emit(());
+            }
+        })
+    };
+
     html! {
         <div style="min-height: 100vh; display: flex; flex-direction: column;">
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
                 <h1>{"Image Metadata Extractor"}</h1>
 
-                <FileUpload on_file_loaded={on_file_loaded} />
+                <FileUpload
+                    on_file_loaded={on_file_loaded}
+                    trigger_file_input={on_trigger_file_input}
+                />
 
                 // Main content area with consistent layout
                 <div style="margin-top: 20px;">
@@ -85,9 +105,12 @@ pub fn app() -> Html {
                             }
                         } else {
                             html! {
-                                <div style="text-align: center; padding: 40px 20px; color: #666; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6;">
+                                <div
+                                    onclick={on_placeholder_click}
+                                    style="text-align: center; padding: 40px 20px; color: #666; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6; cursor: pointer; transition: all 0.2s ease; hover:background-color: #e9ecef; hover:border-color: #007bff;"
+                                >
                                     <div style="font-size: 48px; margin-bottom: 16px;">{"📷"}</div>
-                                    <p style="font-size: 18px; margin-bottom: 8px;">{"Select an image to get started"}</p>
+                                    <p style="font-size: 18px; margin-bottom: 8px; font-weight: 500;">{"Click here to select an image"}</p>
                                     <p style="font-size: 14px; margin: 0;">{"Upload JPEG, PNG, GIF, or WebP files to extract metadata"}</p>
                                 </div>
                             }
