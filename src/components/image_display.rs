@@ -20,33 +20,59 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
         <div>
             <div style="margin: 20px 0;">
                 {
-                    if is_expanded {
+                    if data.mime_type.starts_with("image/") && data.mime_type != "image/svg+xml" {
                         html! {
-                            <div
-                                style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;"
-                                onclick={on_image_click.clone()}
-                            >
-                                <img
-                                    src={data.data_url.clone()}
-                                    alt={data.name.clone()}
-                                    style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px;"
-                                />
-                            </div>
+                            <>
+                                {
+                                    if is_expanded {
+                                        html! {
+                                            <div
+                                                style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;"
+                                                onclick={on_image_click.clone()}
+                                            >
+                                                <img
+                                                    src={data.data_url.clone()}
+                                                    alt={data.name.clone()}
+                                                    style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px;"
+                                                />
+                                            </div>
+                                        }
+                                    } else {
+                                        html! {}
+                                    }
+                                }
+                                <div style="text-align: center;">
+                                    <img
+                                        src={data.data_url.clone()}
+                                        alt={data.name.clone()}
+                                        style={format!("max-width: 300px; height: auto; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
+                                            if is_expanded { "" } else { "box-shadow: 0 2px 8px rgba(0,0,0,0.1);" })}
+                                        onclick={on_image_click}
+                                    />
+                                    <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">{"Click image to expand"}</p>
+                                </div>
+                            </>
                         }
                     } else {
-                        html! {}
+                        html! {
+                            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">
+                                    {
+                                        if data.mime_type == "application/pdf" {
+                                            "📄"
+                                        } else if data.mime_type == "image/svg+xml" {
+                                            "🖼️"
+                                        } else {
+                                            "📎"
+                                        }
+                                    }
+                                </div>
+                                <p style="font-size: 16px; margin: 0; color: #666;">{format!("{} file", data.mime_type)}</p>
+                                <p style="font-size: 14px; margin: 8px 0 0 0; color: #999;">{"Preview not available for this file type"}</p>
+                            </div>
+                        }
                     }
                 }
-                <div style="text-align: center;">
-                    <img
-                        src={data.data_url.clone()}
-                        alt={data.name.clone()}
-                        style={format!("max-width: 300px; height: auto; border-radius: 4px; cursor: pointer; transition: transform 0.2s ease; {}",
-                            if is_expanded { "" } else { "box-shadow: 0 2px 8px rgba(0,0,0,0.1);" })}
-                        onclick={on_image_click}
-                    />
-                    <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">{"Click image to expand"}</p>
-                </div>
             </div>
 
             <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -60,7 +86,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                                     style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease;"
                                     class="upload-new-button"
                                 >
-                                    {"📁 Upload New Image"}
+                                    {"📁 Upload New File"}
                                 </button>
                             }
                         } else {
@@ -76,7 +102,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                             <p><strong>{"Dimensions: "}</strong>{format!("{}x{} pixels", width, height)}</p>
                         }
                     } else {
-                        html! { <p><strong>{"Dimensions: "}</strong>{"Loading..."}</p> }
+                        html! {}
                     }
                 }
             </div>
