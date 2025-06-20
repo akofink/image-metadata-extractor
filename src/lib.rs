@@ -1,8 +1,9 @@
 mod app;
 mod binary_cleaner;
 mod components;
-mod exif;
+pub mod exif;
 mod export;
+pub mod image_cleaner;
 mod metadata_info;
 mod types;
 mod utils;

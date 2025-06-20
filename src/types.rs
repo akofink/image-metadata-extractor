@@ -42,7 +42,11 @@ impl ImageData {
         }
 
         Self {
-            name: if include_basic_info { self.name.clone() } else { String::new() },
+            name: if include_basic_info {
+                self.name.clone()
+            } else {
+                String::new()
+            },
             size: if include_basic_info { self.size } else { 0 },
             mime_type: self.mime_type.clone(),
             data_url: self.data_url.clone(), // Always keep for display

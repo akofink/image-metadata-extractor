@@ -75,7 +75,8 @@ pub fn download_binary_file(bytes: &[u8], filename: &str, mime_type: &str) {
     let blob_options = web_sys::BlobPropertyBag::new();
     blob_options.set_type(mime_type);
 
-    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options).unwrap();
+    let blob =
+        web_sys::Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options).unwrap();
 
     let url = Url::create_object_url_with_blob(&blob).unwrap();
 

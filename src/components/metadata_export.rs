@@ -74,7 +74,11 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     };
 
     // Only show export section if there's metadata to export
-    if data.exif_data.is_empty() && data.gps_coords.is_none() && data.width.is_none() && data.height.is_none() {
+    if data.exif_data.is_empty()
+        && data.gps_coords.is_none()
+        && data.width.is_none()
+        && data.height.is_none()
+    {
         return html! {};
     }
 

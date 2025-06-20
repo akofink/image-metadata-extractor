@@ -91,7 +91,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                         let category_keys: HashSet<String> = items.iter().map(|(key, _)| (*key).clone()).collect();
                         let category_selected_count = category_keys.iter().filter(|key| selected_metadata.contains(*key)).count();
                         let _all_category_selected = category_selected_count == category_keys.len();
-                        
+
                         html! {
                             <div key={*category} style="margin-bottom: 20px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">

@@ -13,11 +13,13 @@ pub fn app() -> Html {
     let selected_metadata = use_state(HashSet::<String>::new);
     let show_explanations = use_state(|| false);
     let file_input_trigger = use_state(|| None::<Callback<()>>);
+    let error_message = use_state(|| None::<String>);
 
     let on_file_loaded = {
         let image_data = image_data.clone();
         let is_expanded = is_expanded.clone();
         let selected_metadata = selected_metadata.clone();
+        let error_message = error_message.clone();
 
         Callback::from(move |data: ImageData| {
             // Auto-select all metadata by default
@@ -25,6 +27,14 @@ pub fn app() -> Html {
             selected_metadata.set(all_keys);
             image_data.set(Some(data));
             is_expanded.set(false); // Reset to thumbnail view
+            error_message.set(None);
+        })
+    };
+
+    let on_file_error = {
+        let error_message = error_message.clone();
+        Callback::from(move |msg: String| {
+            error_message.set(Some(msg));
         })
     };
 
@@ -78,10 +88,16 @@ pub fn app() -> Html {
         <div style="min-height: 100vh; display: flex; flex-direction: column;">
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
                 <h1>{"File Metadata Extractor"}</h1>
+                {
+                    if let Some(msg) = &*error_message {
+                        html! { <p style="color: red;">{msg}</p> }
+                    } else { html!{} }
+                }
 
                 <FileUpload
                     on_file_loaded={on_file_loaded}
                     trigger_file_input={on_trigger_file_input}
+                    on_error={on_file_error}
                 />
 
                 // Main content area with consistent layout

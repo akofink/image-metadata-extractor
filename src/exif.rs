@@ -49,6 +49,23 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
         };
     }
 
+    // Verify that we recognize this mime type
+    let supported_types = [
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "image/svg+xml",
+        "image/tiff",
+        "image/heif",
+        "image/avif",
+        "image/jxl",
+    ];
+    if !supported_types.contains(&mime_type.as_str()) {
+        return Err(JsValue::from_str("Unsupported file type"));
+    }
+
     // Create data URL
     let data_url = format!("data:{};base64,{}", mime_type, base64_encode(&bytes));
 
