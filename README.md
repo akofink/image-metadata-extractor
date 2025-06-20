@@ -269,6 +269,7 @@ This automatically runs code checks, formatting, and linting on every commit, en
 - All commits automatically run pre-commit hooks (install with `make setup-hooks`)
 - Code must pass `cargo check`, `cargo fmt`, and `cargo clippy`
 - Use the Makefile commands for consistent development workflows
+- CI publishes an HTML coverage report for each pull request
 - Follow the modular component architecture established in `src/components/`
 
 ### Development Workflow
