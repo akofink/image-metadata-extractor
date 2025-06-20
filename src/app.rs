@@ -17,6 +17,7 @@ pub fn app() -> Html {
     let include_gps = use_state(|| true);
     let show_explanations = use_state(|| false);
     let image_quality = use_state(|| 0.9); // JPEG quality for cleaned images
+    let selected_format = use_state(|| "jpeg".to_string()); // Output format for cleaned images
 
     let on_file_change = {
         let image_data = image_data.clone();
@@ -100,15 +101,17 @@ pub fn app() -> Html {
     let download_cleaned_image_cb = {
         let image_data = image_data.clone();
         let image_quality = image_quality.clone();
+        let selected_format = selected_format.clone();
         Callback::from(move |_| {
             if let Some(ref data) = *image_data {
                 let data_url = data.data_url.clone();
                 let filename = data.name.clone();
                 let quality = *image_quality;
+                let format = (*selected_format).clone();
                 
                 wasm_bindgen_futures::spawn_local(async move {
                     if let Ok((cleaned_data_url, cleaned_filename)) = 
-                        create_cleaned_image(&data_url, &filename, quality).await 
+                        create_cleaned_image(&data_url, &filename, quality, &format).await 
                     {
                         download_cleaned_image(&cleaned_data_url, &cleaned_filename);
                     }
@@ -296,32 +299,57 @@ pub fn app() -> Html {
                                 <p style="margin-bottom: 15px; color: #0c5460;">{"Download your image with all metadata removed for privacy:"}</p>
                                 
                                 <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-                                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
                                         <label style="display: flex; align-items: center; gap: 5px;">
-                                            {"JPEG Quality:"}
-                                            <input 
-                                                type="range"
-                                                min="0.3"
-                                                max="1.0"
-                                                step="0.1"
-                                                value={image_quality.to_string()}
-                                                oninput={{
-                                                    let image_quality = image_quality.clone();
-                                                    Callback::from(move |e: web_sys::InputEvent| {
-                                                        let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                                                        if let Ok(val) = input.value().parse::<f64>() {
-                                                            image_quality.set(val);
-                                                        }
+                                            {"Output Format:"}
+                                            <select 
+                                                value={(*selected_format).clone()}
+                                                onchange={{
+                                                    let selected_format = selected_format.clone();
+                                                    Callback::from(move |e: Event| {
+                                                        let select: HtmlInputElement = e.target_unchecked_into();
+                                                        selected_format.set(select.value());
                                                     })
                                                 }}
-                                                style="margin: 0 5px;"
-                                            />
-                                            <span style="font-size: 12px; color: #666;">
-                                                {format!("{}%", (*image_quality * 100.0) as u8)}
-                                            </span>
+                                                style="margin-left: 5px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 3px;"
+                                            >
+                                                <option value="jpeg">{"JPEG (smaller file)"}</option>
+                                                <option value="png">{"PNG (lossless)"}</option>
+                                            </select>
                                         </label>
+                                        {
+                                            if *selected_format == "jpeg" {
+                                                html! {
+                                                    <label style="display: flex; align-items: center; gap: 5px;">
+                                                        {"Quality:"}
+                                                        <input 
+                                                            type="range"
+                                                            min="0.3"
+                                                            max="1.0"
+                                                            step="0.1"
+                                                            value={image_quality.to_string()}
+                                                            oninput={{
+                                                                let image_quality = image_quality.clone();
+                                                                Callback::from(move |e: web_sys::InputEvent| {
+                                                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                                                    if let Ok(val) = input.value().parse::<f64>() {
+                                                                        image_quality.set(val);
+                                                                    }
+                                                                })
+                                                            }}
+                                                            style="margin: 0 5px;"
+                                                        />
+                                                        <span style="font-size: 12px; color: #666;">
+                                                            {format!("{}%", (*image_quality * 100.0) as u8)}
+                                                        </span>
+                                                    </label>
+                                                }
+                                            } else {
+                                                html! {}
+                                            }
+                                        }
                                     </div>
-                                    <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                                    <div style="font-size: 12px; color: #666;">
                                         {"Removes ALL metadata including GPS, camera info, and EXIF data"}
                                     </div>
                                 </div>

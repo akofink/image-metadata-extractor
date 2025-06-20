@@ -6,6 +6,7 @@ pub async fn create_cleaned_image(
     image_data_url: &str,
     filename: &str,
     quality: f64,
+    format: &str,
 ) -> Result<(String, String), JsValue> {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
@@ -53,11 +54,10 @@ pub async fn create_cleaned_image(
     // Draw the image to canvas (this strips all metadata)
     context.draw_image_with_html_image_element(&img, 0.0, 0.0)?;
 
-    // Determine output format and extension
-    let (mime_type, extension) = if filename.to_lowercase().ends_with(".png") {
-        ("image/png", "png")
-    } else {
-        ("image/jpeg", "jpg")
+    // Determine output format and extension based on user selection
+    let (mime_type, extension) = match format {
+        "png" => ("image/png", "png"),
+        "jpeg" | _ => ("image/jpeg", "jpg"),
     };
 
     // Get the data URL for download
