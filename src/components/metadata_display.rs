@@ -88,7 +88,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                                     <div style="flex: 1;">
                                                         <div style="margin-bottom: 2px;">
                                                             <strong>{format!("{}: ", key)}</strong>
-                                                            <span>{*value}</span>
+                                                            <span style="word-break: break-all; overflow-wrap: break-word;">{*value}</span>
                                                         </div>
                                                         {
                                                             if show_explanations {
