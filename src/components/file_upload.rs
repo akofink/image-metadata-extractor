@@ -46,15 +46,13 @@ pub fn file_upload(props: &FileUploadProps) -> Html {
     }
 
     html! {
-        <div style="margin: 20px 0;">
-            <input
-                ref={input_ref}
-                type="file"
-                accept="image/*"
-                onchange={on_file_change}
-                style="margin-bottom: 20px;"
-            />
-        </div>
+        <input
+            ref={input_ref}
+            type="file"
+            accept="image/*"
+            onchange={on_file_change}
+            style="display: none;"
+        />
     }
 }
 
