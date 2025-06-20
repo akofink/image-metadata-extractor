@@ -1,6 +1,6 @@
 mod app;
 mod binary_cleaner;
-mod components;
+pub mod components;
 pub mod exif;
 pub mod export;
 pub mod image_cleaner;
