@@ -1,3 +1,4 @@
+#[allow(dead_code)] // WebAssembly tests are run by wasm-pack, not cargo test
 use std::collections::HashMap;
 use wasm_bindgen_test::*;
 use yew::prelude::*;
@@ -5,6 +6,7 @@ use yew::prelude::*;
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
+#[allow(dead_code)] // WebAssembly test functions appear unused to cargo test
 fn test_effect_hook_callback_setup() {
     // This test verifies that effect hooks can be used properly
     // In a real component, use_effect_with would run during mount
@@ -18,6 +20,7 @@ fn test_effect_hook_callback_setup() {
 }
 
 #[wasm_bindgen_test]
+#[allow(dead_code)]
 fn test_callback_emission_pattern() {
     use std::cell::RefCell;
     use std::rc::Rc;
@@ -42,6 +45,7 @@ fn test_callback_emission_pattern() {
 }
 
 #[wasm_bindgen_test]
+#[allow(dead_code)]
 fn test_basic_data_structures() {
     let mut test_data = HashMap::new();
     test_data.insert("key1".to_string(), "value1".to_string());
@@ -53,6 +57,7 @@ fn test_basic_data_structures() {
 }
 
 #[wasm_bindgen_test]
+#[allow(dead_code)]
 fn test_component_lifecycle_safety() {
     // Test that callbacks can be created and destroyed without side effects
     let callback: Callback<()> = Callback::noop();

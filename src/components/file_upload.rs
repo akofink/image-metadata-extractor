@@ -59,6 +59,7 @@ pub fn file_upload(props: &FileUploadProps) -> Html {
 }
 
 #[cfg(test)]
+#[allow(dead_code)] // WebAssembly tests are run by wasm-pack, not cargo test
 mod tests {
     use super::*;
     use wasm_bindgen_test::*;
@@ -66,6 +67,7 @@ mod tests {
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
+    #[allow(dead_code)] // WebAssembly test functions appear unused to cargo test
     fn test_file_upload_component_renders() {
         let on_file_loaded = Callback::noop();
         let trigger_file_input = Callback::noop();
@@ -84,6 +86,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
+    #[allow(dead_code)]
     fn test_file_upload_props_equality() {
         let on_file_loaded = Callback::noop();
         let trigger_file_input = Callback::noop();
@@ -104,6 +107,7 @@ mod tests {
 
     // Test to prevent regression of infinite render loop bug
     #[wasm_bindgen_test]
+    #[allow(dead_code)]
     fn test_trigger_callback_setup_only_once() {
         // This test verifies that the FileUpload component can be created
         // without causing infinite loops or panics during render
