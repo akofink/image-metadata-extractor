@@ -18,20 +18,28 @@ impl BinaryCleaner {
     /// Remove metadata from image file using direct binary manipulation
     /// This preserves original image quality while stripping all metadata
     pub fn clean_metadata(file_data: &[u8], file_extension: &str) -> Result<Vec<u8>, String> {
-        let mut cleaned_data = file_data.to_vec();
-
         match file_extension.to_lowercase().as_str() {
-            "jpg" | "jpeg" => Self::clean_jpeg_metadata(&mut cleaned_data),
-            "png" => Self::clean_png_metadata(&mut cleaned_data),
-            "webp" => Self::clean_webp_metadata(&mut cleaned_data),
-            "gif" => Self::clean_gif_metadata(&mut cleaned_data),
-            "tiff" | "tif" => Self::clean_tiff_metadata(&mut cleaned_data),
-            "heif" | "heic" => Self::clean_heif_metadata(&mut cleaned_data),
-            "avif" => Self::clean_avif_metadata(&mut cleaned_data),
-            "jxl" => Self::clean_jxl_metadata(&mut cleaned_data),
-            // Non-image formats that can contain metadata
-            "pdf" => Self::clean_pdf_metadata(&mut cleaned_data),
-            "svg" => Self::clean_svg_metadata(&mut cleaned_data),
+            // Formats that require mutable access for little_exif
+            "jpg" | "jpeg" => {
+                let mut data = file_data.to_vec();
+                Self::clean_jpeg_metadata(&mut data)
+            }
+            "tiff" | "tif" => {
+                let mut data = file_data.to_vec();
+                Self::clean_tiff_metadata(&mut data)
+            }
+            "heif" | "heic" => {
+                let mut data = file_data.to_vec();
+                Self::clean_heif_metadata(&mut data)
+            }
+            // Formats cleaned without mutation
+            "png" => Self::clean_png_metadata(file_data),
+            "webp" => Self::clean_webp_metadata(file_data),
+            "gif" => Self::clean_gif_metadata(file_data),
+            "avif" => Self::clean_avif_metadata(file_data),
+            "jxl" => Self::clean_jxl_metadata(file_data),
+            "pdf" => Self::clean_pdf_metadata(file_data),
+            "svg" => Self::clean_svg_metadata(file_data),
             _ => Err(format!(
                 "Unsupported format for binary cleaning: {}",
                 file_extension
@@ -40,6 +48,8 @@ impl BinaryCleaner {
     }
 
     /// Clean JPEG metadata by removing application segments (APP0-APP15)
+    // little_exif expects a mutable Vec reference
+    #[allow(clippy::ptr_arg)]
     fn clean_jpeg_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
         // Use little_exif to clear common metadata segments
         match Metadata::clear_app12_segment(data, FileExtension::JPEG) {
@@ -57,7 +67,7 @@ impl BinaryCleaner {
     }
 
     /// Remove JPEG application segments manually for comprehensive metadata removal
-    fn remove_jpeg_app_segments(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn remove_jpeg_app_segments(data: &[u8]) -> Result<Vec<u8>, String> {
         if data.len() < 4 {
             return Err("Invalid JPEG file: too short".to_string());
         }
@@ -120,7 +130,7 @@ impl BinaryCleaner {
     }
 
     /// Clean PNG metadata by removing ancillary chunks
-    fn clean_png_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_png_metadata(data: &[u8]) -> Result<Vec<u8>, String> {
         if data.len() < 8 {
             return Err("Invalid PNG file: too short".to_string());
         }
@@ -172,7 +182,7 @@ impl BinaryCleaner {
     }
 
     /// Clean WebP metadata by removing metadata chunks from RIFF container
-    fn clean_webp_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_webp_metadata(data: &[u8]) -> Result<Vec<u8>, String> {
         if data.len() < 12 {
             return Err("Invalid WebP file: too short".to_string());
         }
@@ -238,7 +248,7 @@ impl BinaryCleaner {
     }
 
     /// Clean GIF metadata by removing extension blocks
-    fn clean_gif_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_gif_metadata(data: &[u8]) -> Result<Vec<u8>, String> {
         if data.len() < 6 {
             return Err("Invalid GIF file: too short".to_string());
         }
@@ -348,6 +358,8 @@ impl BinaryCleaner {
     }
 
     /// Clean TIFF metadata using little_exif library
+    // little_exif expects a mutable Vec reference
+    #[allow(clippy::ptr_arg)]
     fn clean_tiff_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
         // TIFF files can be cleaned using little_exif
         match Metadata::clear_app12_segment(data, FileExtension::TIFF) {
@@ -360,10 +372,12 @@ impl BinaryCleaner {
             Err(e) => console_log!("TIFF APP13 clear warning: {:?}", e),
         }
 
-        Ok(data.clone())
+        Ok(data.to_vec())
     }
 
     /// Clean HEIF/HEIC metadata using little_exif library
+    // little_exif expects a mutable Vec reference
+    #[allow(clippy::ptr_arg)]
     fn clean_heif_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
         // HEIF files can be cleaned using little_exif
         match Metadata::clear_app12_segment(data, FileExtension::HEIF) {
@@ -376,24 +390,24 @@ impl BinaryCleaner {
             Err(e) => console_log!("HEIF APP13 clear warning: {:?}", e),
         }
 
-        Ok(data.clone())
+        Ok(data.to_vec())
     }
 
     /// Clean AVIF metadata (basic implementation)
-    fn clean_avif_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_avif_metadata(_data: &[u8]) -> Result<Vec<u8>, String> {
         // AVIF is based on HEIF, but might need specialized handling
         // For now, return error as it's not fully supported by little_exif
         Err("AVIF metadata cleaning not fully implemented yet".to_string())
     }
 
     /// Clean JPEG XL metadata (basic implementation)
-    fn clean_jxl_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_jxl_metadata(_data: &[u8]) -> Result<Vec<u8>, String> {
         // JXL is a newer format that may not be fully supported
         Err("JPEG XL metadata cleaning not fully implemented yet".to_string())
     }
 
     /// Clean PDF metadata by removing info dictionary and XMP
-    fn clean_pdf_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_pdf_metadata(data: &[u8]) -> Result<Vec<u8>, String> {
         let data_str = String::from_utf8_lossy(data);
 
         // Basic PDF header check
@@ -410,11 +424,11 @@ impl BinaryCleaner {
         // - /Info dictionary
         // - /Metadata streams
         // - /XMP packets
-        Ok(data.clone())
+        Ok(data.to_vec())
     }
 
     /// Clean SVG metadata by removing metadata elements
-    fn clean_svg_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+    fn clean_svg_metadata(data: &[u8]) -> Result<Vec<u8>, String> {
         let data_str = String::from_utf8_lossy(data);
 
         // Basic SVG check
