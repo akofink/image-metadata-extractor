@@ -104,8 +104,8 @@ lint:
 coverage:
 	@echo "📈 Generating coverage report..."
 	cargo install cargo-llvm-cov --version 0.6.0
+	cargo llvm-cov
 	cargo llvm-cov report --html
-	cargo llvm-cov report
 	@echo "✅ Coverage report generated!"
 
 # Format code
