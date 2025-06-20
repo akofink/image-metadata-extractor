@@ -96,7 +96,7 @@ test-all: test test-wasm-all-browsers
 # Run clippy linting
 lint:
 	@echo "🔍 Running clippy linting..."
-	cargo clippy
+	cargo clippy -- -D warnings
 	@echo "✅ Linting complete!"
 
 # Format code
