@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, PartialEq, Serialize)]
 pub struct ImageData {
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub name: String,
     #[serde(skip_serializing_if = "is_zero")]
     pub size: u64,
@@ -41,7 +42,7 @@ impl ImageData {
         }
 
         Self {
-            name: self.name.clone(),
+            name: if include_basic_info { self.name.clone() } else { String::new() },
             size: if include_basic_info { self.size } else { 0 },
             mime_type: self.mime_type.clone(),
             data_url: self.data_url.clone(), // Always keep for display
