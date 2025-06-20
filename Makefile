@@ -82,8 +82,8 @@ test-wasm-chrome:
 	wasm-pack test --headless --chrome
 	@echo "✅ Chrome WebAssembly tests complete!"
 
-# Run all tests (standard + WebAssembly)
-test-all: test test-wasm
+# Run all tests (standard + WebAssembly across all browsers)
+test-all: test test-wasm-all-browsers
 
 # Run clippy linting
 lint:
