@@ -1,7 +1,9 @@
 use crate::exif::process_file;
 use crate::export::{generate_csv, generate_txt};
+use crate::metadata_info::{get_metadata_explanation, get_metadata_category};
 use crate::types::ImageData;
 use crate::utils::{download_file, format_file_size};
+use std::collections::{HashMap, HashSet};
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 
@@ -9,18 +11,27 @@ use yew::prelude::*;
 pub fn app() -> Html {
     let image_data = use_state(|| None::<ImageData>);
     let is_expanded = use_state(|| false);
+    let selected_metadata = use_state(|| HashSet::<String>::new());
+    let include_basic_info = use_state(|| true);
+    let include_gps = use_state(|| true);
+    let show_explanations = use_state(|| false);
 
     let on_file_change = {
         let image_data = image_data.clone();
         let is_expanded = is_expanded.clone();
+        let selected_metadata = selected_metadata.clone();
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             if let Some(files) = input.files() {
                 if let Some(file) = files.get(0) {
                     let image_data = image_data.clone();
                     let is_expanded = is_expanded.clone();
+                    let selected_metadata = selected_metadata.clone();
                     wasm_bindgen_futures::spawn_local(async move {
                         if let Ok(data) = process_file(file).await {
+                            // Auto-select all metadata by default
+                            let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
+                            selected_metadata.set(all_keys);
                             image_data.set(Some(data));
                             is_expanded.set(false); // Reset to thumbnail view
                         }
@@ -39,12 +50,16 @@ pub fn app() -> Html {
 
     let export_json = {
         let image_data = image_data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
         Callback::from(move |_| {
             if let Some(ref data) = *image_data {
-                if let Ok(json) = serde_json::to_string_pretty(data) {
+                let filtered_data = data.filter_metadata(&*selected_metadata, *include_basic_info, *include_gps);
+                if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
                     download_file(
                         &json,
-                        &format!("{}_metadata.json", data.name),
+                        &format!("{}_filtered_metadata.json", data.name),
                         "application/json",
                     );
                 }
@@ -54,20 +69,28 @@ pub fn app() -> Html {
 
     let export_csv = {
         let image_data = image_data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
         Callback::from(move |_| {
             if let Some(ref data) = *image_data {
-                let csv = generate_csv(data);
-                download_file(&csv, &format!("{}_metadata.csv", data.name), "text/csv");
+                let filtered_data = data.filter_metadata(&*selected_metadata, *include_basic_info, *include_gps);
+                let csv = generate_csv(&filtered_data);
+                download_file(&csv, &format!("{}_filtered_metadata.csv", data.name), "text/csv");
             }
         })
     };
 
     let export_txt = {
         let image_data = image_data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
         Callback::from(move |_| {
             if let Some(ref data) = *image_data {
-                let txt = generate_txt(data);
-                download_file(&txt, &format!("{}_metadata.txt", data.name), "text/plain");
+                let filtered_data = data.filter_metadata(&*selected_metadata, *include_basic_info, *include_gps);
+                let txt = generate_txt(&filtered_data);
+                download_file(&txt, &format!("{}_filtered_metadata.txt", data.name), "text/plain");
             }
         })
     };
@@ -150,17 +173,86 @@ pub fn app() -> Html {
 
                             {
                                 if !data.exif_data.is_empty() {
+                                    // Group metadata by category
+                                    let mut categorized: HashMap<&str, Vec<(&String, &String)>> = HashMap::new();
+                                    for (key, value) in &data.exif_data {
+                                        let category = get_metadata_category(key);
+                                        categorized.entry(category).or_insert_with(Vec::new).push((key, value));
+                                    }
+
                                     html! {
                                         <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
-                                            <h3>{"EXIF Metadata"}</h3>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                                <h3 style="margin: 0;">{"EXIF Metadata"}</h3>
+                                                <button 
+                                                    onclick={{
+                                                        let show_explanations = show_explanations.clone();
+                                                        Callback::from(move |_| show_explanations.set(!*show_explanations))
+                                                    }}
+                                                    style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                                                >
+                                                    {if *show_explanations { "Hide Info" } else { "Show Info" }}
+                                                </button>
+                                            </div>
+                                            
                                             <div style="max-height: 400px; overflow-y: auto;">
                                                 {
-                                                    data.exif_data.iter().map(|(key, value)| {
+                                                    categorized.iter().map(|(category, items)| {
                                                         html! {
-                                                            <p key={key.clone()}>
-                                                                <strong>{format!("{}: ", key)}</strong>
-                                                                {value}
-                                                            </p>
+                                                            <div key={*category} style="margin-bottom: 20px;">
+                                                                <h4 style="margin: 0 0 10px 0; color: #555; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                                                                    {*category}
+                                                                </h4>
+                                                                {
+                                                                    items.iter().map(|(key, value)| {
+                                                                        let is_selected = selected_metadata.contains(*key);
+                                                                        let key_clone = (*key).clone();
+                                                                        let selected_metadata_clone = selected_metadata.clone();
+                                                                        
+                                                                        html! {
+                                                                            <div key={(*key).clone()} style="margin-bottom: 8px; padding: 5px; border-radius: 3px; background: rgba(255,255,255,0.5);">
+                                                                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                                                                    <input 
+                                                                                        type="checkbox"
+                                                                                        checked={is_selected}
+                                                                                        onchange={Callback::from(move |_| {
+                                                                                            let mut current = (*selected_metadata_clone).clone();
+                                                                                            if current.contains(&key_clone) {
+                                                                                                current.remove(&key_clone);
+                                                                                            } else {
+                                                                                                current.insert(key_clone.clone());
+                                                                                            }
+                                                                                            selected_metadata_clone.set(current);
+                                                                                        })}
+                                                                                        style="margin-top: 2px;"
+                                                                                    />
+                                                                                    <div style="flex: 1;">
+                                                                                        <div style="margin-bottom: 2px;">
+                                                                                            <strong>{format!("{}: ", key)}</strong>
+                                                                                            <span>{*value}</span>
+                                                                                        </div>
+                                                                                        {
+                                                                                            if *show_explanations {
+                                                                                                if let Some(explanation) = get_metadata_explanation(key) {
+                                                                                                    html! {
+                                                                                                        <div style="font-size: 11px; color: #666; font-style: italic; margin-top: 2px;">
+                                                                                                            {explanation}
+                                                                                                        </div>
+                                                                                                    }
+                                                                                                } else {
+                                                                                                    html! {}
+                                                                                                }
+                                                                                            } else {
+                                                                                                html! {}
+                                                                                            }
+                                                                                        }
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+                                                                    }).collect::<Html>()
+                                                                }
+                                                            </div>
                                                         }
                                                     }).collect::<Html>()
                                                 }
@@ -179,7 +271,40 @@ pub fn app() -> Html {
 
                             <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #ffeaa7;">
                                 <h3>{"Export Metadata"}</h3>
-                                <p style="margin-bottom: 15px; color: #856404;">{"Download the extracted metadata in your preferred format:"}</p>
+                                <p style="margin-bottom: 15px; color: #856404;">{"Download selected metadata in your preferred format:"}</p>
+                                
+                                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                    <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"Include in Export:"}</h4>
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                            <input 
+                                                type="checkbox"
+                                                checked={*include_basic_info}
+                                                onchange={{
+                                                    let include_basic_info = include_basic_info.clone();
+                                                    Callback::from(move |_| include_basic_info.set(!*include_basic_info))
+                                                }}
+                                            />
+                                            {"File Info (name, size, dimensions)"}
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                            <input 
+                                                type="checkbox"
+                                                checked={*include_gps}
+                                                onchange={{
+                                                    let include_gps = include_gps.clone();
+                                                    Callback::from(move |_| include_gps.set(!*include_gps))
+                                                }}
+                                            />
+                                            {"GPS Location"}
+                                        </label>
+                                    </div>
+                                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                        {format!("{} EXIF fields selected", selected_metadata.len())}
+                                        {" • Use checkboxes above to select specific metadata"}
+                                    </div>
+                                </div>
+                                
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                     <button
                                         onclick={export_json}

@@ -1,6 +1,7 @@
 mod app;
 mod exif;
 mod export;
+mod metadata_info;
 mod types;
 mod utils;
 
