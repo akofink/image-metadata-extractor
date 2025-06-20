@@ -4,15 +4,24 @@ use std::collections::{HashMap, HashSet};
 #[derive(Clone, PartialEq, Serialize)]
 pub struct ImageData {
     pub name: String,
+    #[serde(skip_serializing_if = "is_zero")]
     pub size: u64,
     #[serde(skip)]
     pub mime_type: String,
     #[serde(skip)] // Don't include data URL in exports
     pub data_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub exif_data: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub gps_coords: Option<(f64, f64)>, // (latitude, longitude)
+}
+
+fn is_zero(value: &u64) -> bool {
+    *value == 0
 }
 
 impl ImageData {
