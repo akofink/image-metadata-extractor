@@ -130,6 +130,7 @@ The project includes a comprehensive Makefile for streamlined development:
 #### **Code Quality**
 - **`make check`** - Check code compilation
 - **`make test`** - Run all tests
+- **`make coverage`** - Generate HTML coverage report
 - **`make format`** - Format code with cargo fmt
 - **`make lint`** - Run clippy linting
 - **`make clean`** - Clean build artifacts

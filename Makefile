@@ -2,7 +2,7 @@
 # Convenient commands for development and deployment
 
 # Phony targets that don't create files
-.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check
+.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage
 
 # Default target
 all: pkg
@@ -21,6 +21,7 @@ help:
 	@echo "  make test-wasm-chrome - Run WebAssembly tests in Chrome only"
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
+	@echo "  make coverage    - Generate code coverage report"
 	@echo "  make format      - Format code with cargo fmt"
 	@echo "  make clean       - Clean build artifacts"
 	@echo "  make install     - Install wasm-pack if missing"
@@ -30,6 +31,7 @@ help:
 # Development build (fast, with debug info) - default
 pkg: src/**/*.rs Cargo.toml Cargo.lock
 	@echo "🔨 Building for development..."
+	cargo build --test "component_tests"
 	wasm-pack build --target web --dev
 	@echo "✅ Development build complete!"
 
@@ -64,7 +66,7 @@ check:
 	@echo "✅ Code check complete!"
 
 # Run tests
-test:
+test: build
 	@echo "🧪 Running tests..."
 	cargo test
 	@echo "✅ Tests complete!"
@@ -94,10 +96,16 @@ test-wasm-chrome:
 test-all: test test-wasm-all-browsers
 
 # Run clippy linting
-lint:
+lint: build
 	@echo "🔍 Running clippy linting..."
 	cargo clippy -- -D warnings
 	@echo "✅ Linting complete!"
+
+# Generate code coverage report
+coverage: build
+	@echo "📈 Generating coverage report..."
+	cargo llvm-cov --html
+	@echo "✅ Coverage report generated!"
 
 # Format code
 format:

@@ -35,3 +35,4 @@ gloo-file = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+cargo-llvm-cov = "0.6"

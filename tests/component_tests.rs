@@ -103,6 +103,7 @@ fn test_generate_txt_includes_map_links() {
 }
 
 #[wasm_bindgen_test]
+#[allow(dead_code)]
 async fn test_unsupported_file_error() {
     use image_metadata_extractor::exif::process_file;
     use js_sys::{Array, Uint8Array};
@@ -110,10 +111,10 @@ async fn test_unsupported_file_error() {
 
     let bytes = Uint8Array::new_with_length(4);
     bytes.copy_from(&[1, 2, 3, 4]);
-    let mut parts = Array::new();
+    let parts = Array::new();
     parts.push(&bytes.buffer());
-    let mut bag = web_sys::FilePropertyBag::new();
-    bag.type_("application/octet-stream");
+    let bag = web_sys::FilePropertyBag::new();
+    bag.set_type("application/octet-stream");
     let file = File::new_with_u8_array_sequence_and_options(&parts, "test.bin", &bag).unwrap();
 
     let result = process_file(file).await;
