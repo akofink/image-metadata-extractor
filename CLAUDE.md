@@ -15,7 +15,7 @@ For consistent code quality, install git pre-commit hooks:
 make setup-hooks
 ```
 
-This installs a git hook that automatically runs `make check`, `make format`, and `make lint` on every commit, ensuring code quality and consistent formatting. The hooks will prevent commits if any checks fail.
+This installs a git hook that automatically runs `make check`, `make test`, `make format`, and `make lint` on every commit, ensuring code quality and consistent formatting. The hooks will prevent commits if any checks fail.
 
 ### Makefile Commands (Recommended)
 - **Default build**: `make` or `make build`
@@ -24,6 +24,8 @@ This installs a git hook that automatically runs `make check`, `make format`, an
 - **Setup hooks**: `make setup-hooks`
 - **Check code**: `make check`
 - **Run tests**: `make test`
+- **Run WebAssembly tests**: `make test-wasm`
+- **Run all tests**: `make test-all`
 - **Format code**: `make format`
 - **Lint code**: `make lint`
 - **Clean artifacts**: `make clean`
@@ -94,6 +96,31 @@ The application uses a modern component-based architecture for maintainability a
 - **Blob API**: Dynamic file generation for downloads
 - **Local Storage**: No data persistence (privacy-first design)
 - **Responsive Design**: Mobile-optimized layouts and interactions
+
+## Testing
+
+### Testing Framework
+The project uses `wasm-bindgen-test` for WebAssembly component testing:
+- **Unit Tests**: Component logic and state management
+- **Integration Tests**: Component interactions and data flow  
+- **Regression Tests**: Prevent infinite render loops and side effect bugs
+
+### Running Tests
+- **Standard Rust tests**: `make test` or `cargo test`
+- **WebAssembly tests**: `make test-wasm` (runs in browser via wasm-pack)
+- **All tests**: `make test-all` (combines both test suites)
+
+### Test Categories
+- **Component Tests**: FileUpload component render loop prevention
+- **Callback Tests**: Proper use_effect_with patterns and one-time setup
+- **Lifecycle Tests**: Memory safety and component creation/destruction
+- **Props Tests**: Component interface and equality implementations
+
+### Pre-commit Testing
+The git hooks automatically run tests on every commit:
+```bash
+make check && make test && make format && make lint
+```
 
 ## Build Output
 The build process generates the `pkg/` directory containing:

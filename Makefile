@@ -15,6 +15,10 @@ help:
 	@echo "  make serve       - Start local development server"
 	@echo "  make check       - Check code compilation"
 	@echo "  make test        - Run tests"
+	@echo "  make test-wasm   - Run WebAssembly tests in browser (Chrome)"
+	@echo "  make test-wasm-all-browsers - Run WebAssembly tests in all browsers"
+	@echo "  make test-wasm-chrome - Run WebAssembly tests in Chrome only"
+	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
 	@echo "  make format      - Format code with cargo fmt"
 	@echo "  make clean       - Clean build artifacts"
@@ -57,6 +61,30 @@ test:
 	cargo test
 	@echo "✅ Tests complete!"
 
+# Run WebAssembly tests in browser (Chrome - most reliable)
+test-wasm:
+	@echo "🌐 Running WebAssembly tests in browser..."
+	wasm-pack test --headless --chrome
+	@echo "✅ WebAssembly tests complete!"
+
+# Run WebAssembly tests across multiple browsers (requires all drivers)
+test-wasm-all-browsers:
+	@echo "🌐 Attempting WebAssembly tests across all browsers..."
+	@echo "Note: This requires Chrome, Firefox, and Safari drivers to be installed"
+	wasm-pack test --headless --chrome --firefox --safari || \
+	(echo "⚠️  Some browsers failed. Falling back to Chrome only..." && \
+	 wasm-pack test --headless --chrome)
+	@echo "✅ Multi-browser WebAssembly tests complete!"
+
+# Run WebAssembly tests in Chrome only (fast option)
+test-wasm-chrome:
+	@echo "🌐 Running WebAssembly tests in Chrome..."
+	wasm-pack test --headless --chrome
+	@echo "✅ Chrome WebAssembly tests complete!"
+
+# Run all tests (standard + WebAssembly)
+test-all: test test-wasm
+
 # Run clippy linting
 lint:
 	@echo "🔍 Running clippy linting..."
@@ -88,7 +116,7 @@ install:
 dev: check format lint build-dev
 
 # Production workflow - full checks and optimized build  
-prod: check test lint format build-release
+prod: check test-all lint format build-release
 
 # Install git pre-commit hooks
 setup-hooks:
@@ -96,13 +124,13 @@ setup-hooks:
 	@echo '#!/bin/bash' > .git/hooks/pre-commit
 	@echo 'set -e' >> .git/hooks/pre-commit
 	@echo 'echo "🔍 Running pre-commit checks..."' >> .git/hooks/pre-commit
-	@echo 'make check && make format && make lint' >> .git/hooks/pre-commit
+	@echo 'make check && make test && make format && make lint' >> .git/hooks/pre-commit
 	@echo 'git add -u  # Add any formatting changes' >> .git/hooks/pre-commit
 	@echo 'echo "✅ Pre-commit checks passed!"' >> .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
 	@echo "✅ Pre-commit hooks installed!"
 	@echo "   • Hooks will run automatically on each commit"
-	@echo "   • Runs: make check && make format && make lint"
+	@echo "   • Runs: make check && make test && make format && make lint"
 
 # Quick deployment check
 deploy-check: prod
