@@ -8,22 +8,35 @@ This is a Rust-based image metadata extraction tool that runs entirely in the br
 
 ## Development Commands
 
-### Build Commands
+### Makefile Commands (Recommended)
+- **Default build**: `make` or `make build`
+- **Production build**: `make build-release`
+- **Start dev server**: `make serve`
+- **Check code**: `make check`
+- **Run tests**: `make test`
+- **Format code**: `make format`
+- **Lint code**: `make lint`
+- **Clean artifacts**: `make clean`
+- **Full dev workflow**: `make dev` (check + format + lint + build)
+- **Production workflow**: `make prod` (check + test + lint + format + build-release)
+- **Show all commands**: `make help`
+
+### Direct Commands (Alternative)
 - **Development build**: `wasm-pack build --target web --dev`
 - **Production build**: `wasm-pack build --target web --release`
 - **Check code**: `cargo check`
 - **Clean build artifacts**: `cargo clean`
-
-### Code Quality
 - **Run tests**: `cargo test`
 - **Format code**: `cargo fmt`
 - **Lint code**: `cargo clippy`
 
 ### Local Development Server
-Choose one of these options to serve the application locally:
-- **Node.js (recommended)**: `npx -y serve -s . -p 8000`
-- **Python**: `python -m http.server 8000`
-- **Rust**: `cargo install basic-http-server && basic-http-server -a 0.0.0.0:8000`
+The Makefile automatically detects available servers:
+- **Using Makefile**: `make serve` (tries npx, python3, python in order)
+- **Manual options**:
+  - **Node.js**: `npx -y serve -s . -p 8000`
+  - **Python**: `python -m http.server 8000`
+  - **Rust**: `cargo install basic-http-server && basic-http-server -a 0.0.0.0:8000`
 
 After starting the server, open `http://localhost:8000` in your browser.
 

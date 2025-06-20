@@ -1,5 +1,6 @@
 use crate::exif::process_file;
 use crate::export::{generate_csv, generate_txt};
+use crate::image_cleaner::{create_cleaned_image, download_cleaned_image};
 use crate::metadata_info::{get_metadata_explanation, get_metadata_category};
 use crate::types::ImageData;
 use crate::utils::{download_file, format_file_size};
@@ -15,6 +16,7 @@ pub fn app() -> Html {
     let include_basic_info = use_state(|| true);
     let include_gps = use_state(|| true);
     let show_explanations = use_state(|| false);
+    let image_quality = use_state(|| 0.9); // JPEG quality for cleaned images
 
     let on_file_change = {
         let image_data = image_data.clone();
@@ -91,6 +93,26 @@ pub fn app() -> Html {
                 let filtered_data = data.filter_metadata(&*selected_metadata, *include_basic_info, *include_gps);
                 let txt = generate_txt(&filtered_data);
                 download_file(&txt, &format!("{}_filtered_metadata.txt", data.name), "text/plain");
+            }
+        })
+    };
+
+    let download_cleaned_image_cb = {
+        let image_data = image_data.clone();
+        let image_quality = image_quality.clone();
+        Callback::from(move |_| {
+            if let Some(ref data) = *image_data {
+                let data_url = data.data_url.clone();
+                let filename = data.name.clone();
+                let quality = *image_quality;
+                
+                wasm_bindgen_futures::spawn_local(async move {
+                    if let Ok((cleaned_data_url, cleaned_filename)) = 
+                        create_cleaned_image(&data_url, &filename, quality).await 
+                    {
+                        download_cleaned_image(&cleaned_data_url, &cleaned_filename);
+                    }
+                });
             }
         })
     };
@@ -269,8 +291,51 @@ pub fn app() -> Html {
                                 }
                             }
 
+                            <div style="background: #d1ecf1; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #bee5eb;">
+                                <h3>{"🖼️ Download Cleaned Image"}</h3>
+                                <p style="margin-bottom: 15px; color: #0c5460;">{"Download your image with all metadata removed for privacy:"}</p>
+                                
+                                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 5px;">
+                                            {"JPEG Quality:"}
+                                            <input 
+                                                type="range"
+                                                min="0.3"
+                                                max="1.0"
+                                                step="0.1"
+                                                value={image_quality.to_string()}
+                                                oninput={{
+                                                    let image_quality = image_quality.clone();
+                                                    Callback::from(move |e: web_sys::InputEvent| {
+                                                        let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                                        if let Ok(val) = input.value().parse::<f64>() {
+                                                            image_quality.set(val);
+                                                        }
+                                                    })
+                                                }}
+                                                style="margin: 0 5px;"
+                                            />
+                                            <span style="font-size: 12px; color: #666;">
+                                                {format!("{}%", (*image_quality * 100.0) as u8)}
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                                        {"Removes ALL metadata including GPS, camera info, and EXIF data"}
+                                    </div>
+                                </div>
+                                
+                                <button
+                                    onclick={download_cleaned_image_cb}
+                                    style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;"
+                                >
+                                    {"🧹 Download Privacy-Safe Image"}
+                                </button>
+                            </div>
+
                             <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #ffeaa7;">
-                                <h3>{"Export Metadata"}</h3>
+                                <h3>{"📊 Export Metadata"}</h3>
                                 <p style="margin-bottom: 15px; color: #856404;">{"Download selected metadata in your preferred format:"}</p>
                                 
                                 <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">

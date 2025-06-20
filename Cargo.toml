@@ -16,7 +16,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 yew = { version = "0.21", features = ["csr"] }
-web-sys = { version = "0.3", features = ["HtmlAnchorElement", "HtmlElement", "Element", "CssStyleDeclaration", "Blob", "BlobPropertyBag", "Url", "Document", "Window"] }
+web-sys = { version = "0.3", features = [
+    "HtmlAnchorElement", "HtmlElement", "Element", "CssStyleDeclaration", 
+    "Blob", "BlobPropertyBag", "Url", "Document", "Window",
+    "HtmlCanvasElement", "CanvasRenderingContext2d", "HtmlImageElement",
+    "InputEvent"
+] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
