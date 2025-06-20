@@ -9,48 +9,45 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::File;
 
-pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
-    let name = file.name();
-    let size = file.size() as u64;
-
-    // Create data URL for image display
+pub async fn file_bytes(file: &File) -> Result<Vec<u8>, JsValue> {
     let array_buffer = JsFuture::from(file.array_buffer()).await?;
     let uint8_array = Uint8Array::new(&array_buffer);
-    let bytes = uint8_array.to_vec();
+    Ok(uint8_array.to_vec())
+}
 
-    // Determine MIME type from file or guess from extension/content
-    let mut mime_type = file.type_();
-    if mime_type.is_empty() {
-        // Try image format detection first
-        mime_type = match image::guess_format(&bytes) {
-            Ok(image::ImageFormat::Png) => "image/png".into(),
-            Ok(image::ImageFormat::Jpeg) => "image/jpeg".into(),
-            Ok(image::ImageFormat::Gif) => "image/gif".into(),
-            Ok(image::ImageFormat::WebP) => "image/webp".into(),
-            _ => {
-                // Guess from file extension for non-image files
-                let name_lower = name.to_lowercase();
-                if name_lower.ends_with(".pdf") {
-                    "application/pdf".into()
-                } else if name_lower.ends_with(".svg") {
-                    "image/svg+xml".into()
-                } else if name_lower.ends_with(".tiff") || name_lower.ends_with(".tif") {
-                    "image/tiff".into()
-                } else if name_lower.ends_with(".heif") || name_lower.ends_with(".heic") {
-                    "image/heif".into()
-                } else if name_lower.ends_with(".avif") {
-                    "image/avif".into()
-                } else if name_lower.ends_with(".jxl") {
-                    "image/jxl".into()
-                } else {
-                    "application/octet-stream".into()
-                }
-            }
-        };
+pub fn determine_mime_type(name: &str, file_type: &str, bytes: &[u8]) -> String {
+    if !file_type.is_empty() {
+        return file_type.to_string();
     }
 
-    // Verify that we recognize this mime type
-    let supported_types = [
+    match image::guess_format(bytes) {
+        Ok(image::ImageFormat::Png) => "image/png".into(),
+        Ok(image::ImageFormat::Jpeg) => "image/jpeg".into(),
+        Ok(image::ImageFormat::Gif) => "image/gif".into(),
+        Ok(image::ImageFormat::WebP) => "image/webp".into(),
+        _ => {
+            let name_lower = name.to_lowercase();
+            if name_lower.ends_with(".pdf") {
+                "application/pdf".into()
+            } else if name_lower.ends_with(".svg") {
+                "image/svg+xml".into()
+            } else if name_lower.ends_with(".tiff") || name_lower.ends_with(".tif") {
+                "image/tiff".into()
+            } else if name_lower.ends_with(".heif") || name_lower.ends_with(".heic") {
+                "image/heif".into()
+            } else if name_lower.ends_with(".avif") {
+                "image/avif".into()
+            } else if name_lower.ends_with(".jxl") {
+                "image/jxl".into()
+            } else {
+                "application/octet-stream".into()
+            }
+        }
+    }
+}
+
+pub fn is_supported_mime_type(mime: &str) -> bool {
+    const SUPPORTED: &[&str] = &[
         "image/png",
         "image/jpeg",
         "image/gif",
@@ -62,30 +59,41 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
         "image/avif",
         "image/jxl",
     ];
-    if !supported_types.contains(&mime_type.as_str()) {
+    SUPPORTED.contains(&mime)
+}
+
+pub fn create_data_url(mime: &str, bytes: &[u8]) -> String {
+    format!("data:{};base64,{}", mime, base64_encode(bytes))
+}
+
+pub fn get_dimensions(mime: &str, bytes: &[u8]) -> (Option<u32>, Option<u32>) {
+    if mime.starts_with("image/") && mime != "image/svg+xml" {
+        match get_image_dimensions(bytes) {
+            Ok(dims) => (Some(dims.0), Some(dims.1)),
+            Err(_) => (None, None),
+        }
+    } else {
+        (None, None)
+    }
+}
+pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
+    let name = file.name();
+    let size = file.size() as u64;
+
+    let bytes = file_bytes(&file).await?;
+    let mime_type = determine_mime_type(&name, &file.type_(), &bytes);
+    if !is_supported_mime_type(&mime_type) {
         return Err(JsValue::from_str("Unsupported file type"));
     }
 
-    // Create data URL
-    let data_url = format!("data:{};base64,{}", mime_type, base64_encode(&bytes));
-
-    // Get dimensions (only for image files)
-    let (width, height) = if mime_type.starts_with("image/") && mime_type != "image/svg+xml" {
-        match get_image_dimensions(&bytes) {
-            Ok(dims) => (Some(dims.0), Some(dims.1)),
-            Err(_) => (None, None), // Non-image or unsupported format
-        }
-    } else {
-        (None, None) // Non-image files don't have pixel dimensions
-    };
-
-    // Extract EXIF data
+    let data_url = create_data_url(&mime_type, &bytes);
+    let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = extract_exif_data(&bytes);
 
     Ok(ImageData {
         name,
         size,
-        mime_type: mime_type.clone(),
+        mime_type,
         data_url,
         width,
         height,
@@ -105,75 +113,79 @@ fn get_image_dimensions(bytes: &[u8]) -> Result<(u32, u32), JsValue> {
     }
 }
 
-fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64)>) {
+pub fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64)>) {
     let mut exif_map = HashMap::new();
     let mut gps_coords = None;
 
-    // Try to parse EXIF data
     if let Ok(exifreader) = Reader::new().read_from_container(&mut Cursor::new(bytes)) {
         for f in exifreader.fields() {
             let tag_name = format!("{}", f.tag);
             let value = format!("{}", f.display_value().with_unit(&exifreader));
-
-            // Store the EXIF field
-            exif_map.insert(tag_name.clone(), value);
-
-            // Check for GPS coordinates
-            match f.tag {
-                Tag::GPSLatitude => {
-                    if let Some(lat) = parse_gps_coordinate(f, &exifreader) {
-                        if let Some((_, lon)) = gps_coords {
-                            gps_coords = Some((lat, lon));
-                        } else {
-                            gps_coords = Some((lat, 0.0));
-                        }
-                    }
-                }
-                Tag::GPSLongitude => {
-                    if let Some(lon) = parse_gps_coordinate(f, &exifreader) {
-                        if let Some((lat, _)) = gps_coords {
-                            gps_coords = Some((lat, lon));
-                        } else {
-                            gps_coords = Some((0.0, lon));
-                        }
-                    }
-                }
-                _ => {}
-            }
+            exif_map.insert(tag_name, value);
+            update_gps_coords(&mut gps_coords, f, &exifreader);
         }
 
-        // Apply GPS reference directions
-        if let Some((mut lat, mut lon)) = gps_coords {
-            // Check latitude reference (N/S)
-            if let Some(lat_ref_field) = exifreader.get_field(Tag::GPSLatitudeRef, In::PRIMARY) {
-                if let Value::Ascii(ref vec) = lat_ref_field.value {
-                    if let Some(lat_ref) = vec.first() {
-                        if !lat_ref.is_empty() && lat_ref[0] == b'S' {
-                            lat = -lat;
-                        }
-                    }
-                }
-            }
-
-            // Check longitude reference (E/W)
-            if let Some(lon_ref_field) = exifreader.get_field(Tag::GPSLongitudeRef, In::PRIMARY) {
-                if let Value::Ascii(ref vec) = lon_ref_field.value {
-                    if let Some(lon_ref) = vec.first() {
-                        if !lon_ref.is_empty() && lon_ref[0] == b'W' {
-                            lon = -lon;
-                        }
-                    }
-                }
-            }
-
-            gps_coords = Some((lat, lon));
+        if let Some(mut coords) = gps_coords {
+            apply_gps_ref(&exifreader, &mut coords);
+            gps_coords = Some(coords);
         }
     }
 
     (exif_map, gps_coords)
 }
 
-fn parse_gps_coordinate(field: &Field, _exifreader: &Exif) -> Option<f64> {
+fn update_gps_coords(coords: &mut Option<(f64, f64)>, field: &Field, reader: &Exif) {
+    match field.tag {
+        Tag::GPSLatitude => {
+            if let Some(lat) = parse_gps_coordinate(field, reader) {
+                if let Some((_, lon)) = *coords {
+                    *coords = Some((lat, lon));
+                } else {
+                    *coords = Some((lat, 0.0));
+                }
+            }
+        }
+        Tag::GPSLongitude => {
+            if let Some(lon) = parse_gps_coordinate(field, reader) {
+                if let Some((lat, _)) = *coords {
+                    *coords = Some((lat, lon));
+                } else {
+                    *coords = Some((0.0, lon));
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn apply_gps_ref(exif: &Exif, coords: &mut (f64, f64)) {
+    let (lat_ref, lon_ref) = (
+        exif.get_field(Tag::GPSLatitudeRef, In::PRIMARY),
+        exif.get_field(Tag::GPSLongitudeRef, In::PRIMARY),
+    );
+
+    if let Some(field) = lat_ref {
+        if let Value::Ascii(ref vec) = field.value {
+            if let Some(val) = vec.first() {
+                if !val.is_empty() && val[0] == b'S' {
+                    coords.0 = -coords.0;
+                }
+            }
+        }
+    }
+
+    if let Some(field) = lon_ref {
+        if let Value::Ascii(ref vec) = field.value {
+            if let Some(val) = vec.first() {
+                if !val.is_empty() && val[0] == b'W' {
+                    coords.1 = -coords.1;
+                }
+            }
+        }
+    }
+}
+
+pub fn parse_gps_coordinate(field: &Field, _exifreader: &Exif) -> Option<f64> {
     if let Value::Rational(ref rationals) = field.value {
         if rationals.len() >= 3 {
             let degrees = rationals[0].to_f64();
