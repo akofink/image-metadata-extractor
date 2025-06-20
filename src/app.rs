@@ -204,6 +204,13 @@ pub fn app() -> Html {
                                         let category = get_metadata_category(key);
                                         categorized.entry(category).or_insert_with(Vec::new).push((key, value));
                                     }
+                                    
+                                    // Sort categories alphabetically and items within each category
+                                    let mut sorted_categories: Vec<_> = categorized.into_iter().collect();
+                                    sorted_categories.sort_by_key(|(category, _)| *category);
+                                    for (_, items) in &mut sorted_categories {
+                                        items.sort_by_key(|(key, _)| key.as_str());
+                                    }
 
                                     html! {
                                         <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
@@ -222,7 +229,7 @@ pub fn app() -> Html {
                                             
                                             <div style="max-height: 400px; overflow-y: auto;">
                                                 {
-                                                    categorized.iter().map(|(category, items)| {
+                                                    sorted_categories.iter().map(|(category, items)| {
                                                         html! {
                                                             <div key={*category} style="margin-bottom: 20px;">
                                                                 <h4 style="margin: 0 0 10px 0; color: #555; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
