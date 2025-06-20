@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://image-metadata-extractor.com/sitemap.xml

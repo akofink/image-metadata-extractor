@@ -13,14 +13,15 @@
     
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Metadata Extractor - Free EXIF Data Viewer & GPS Coordinates</title>
+    <title>Image Metadata Extractor | View & Remove EXIF Data Online</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Free browser-based tool to extract EXIF metadata, GPS coordinates, and technical information from images. Privacy-focused - no uploads to servers. Export in JSON, CSV, or text format.">
-    <meta name="keywords" content="EXIF data, image metadata, GPS coordinates, photo information, metadata extractor, image analysis, EXIF viewer, photo data">
+    <meta name="description" content="Open-source tool to view and remove EXIF metadata from images. Works entirely in your browser with full privacy. Export cleaned photos or metadata in JSON, CSV or text.">
+    <meta name="keywords" content="EXIF data, remove metadata, image metadata viewer, photo EXIF cleaner, GPS coordinates, metadata extractor, image analysis">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Image Metadata Extractor">
     <link rel="canonical" href="https://image-metadata-extractor.com">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -84,6 +85,14 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+        .lead {
+            text-align: center;
+            font-size: 1.1em;
+        }
         .upload-new-button:hover {
             background-color: #0056b3 !important;
         }
@@ -91,7 +100,12 @@
 </head>
 <body>
     <div class="container">
+        <h1>Image Metadata Extractor</h1>
+        <p class="lead">Free EXIF viewer and metadata cleaner that runs entirely in your browser.</p>
         <div id="app"></div>
+        <noscript>
+            <p>This application requires JavaScript to run. Enable it to inspect and remove EXIF metadata from your photos.</p>
+        </noscript>
     </div>
     
     <script type="module">
