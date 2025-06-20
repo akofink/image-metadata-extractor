@@ -1,0 +1,334 @@
+use little_exif::metadata::Metadata;
+use little_exif::filetype::FileExtension;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
+
+pub struct BinaryCleaner;
+
+impl BinaryCleaner {
+    /// Remove metadata from image file using direct binary manipulation
+    /// This preserves original image quality while stripping all metadata
+    pub fn clean_metadata(file_data: &[u8], file_extension: &str) -> Result<Vec<u8>, String> {
+        let mut cleaned_data = file_data.to_vec();
+        
+        match file_extension.to_lowercase().as_str() {
+            "jpg" | "jpeg" => Self::clean_jpeg_metadata(&mut cleaned_data),
+            "png" => Self::clean_png_metadata(&mut cleaned_data),
+            "webp" => Self::clean_webp_metadata(&mut cleaned_data),
+            "gif" => Self::clean_gif_metadata(&mut cleaned_data),
+            _ => Err(format!("Unsupported format for binary cleaning: {}", file_extension)),
+        }
+    }
+
+    /// Clean JPEG metadata by removing application segments (APP0-APP15)
+    fn clean_jpeg_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        // Use little_exif to clear common metadata segments
+        match Metadata::clear_app12_segment(data, FileExtension::JPEG) {
+            Ok(_) => console_log!("Cleared APP12 segment"),
+            Err(e) => console_log!("APP12 clear warning: {:?}", e),
+        }
+        
+        match Metadata::clear_app13_segment(data, FileExtension::JPEG) {
+            Ok(_) => console_log!("Cleared APP13 segment"),
+            Err(e) => console_log!("APP13 clear warning: {:?}", e),
+        }
+
+        // Manual removal of common EXIF and metadata segments
+        Self::remove_jpeg_app_segments(data)
+    }
+
+    /// Remove JPEG application segments manually for comprehensive metadata removal
+    fn remove_jpeg_app_segments(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        if data.len() < 4 {
+            return Err("Invalid JPEG file: too short".to_string());
+        }
+
+        // Verify JPEG SOI marker (0xFFD8)
+        if data[0] != 0xFF || data[1] != 0xD8 {
+            return Err("Invalid JPEG file: missing SOI marker".to_string());
+        }
+
+        let mut cleaned = vec![0xFF, 0xD8]; // Keep SOI marker
+        let mut i = 2;
+
+        while i < data.len() - 1 {
+            if data[i] != 0xFF {
+                // Not a marker, copy remaining data (we've hit image data)
+                cleaned.extend_from_slice(&data[i..]);
+                break;
+            }
+
+            let marker = data[i + 1];
+            
+            match marker {
+                // Start of Scan - image data follows, copy rest of file
+                0xDA => {
+                    cleaned.extend_from_slice(&data[i..]);
+                    break;
+                }
+                // Application segments (APP0-APP15) - remove these
+                0xE0..=0xEF => {
+                    if i + 3 >= data.len() {
+                        return Err("Truncated JPEG file".to_string());
+                    }
+                    // Get segment length (big-endian)
+                    let length = ((data[i + 2] as u16) << 8) | (data[i + 3] as u16);
+                    if length < 2 {
+                        return Err("Invalid segment length".to_string());
+                    }
+                    // Skip entire segment (marker + length + data)
+                    i += 2 + length as usize;
+                    console_log!("Removed APP{} segment", marker - 0xE0);
+                }
+                // Keep other markers (quantization tables, Huffman tables, etc.)
+                _ => {
+                    if i + 3 >= data.len() {
+                        cleaned.extend_from_slice(&data[i..]);
+                        break;
+                    }
+                    let length = ((data[i + 2] as u16) << 8) | (data[i + 3] as u16);
+                    if length < 2 || i + 2 + length as usize > data.len() {
+                        cleaned.extend_from_slice(&data[i..]);
+                        break;
+                    }
+                    cleaned.extend_from_slice(&data[i..i + 2 + length as usize]);
+                    i += 2 + length as usize;
+                }
+            }
+        }
+
+        Ok(cleaned)
+    }
+
+    /// Clean PNG metadata by removing ancillary chunks
+    fn clean_png_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        if data.len() < 8 {
+            return Err("Invalid PNG file: too short".to_string());
+        }
+
+        // Verify PNG signature
+        let png_signature = &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        if data[..8] != *png_signature {
+            return Err("Invalid PNG file: missing signature".to_string());
+        }
+
+        let mut cleaned = Vec::new();
+        cleaned.extend_from_slice(&data[0..8]); // Keep PNG signature
+
+        let mut i = 8;
+        while i < data.len() {
+            if i + 8 > data.len() {
+                break;
+            }
+
+            // Read chunk length (big-endian)
+            let length = u32::from_be_bytes([data[i], data[i + 1], data[i + 2], data[i + 3]]);
+            let chunk_type = &data[i + 4..i + 8];
+            let chunk_name = String::from_utf8_lossy(chunk_type);
+
+            let total_chunk_size = 12 + length as usize; // 4 bytes length + 4 bytes type + data + 4 bytes CRC
+            if i + total_chunk_size > data.len() {
+                break;
+            }
+
+            match chunk_name.as_ref() {
+                // Critical chunks - must keep
+                "IHDR" | "PLTE" | "IDAT" | "IEND" => {
+                    cleaned.extend_from_slice(&data[i..i + total_chunk_size]);
+                }
+                // Metadata chunks - remove these
+                "tEXt" | "zTXt" | "iTXt" | "tIME" | "pHYs" | "gAMA" | "cHRM" | "sRGB" | "iCCP" => {
+                    console_log!("Removed PNG {} chunk", chunk_name);
+                }
+                // Other ancillary chunks - keep for safety
+                _ => {
+                    cleaned.extend_from_slice(&data[i..i + total_chunk_size]);
+                }
+            }
+
+            i += total_chunk_size;
+        }
+
+        Ok(cleaned)
+    }
+
+    /// Clean WebP metadata by removing metadata chunks from RIFF container
+    fn clean_webp_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        if data.len() < 12 {
+            return Err("Invalid WebP file: too short".to_string());
+        }
+
+        // Verify RIFF header and WebP signature
+        if &data[0..4] != b"RIFF" || &data[8..12] != b"WEBP" {
+            return Err("Invalid WebP file: missing RIFF/WEBP signature".to_string());
+        }
+
+        let mut cleaned = Vec::new();
+        cleaned.extend_from_slice(&data[0..12]); // Keep RIFF header and WebP signature
+
+        let mut i = 12;
+        let mut new_file_size = 4u32; // Start with "WEBP" in size calculation
+
+        while i < data.len() {
+            if i + 8 > data.len() {
+                break;
+            }
+
+            let chunk_id = &data[i..i + 4];
+            let chunk_size = u32::from_le_bytes([data[i + 4], data[i + 5], data[i + 6], data[i + 7]]);
+            let chunk_name = String::from_utf8_lossy(chunk_id);
+            
+            // Ensure chunk size is reasonable
+            let padded_size = if chunk_size % 2 == 1 { chunk_size + 1 } else { chunk_size };
+            let total_chunk_size = 8 + padded_size as usize;
+            
+            if i + total_chunk_size > data.len() {
+                break;
+            }
+
+            match chunk_name.as_ref() {
+                // Image data chunks - keep
+                "VP8 " | "VP8L" | "VP8X" | "ANIM" | "ANMF" => {
+                    cleaned.extend_from_slice(&data[i..i + total_chunk_size]);
+                    new_file_size += total_chunk_size as u32;
+                }
+                // Metadata chunks - remove
+                "EXIF" | "XMP " | "ICCP" => {
+                    console_log!("Removed WebP {} chunk", chunk_name);
+                }
+                // Unknown chunks - keep for safety
+                _ => {
+                    cleaned.extend_from_slice(&data[i..i + total_chunk_size]);
+                    new_file_size += total_chunk_size as u32;
+                }
+            }
+
+            i += total_chunk_size;
+        }
+
+        // Update RIFF file size
+        let size_bytes = new_file_size.to_le_bytes();
+        cleaned[4..8].copy_from_slice(&size_bytes);
+
+        Ok(cleaned)
+    }
+
+    /// Clean GIF metadata by removing extension blocks
+    fn clean_gif_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        if data.len() < 6 {
+            return Err("Invalid GIF file: too short".to_string());
+        }
+
+        // Verify GIF signature
+        if &data[0..3] != b"GIF" || (&data[3..6] != b"87a" && &data[3..6] != b"89a") {
+            return Err("Invalid GIF file: missing signature".to_string());
+        }
+
+        let mut cleaned = Vec::new();
+        let mut i = 0;
+
+        // Copy header (6 bytes) and logical screen descriptor (7 bytes)
+        if data.len() >= 13 {
+            cleaned.extend_from_slice(&data[0..13]);
+            i = 13;
+
+            // Handle global color table if present
+            let packed_field = data[10];
+            if packed_field & 0x80 != 0 {
+                let global_color_table_size = 2 << (packed_field & 0x07);
+                let color_table_bytes = global_color_table_size * 3;
+                if i + color_table_bytes <= data.len() {
+                    cleaned.extend_from_slice(&data[i..i + color_table_bytes]);
+                    i += color_table_bytes;
+                }
+            }
+        }
+
+        // Process data stream
+        while i < data.len() {
+            match data[i] {
+                // Extension introducer
+                0x21 => {
+                    if i + 1 >= data.len() {
+                        break;
+                    }
+                    let label = data[i + 1];
+                    match label {
+                        // Application extension (may contain metadata like XMP)
+                        0xFF => {
+                            console_log!("Removed GIF application extension");
+                            i += 2;
+                            // Skip sub-blocks
+                            while i < data.len() {
+                                let block_size = data[i] as usize;
+                                if block_size == 0 {
+                                    i += 1;
+                                    break;
+                                }
+                                i += 1 + block_size;
+                                if i >= data.len() {
+                                    break;
+                                }
+                            }
+                        }
+                        // Comment extension
+                        0xFE => {
+                            console_log!("Removed GIF comment extension");
+                            i += 2;
+                            // Skip sub-blocks
+                            while i < data.len() {
+                                let block_size = data[i] as usize;
+                                if block_size == 0 {
+                                    i += 1;
+                                    break;
+                                }
+                                i += 1 + block_size;
+                                if i >= data.len() {
+                                    break;
+                                }
+                            }
+                        }
+                        // Keep other extensions (graphics control, plain text)
+                        _ => {
+                            let start = i;
+                            i += 2;
+                            // Copy extension including sub-blocks
+                            while i < data.len() {
+                                let block_size = data[i] as usize;
+                                i += 1;
+                                if block_size == 0 {
+                                    break;
+                                }
+                                i += block_size;
+                                if i >= data.len() {
+                                    break;
+                                }
+                            }
+                            cleaned.extend_from_slice(&data[start..i]);
+                        }
+                    }
+                }
+                // Image separator or trailer
+                0x2C | 0x3B => {
+                    cleaned.extend_from_slice(&data[i..]);
+                    break;
+                }
+                _ => {
+                    cleaned.push(data[i]);
+                    i += 1;
+                }
+            }
+        }
+
+        Ok(cleaned)
+    }
+}

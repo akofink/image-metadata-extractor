@@ -27,6 +27,8 @@ wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
 image = { version = "0.24", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 kamadak-exif = "0.5"
+little_exif = "0.6"
+base64 = "0.21"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 gloo-file = "0.3"

@@ -1,4 +1,5 @@
 mod app;
+mod binary_cleaner;
 mod components;
 mod exif;
 mod export;

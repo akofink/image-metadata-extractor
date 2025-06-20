@@ -1,5 +1,8 @@
+use crate::binary_cleaner::BinaryCleaner;
 use crate::image_cleaner::{create_cleaned_image, download_cleaned_image};
 use crate::types::ImageData;
+use crate::utils::download_binary_file;
+use base64::{Engine as _, engine::general_purpose};
 use web_sys::{Event, HtmlSelectElement};
 use yew::prelude::*;
 
@@ -51,6 +54,36 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
             let format = (*selected_format).clone();
 
             wasm_bindgen_futures::spawn_local(async move {
+                // Try binary cleaning first
+                if let Some(file_extension) = filename.split('.').last() {
+                    // Convert data URL to bytes
+                    if let Some(base64_data) = data_url.strip_prefix("data:image/") {
+                        if let Some(comma_pos) = base64_data.find(',') {
+                            let base64_content = &base64_data[comma_pos + 1..];
+                            if let Ok(file_bytes) = general_purpose::STANDARD.decode(base64_content) {
+                                match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
+                                    Ok(cleaned_bytes) => {
+                                        // Create cleaned filename
+                                        let cleaned_filename = filename
+                                            .strip_suffix(&format!(".{}", file_extension))
+                                            .unwrap_or(&filename)
+                                            .to_string() + "_cleaned." + file_extension;
+                                        
+                                        // Download cleaned file
+                                        let mime_type = format!("image/{}", file_extension);
+                                        download_binary_file(&cleaned_bytes, &cleaned_filename, &mime_type);
+                                        return;
+                                    }
+                                    Err(e) => {
+                                        web_sys::console::log_1(&format!("Binary cleaning failed: {}, falling back to Canvas", e).into());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Fallback to Canvas-based cleaning
                 if let Ok((cleaned_data_url, cleaned_filename)) =
                     create_cleaned_image(&data_url, &filename, quality, &format).await
                 {
