@@ -15,7 +15,7 @@ For consistent code quality, install git pre-commit hooks:
 make setup-hooks
 ```
 
-This installs a git hook that automatically runs `make check`, `make format`, and `make lint` on every commit, ensuring code quality and consistent formatting.
+This installs a git hook that automatically runs `make check`, `make format`, and `make lint` on every commit, ensuring code quality and consistent formatting. The hooks will prevent commits if any checks fail.
 
 ### Makefile Commands (Recommended)
 - **Default build**: `make` or `make build`
