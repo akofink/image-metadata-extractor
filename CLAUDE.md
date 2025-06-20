@@ -8,6 +8,21 @@ This is a Rust-based image metadata extraction tool that runs entirely in the br
 
 ## Development Commands
 
+### Pre-commit Hooks (Recommended Setup)
+For consistent code quality, install pre-commit hooks:
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+
+# Install hooks for this repository
+pre-commit install
+
+# Run hooks manually (optional)
+pre-commit run --all-files
+```
+
+Once installed, the hooks will automatically run `make check`, `make format`, and `make lint` on every commit.
+
 ### Makefile Commands (Recommended)
 - **Default build**: `make` or `make build`
 - **Production build**: `make build-release`
