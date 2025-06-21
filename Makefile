@@ -16,6 +16,7 @@ help:
 	@echo "  make serve       - Start local development server"
 	@echo "  make check       - Check code compilation (fails on warnings)"
 	@echo "  make check-warnings - Comprehensive warning check (code + tests)"
+	@echo "  make check-test-separation - Ensure tests are separated from app code"
 	@echo "  make test        - Run tests (fails on warnings)"
 	@echo "  make test-wasm   - Run WebAssembly tests in browser (Chrome)"
 	@echo "  make test-wasm-all-browsers - Run WebAssembly tests in all browsers"
@@ -79,6 +80,39 @@ check-warnings:
 	RUSTFLAGS="-D warnings" cargo check
 	RUSTFLAGS="-D warnings" cargo check --tests
 	@echo "✅ All warning checks passed!"
+
+# Check that tests are properly separated from application code
+check-test-separation:
+	@echo "🔍 Checking test organization..."
+	@echo "  • Checking for test functions in src/ directory..."
+	@if find src -name "*.rs" -exec grep -l "#\[test\]" {} \; | head -1 | grep -q .; then \
+		echo "❌ Found test functions in src/ directory:"; \
+		find src -name "*.rs" -exec grep -l "#\[test\]" {} \; | sed 's/^/    /'; \
+		echo "   Please move tests to tests/ directory"; \
+		exit 1; \
+	fi
+	@echo "  • Checking for test modules in src/ directory..."
+	@if find src -name "*.rs" -exec grep -l "#\[cfg(test)\]" {} \; | head -1 | grep -q .; then \
+		echo "❌ Found test modules in src/ directory:"; \
+		find src -name "*.rs" -exec grep -l "#\[cfg(test)\]" {} \; | sed 's/^/    /'; \
+		echo "   Please move tests to tests/ directory"; \
+		exit 1; \
+	fi
+	@echo "  • Checking for test imports in src/ directory..."
+	@if find src -name "*.rs" -exec grep -l "use.*test" {} \; | head -1 | grep -q .; then \
+		echo "⚠️  Found potential test imports in src/ directory:"; \
+		find src -name "*.rs" -exec grep -l "use.*test" {} \; | sed 's/^/    /'; \
+		echo "   Please review these imports"; \
+	fi
+	@echo "  • Checking that tests/ directory exists and has tests..."
+	@if [ ! -d "tests" ]; then \
+		echo "⚠️  No tests/ directory found"; \
+	elif [ -z "$$(find tests -name "*.rs" 2>/dev/null)" ]; then \
+		echo "⚠️  No test files found in tests/ directory"; \
+	else \
+		echo "  ✅ Found $$(find tests -name "*.rs" | wc -l | tr -d ' ') test files in tests/ directory"; \
+	fi
+	@echo "✅ Test separation check complete!"
 
 # Run tests
 test: build
