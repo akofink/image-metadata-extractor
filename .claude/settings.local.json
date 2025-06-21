@@ -9,7 +9,8 @@
       "Bash(mkdir:*)",
       "Bash(git rm:*)",
       "Bash(git mv:*)",
-      "Bash(wasm-pack test:*)"
+      "Bash(wasm-pack test:*)",
+      "Bash(cargo test)"
     ],
     "deny": []
   }
