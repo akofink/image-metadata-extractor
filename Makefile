@@ -23,6 +23,7 @@ help:
 	@echo "  make test-wasm-fallback - Try Chrome, skip WASM if failed"
 	@echo "  make test-ci     - Run regular tests only (skip WASM for CI)"
 	@echo "  make test-auto   - Auto-detect Chrome and run appropriate tests"
+	@echo "  make test-debug  - Debug Chrome detection (troubleshooting)"
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
 	@echo "  make coverage    - Generate code coverage report"
@@ -119,14 +120,36 @@ test-ci: test
 
 # Check if Chrome is available and run appropriate tests
 test-auto:
-	@if command -v google-chrome >/dev/null 2>&1 && command -v chromedriver >/dev/null 2>&1; then \
-		echo "🌐 Chrome and ChromeDriver detected, running full test suite..."; \
+	@echo "🔍 Detecting Chrome availability..."
+	@if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 || command -v chrome >/dev/null 2>&1; then \
+		echo "🌐 Chrome detected, running full test suite..."; \
+		echo "💡 Note: wasm-pack will download ChromeDriver automatically if needed"; \
 		$(MAKE) test test-wasm-chrome; \
 	else \
-		echo "⚠️  Chrome/ChromeDriver not available, running regular tests only..."; \
+		echo "⚠️  Chrome not found, running regular tests only..."; \
 		echo "💡 To run WASM tests, install Chrome with: ./scripts/install-chrome-apt.sh"; \
 		$(MAKE) test-ci; \
 	fi
+
+# Debug Chrome detection for troubleshooting
+test-debug:
+	@echo "🔍 Chrome Detection Debug:"
+	@echo "Testing Chrome binary detection:"
+	@command -v google-chrome >/dev/null 2>&1 && echo "  ✅ google-chrome found: $$(command -v google-chrome)" || echo "  ❌ google-chrome not found"
+	@command -v chromium >/dev/null 2>&1 && echo "  ✅ chromium found: $$(command -v chromium)" || echo "  ❌ chromium not found"
+	@command -v chrome >/dev/null 2>&1 && echo "  ✅ chrome found: $$(command -v chrome)" || echo "  ❌ chrome not found"
+	@echo ""
+	@echo "Testing ChromeDriver detection:"
+	@command -v chromedriver >/dev/null 2>&1 && echo "  ✅ chromedriver found: $$(command -v chromedriver)" || echo "  ❌ chromedriver not found"
+	@echo ""
+	@echo "Auto-detection result:"
+	@if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 || command -v chrome >/dev/null 2>&1; then \
+		echo "  ✅ Chrome detected - test-auto will run WASM tests"; \
+	else \
+		echo "  ❌ Chrome not detected - test-auto will skip WASM tests"; \
+	fi
+	@echo ""
+	@echo "💡 Note: wasm-pack can download ChromeDriver automatically even if not in PATH"
 
 # Run clippy linting
 lint:
