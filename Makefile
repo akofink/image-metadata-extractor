@@ -121,29 +121,43 @@ test-ci: test
 # Check if Chrome is available and run appropriate tests
 test-auto:
 	@echo "🔍 Detecting Chrome availability..."
-	@if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 || command -v chrome >/dev/null 2>&1; then \
+	@if command -v google-chrome >/dev/null 2>&1 || \
+		command -v chromium >/dev/null 2>&1 || \
+		command -v chrome >/dev/null 2>&1 || \
+		[ -d "/Applications/Google Chrome.app" ] || \
+		[ -d "/Applications/Chromium.app" ]; then \
 		echo "🌐 Chrome detected, running full test suite..."; \
 		echo "💡 Note: wasm-pack will download ChromeDriver automatically if needed"; \
 		$(MAKE) test test-wasm-chrome; \
 	else \
 		echo "⚠️  Chrome not found, running regular tests only..."; \
-		echo "💡 To run WASM tests, install Chrome with: ./scripts/install-chrome-apt.sh"; \
+		echo "💡 To run WASM tests:"; \
+		echo "   • macOS: Install Chrome from https://www.google.com/chrome/"; \
+		echo "   • Linux: Run ./scripts/install-chrome-apt.sh"; \
 		$(MAKE) test-ci; \
 	fi
 
 # Debug Chrome detection for troubleshooting
 test-debug:
 	@echo "🔍 Chrome Detection Debug:"
-	@echo "Testing Chrome binary detection:"
+	@echo "Testing Chrome binary detection (Linux/CLI):"
 	@command -v google-chrome >/dev/null 2>&1 && echo "  ✅ google-chrome found: $$(command -v google-chrome)" || echo "  ❌ google-chrome not found"
 	@command -v chromium >/dev/null 2>&1 && echo "  ✅ chromium found: $$(command -v chromium)" || echo "  ❌ chromium not found"
 	@command -v chrome >/dev/null 2>&1 && echo "  ✅ chrome found: $$(command -v chrome)" || echo "  ❌ chrome not found"
+	@echo ""
+	@echo "Testing Chrome app detection (macOS):"
+	@[ -d "/Applications/Google Chrome.app" ] && echo "  ✅ Google Chrome.app found" || echo "  ❌ Google Chrome.app not found"
+	@[ -d "/Applications/Chromium.app" ] && echo "  ✅ Chromium.app found" || echo "  ❌ Chromium.app not found"
 	@echo ""
 	@echo "Testing ChromeDriver detection:"
 	@command -v chromedriver >/dev/null 2>&1 && echo "  ✅ chromedriver found: $$(command -v chromedriver)" || echo "  ❌ chromedriver not found"
 	@echo ""
 	@echo "Auto-detection result:"
-	@if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 || command -v chrome >/dev/null 2>&1; then \
+	@if command -v google-chrome >/dev/null 2>&1 || \
+		command -v chromium >/dev/null 2>&1 || \
+		command -v chrome >/dev/null 2>&1 || \
+		[ -d "/Applications/Google Chrome.app" ] || \
+		[ -d "/Applications/Chromium.app" ]; then \
 		echo "  ✅ Chrome detected - test-auto will run WASM tests"; \
 	else \
 		echo "  ❌ Chrome not detected - test-auto will skip WASM tests"; \
