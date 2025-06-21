@@ -19,6 +19,8 @@ help:
 	@echo "  make test-wasm   - Run WebAssembly tests in browser (Chrome)"
 	@echo "  make test-wasm-all-browsers - Run WebAssembly tests in all browsers"
 	@echo "  make test-wasm-chrome - Run WebAssembly tests in Chrome only"
+	@echo "  make test-wasm-node - Run WebAssembly tests in Node.js (fallback)"
+	@echo "  make test-wasm-fallback - Try Chrome, fallback to Node.js if failed"
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
 	@echo "  make coverage    - Generate code coverage report"
@@ -90,6 +92,20 @@ test-wasm-chrome:
 	@echo "🌐 Running WebAssembly tests in Chrome..."
 	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
 	@echo "✅ Chrome WebAssembly tests complete!"
+
+# Run WebAssembly tests in Node.js (fallback for environments without Chrome)
+test-wasm-node:
+	@echo "🌐 Running WebAssembly tests in Node.js..."
+	wasm-pack test --node -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
+	@echo "✅ Node.js WebAssembly tests complete!"
+
+# Try Chrome first, fallback to Node.js if Chrome fails
+test-wasm-fallback:
+	@echo "🌐 Attempting WebAssembly tests in Chrome, falling back to Node.js..."
+	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests || \
+	(echo "⚠️  Chrome failed, trying Node.js..." && \
+	 wasm-pack test --node -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests)
+	@echo "✅ WebAssembly tests complete!"
 
 # Run all tests (standard + WebAssembly across all browsers)
 test-all: test test-wasm-all-browsers
