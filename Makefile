@@ -66,13 +66,13 @@ serve:
 # Check compilation without building
 check:
 	@echo "🔍 Checking code..."
-	cargo check
+	RUSTFLAGS="-D warnings" cargo check
 	@echo "✅ Code check complete!"
 
 # Run tests
 test: build
 	@echo "🧪 Running tests..."
-	cargo test
+	RUSTFLAGS="-D warnings" cargo test
 	@echo "✅ Tests complete!"
 
 # Run WebAssembly tests in browser (Chrome - most reliable)
