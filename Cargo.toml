@@ -35,7 +35,7 @@ gloo-file = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
-gloo = { version = "0.10", features = ["futures", "utils"] }
+gloo = { version = "0.10", features = ["futures", "utils", "timers"] }
 
 # Test configurations
 [[test]]
