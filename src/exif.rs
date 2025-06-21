@@ -1,5 +1,5 @@
 //! Functions for reading EXIF metadata and converting uploaded files into
-//! structured [`ImageData`](crate::types::ImageData).
+//! structured [`ImageData`].
 
 use crate::types::ImageData;
 use crate::utils::base64_encode;
@@ -84,7 +84,7 @@ pub fn get_dimensions(mime: &str, bytes: &[u8]) -> (Option<u32>, Option<u32>) {
         (None, None)
     }
 }
-/// Convert an uploaded [`File`] into [`ImageData`](crate::types::ImageData).
+/// Convert an uploaded [`File`] into [`ImageData`].
 pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let name = file.name();
     let size = file.size() as u64;

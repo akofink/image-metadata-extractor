@@ -2,7 +2,7 @@
 # Convenient commands for development and deployment
 
 # Phony targets that don't create files
-.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage check-warnings check-test-separation coverage-text coverage-compact coverage-summary
+.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage check-warnings check-test-separation coverage-text coverage-compact coverage-summary doc
 
 # Default target
 all: pkg
@@ -33,6 +33,7 @@ help:
 	@echo "  make coverage-compact - Show compact coverage table"
 	@echo "  make coverage-summary - Show just overall coverage percentage"
 	@echo "  make format      - Format code with cargo fmt"
+	@echo "  make doc         - Generate documentation"
 	@echo "  make clean       - Clean build artifacts"
 	@echo "  make install     - Install wasm-pack if missing"
 	@echo "  make setup-hooks - Install git pre-commit hooks"
@@ -263,6 +264,13 @@ format:
 	@echo "🎨 Formatting code..."
 	cargo fmt
 	@echo "✅ Code formatted!"
+
+# Generate documentation
+doc:
+	@echo "📚 Generating documentation..."
+	RUSTDOCFLAGS="-D warnings" cargo doc
+	@echo "✅ Documentation generated!"
+	@echo "   Open target/doc/image_metadata_extractor/index.html to view"
 
 # Clean build artifacts
 clean:
