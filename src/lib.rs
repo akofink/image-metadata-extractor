@@ -6,7 +6,7 @@ pub mod export;
 pub mod image_cleaner;
 mod metadata_info;
 pub mod types;
-mod utils;
+pub mod utils;
 
 use app::App;
 use wasm_bindgen::prelude::*;
