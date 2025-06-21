@@ -1,4 +1,4 @@
-mod app;
+pub mod app;
 mod binary_cleaner;
 pub mod components;
 pub mod exif;
