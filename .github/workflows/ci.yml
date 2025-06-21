@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,18 +15,33 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-          components: clippy, rustfmt
-      - name: Install wasm-pack
-        run: make install
+          components: rustfmt
       - name: Format
         run: |
           make format
           git diff --exit-code
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: clippy
       - name: Lint
         run: make lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
       - name: Run tests
-        run: make test
-      - name: Generate coverage
         run: |
           make coverage
       - name: Upload coverage report
