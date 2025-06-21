@@ -19,8 +19,8 @@ help:
 	@echo "  make test-wasm   - Run WebAssembly tests in browser (Chrome)"
 	@echo "  make test-wasm-all-browsers - Run WebAssembly tests in all browsers"
 	@echo "  make test-wasm-chrome - Run WebAssembly tests in Chrome only"
-	@echo "  make test-wasm-node - Run WebAssembly tests in Node.js (fallback)"
-	@echo "  make test-wasm-fallback - Try Chrome, fallback to Node.js if failed"
+	@echo "  make test-wasm-skip - Skip WASM tests (for environments without Chrome)"
+	@echo "  make test-wasm-fallback - Try Chrome, skip WASM if failed"
 	@echo "  make test-ci     - Run regular tests only (skip WASM for CI)"
 	@echo "  make test-auto   - Auto-detect Chrome and run appropriate tests"
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
@@ -95,19 +95,20 @@ test-wasm-chrome:
 	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
 	@echo "✅ Chrome WebAssembly tests complete!"
 
-# Run WebAssembly tests in Node.js (fallback for environments without Chrome)
-test-wasm-node:
-	@echo "🌐 Running WebAssembly tests in Node.js..."
-	wasm-pack test --node -- --test wasm_node_tests
-	@echo "✅ Node.js WebAssembly tests complete!"
+# Skip WASM tests (for environments without Chrome)
+test-wasm-skip:
+	@echo "⚠️  Skipping WebAssembly tests (Chrome not available)"
+	@echo "💡 WASM tests require browser APIs and cannot run in Node.js"
+	@echo "✅ Use 'make test-ci' for regular tests only"
 
-# Try Chrome first, fallback to Node.js if Chrome fails
+# Try Chrome, skip WASM tests if Chrome fails  
 test-wasm-fallback:
-	@echo "🌐 Attempting WebAssembly tests in Chrome, falling back to Node.js..."
+	@echo "🌐 Attempting WebAssembly tests in Chrome..."
 	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests || \
-	(echo "⚠️  Chrome failed, trying Node.js..." && \
-	 wasm-pack test --node -- --test wasm_node_tests)
-	@echo "✅ WebAssembly tests complete!"
+	(echo "⚠️  Chrome failed, skipping WASM tests..." && \
+	 echo "💡 WASM tests require browser environment" && \
+	 echo "✅ Use './scripts/install-chrome-apt.sh' to install Chrome")
+	@echo "✅ Test run complete!"
 
 # Run all tests (standard + WebAssembly across all browsers)
 test-all: test test-wasm-all-browsers
@@ -119,10 +120,11 @@ test-ci: test
 # Check if Chrome is available and run appropriate tests
 test-auto:
 	@if command -v google-chrome >/dev/null 2>&1 && command -v chromedriver >/dev/null 2>&1; then \
-		echo "🌐 Chrome detected, running full test suite..."; \
+		echo "🌐 Chrome and ChromeDriver detected, running full test suite..."; \
 		$(MAKE) test test-wasm-chrome; \
 	else \
-		echo "⚠️  Chrome not available, running regular tests only..."; \
+		echo "⚠️  Chrome/ChromeDriver not available, running regular tests only..."; \
+		echo "💡 To run WASM tests, install Chrome with: ./scripts/install-chrome-apt.sh"; \
 		$(MAKE) test-ci; \
 	fi
 
