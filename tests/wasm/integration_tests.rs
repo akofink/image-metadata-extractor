@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use image_metadata_extractor::exif::process_file;
 use js_sys::{Array, Uint8Array};
 use wasm_bindgen_test::*;

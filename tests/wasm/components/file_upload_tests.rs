@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use image_metadata_extractor::components::file_upload::{FileUpload, FileUploadProps};
 use wasm_bindgen_test::*;
 use yew::prelude::*;
