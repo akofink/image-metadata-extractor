@@ -290,13 +290,22 @@ setup-hooks:
 	@echo '#!/bin/bash' > .git/hooks/pre-commit
 	@echo 'set -e' >> .git/hooks/pre-commit
 	@echo 'echo "🔍 Running pre-commit checks..."' >> .git/hooks/pre-commit
-	@echo 'make check && make test && make format && make lint' >> .git/hooks/pre-commit
+	@echo 'make check && make format && make lint' >> .git/hooks/pre-commit
+	@echo '' >> .git/hooks/pre-commit
+	@echo '# Also check tests specifically for warnings' >> .git/hooks/pre-commit
+	@echo 'echo "🧪 Checking test code for warnings..."' >> .git/hooks/pre-commit
+	@echo 'RUSTFLAGS="-D warnings" cargo check --tests' >> .git/hooks/pre-commit
+	@echo '' >> .git/hooks/pre-commit
+	@echo '# Ensure tests are properly separated from application code' >> .git/hooks/pre-commit
+	@echo 'echo "🔬 Checking test organization..."' >> .git/hooks/pre-commit
+	@echo 'make check-test-separation' >> .git/hooks/pre-commit
+	@echo '' >> .git/hooks/pre-commit
 	@echo 'git add -u  # Add any formatting changes' >> .git/hooks/pre-commit
 	@echo 'echo "✅ Pre-commit checks passed!"' >> .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
 	@echo "✅ Pre-commit hooks installed!"
 	@echo "   • Hooks will run automatically on each commit"
-	@echo "   • Runs: make check && make test && make format && make lint"
+	@echo "   • Runs: code check, format, lint, test warnings, test separation"
 
 # Quick deployment check
 deploy-check: pkg-release
