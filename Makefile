@@ -2,7 +2,7 @@
 # Convenient commands for development and deployment
 
 # Phony targets that don't create files
-.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage check-warnings check-test-separation coverage-text coverage-compact coverage-summary coverage-components
+.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage check-warnings check-test-separation coverage-text coverage-compact coverage-summary
 
 # Default target
 all: pkg
@@ -32,7 +32,6 @@ help:
 	@echo "  make coverage-text - Show coverage summary in terminal"
 	@echo "  make coverage-compact - Show compact coverage table"
 	@echo "  make coverage-summary - Show just overall coverage percentage"
-	@echo "  make coverage-components - Show component test coverage analysis"
 	@echo "  make format      - Format code with cargo fmt"
 	@echo "  make clean       - Clean build artifacts"
 	@echo "  make install     - Install wasm-pack if missing"
@@ -258,25 +257,6 @@ coverage-summary:
 	cargo install cargo-llvm-cov --version 0.6.0 >/dev/null 2>&1
 	@RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | tail -n 1 | awk '{printf "  Lines: %s | Regions: %s | Functions: %s\n", $$10, $$4, $$7}'
 
-# Show component test coverage analysis
-coverage-components:
-	@echo "📊 Component Test Coverage Analysis:"
-	@echo ""
-	@echo "=== COMPONENT FILES (0% coverage - UI only) ==="
-	@RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "components/" | awk '{printf "  %-30s Lines: %s\n", $$1, $$7}'
-	@echo ""
-	@echo "=== COMPONENT LOGIC TESTABILITY ==="
-	@echo "  ✅ Component Props: Tested via integration tests"
-	@echo "  ✅ Data Processing: Covered in types.rs ($(shell RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "types.rs" | awk '{print $$7}'))"
-	@echo "  ✅ Metadata Logic: Covered in metadata_info.rs ($(shell RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "metadata_info.rs" | awk '{print $$7}'))"
-	@echo "  ✅ Export Logic: Covered in export.rs ($(shell RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "export.rs" | awk '{print $$7}' || echo "100.00%"))"
-	@echo ""
-	@echo "=== WASM COMPONENT TESTS ==="
-	@echo "  Browser Tests: $(shell find tests/wasm -name "*.rs" | wc -l | tr -d ' ') files (run with 'make test-wasm')"
-	@echo "  Integration Tests: $(shell find tests -name "*component*" -o -name "*wasm*" | wc -l | tr -d ' ') test suites"
-	@echo ""
-	@echo "💡 Component UI rendering is tested via WASM browser tests"
-	@echo "💡 Component logic is tested via unit tests of supporting modules"
 
 # Format code
 format:
