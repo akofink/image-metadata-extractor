@@ -28,6 +28,9 @@ help:
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
 	@echo "  make coverage    - Generate code coverage report"
+	@echo "  make coverage-text - Show coverage summary in terminal"
+	@echo "  make coverage-compact - Show compact coverage table"
+	@echo "  make coverage-summary - Show just overall coverage percentage"
 	@echo "  make format      - Format code with cargo fmt"
 	@echo "  make clean       - Clean build artifacts"
 	@echo "  make install     - Install wasm-pack if missing"
@@ -186,6 +189,39 @@ coverage:
 	RUSTFLAGS="-D warnings" cargo llvm-cov
 	RUSTFLAGS="-D warnings" cargo llvm-cov report --html
 	@echo "✅ Coverage report generated!"
+
+# Generate terminal-friendly coverage summary
+coverage-text:
+	@echo "📊 Generating coverage summary..."
+	cargo install cargo-llvm-cov --version 0.6.0
+	@echo ""
+	@echo "=== COVERAGE SUMMARY ==="
+	RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | tail -n 1
+	@echo ""
+	@echo "=== TOP COVERED FILES ==="
+	RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep -v "0.00%" | grep -v "TOTAL" | head -n 8
+	@echo ""
+	@echo "=== FILES NEEDING COVERAGE ==="
+	RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "0.00%" | head -n 5
+	@echo "✅ Coverage summary complete!"
+
+# Generate compact coverage table (just key metrics)
+coverage-compact:
+	@echo "📊 Generating compact coverage..."
+	cargo install cargo-llvm-cov --version 0.6.0
+	@echo ""
+	@printf "%-25s %8s %8s %8s\n" "File" "Lines" "Regions" "Functions"
+	@printf "%-25s %8s %8s %8s\n" "----" "-----" "-------" "---------"
+	@RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | grep "\.rs" | head -n 12 | awk '{printf "%-25s %8s %8s %8s\n", substr($$1,1,25), $$7, $$3, $$5}'
+	@echo ""
+	@RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | tail -n 1 | awk '{printf "%-25s %8s %8s %8s\n", "TOTAL", $$7, $$3, $$5}'
+	@echo "✅ Compact coverage complete!"
+
+# Show just overall coverage percentage
+coverage-summary:
+	@echo "📊 Overall Coverage:"
+	cargo install cargo-llvm-cov --version 0.6.0 >/dev/null 2>&1
+	@RUSTFLAGS="-D warnings" cargo llvm-cov 2>/dev/null | tail -n 1 | awk '{printf "  Lines: %s | Regions: %s | Functions: %s\n", $$10, $$4, $$7}'
 
 # Format code
 format:
