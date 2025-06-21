@@ -15,6 +15,7 @@ help:
 	@echo "  make build-release - Build optimized for production"
 	@echo "  make serve       - Start local development server"
 	@echo "  make check       - Check code compilation (fails on warnings)"
+	@echo "  make check-warnings - Comprehensive warning check (code + tests)"
 	@echo "  make test        - Run tests (fails on warnings)"
 	@echo "  make test-wasm   - Run WebAssembly tests in browser (Chrome)"
 	@echo "  make test-wasm-all-browsers - Run WebAssembly tests in all browsers"
@@ -68,6 +69,13 @@ check:
 	@echo "🔍 Checking code..."
 	RUSTFLAGS="-D warnings" cargo check
 	@echo "✅ Code check complete!"
+
+# Comprehensive warning check (code + tests)
+check-warnings:
+	@echo "🔍 Comprehensive warning check..."
+	RUSTFLAGS="-D warnings" cargo check
+	RUSTFLAGS="-D warnings" cargo check --tests
+	@echo "✅ All warning checks passed!"
 
 # Run tests
 test: build
