@@ -1,15 +1,23 @@
+#[cfg(not(target_arch = "wasm32"))]
 use base64::Engine;
+#[cfg(not(target_arch = "wasm32"))]
 use base64::engine::general_purpose;
+#[cfg(not(target_arch = "wasm32"))]
 use exif::Rational;
+#[cfg(not(target_arch = "wasm32"))]
 use exif::{Field, In, Tag, Value};
+#[cfg(not(target_arch = "wasm32"))]
 use image_metadata_extractor::exif::{
     determine_mime_type, extract_exif_data, get_dimensions, is_supported_mime_type,
     parse_gps_coordinate,
 };
+#[cfg(not(target_arch = "wasm32"))]
 use std::io::Cursor;
 
+#[cfg(not(target_arch = "wasm32"))]
 const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_determine_mime_type_from_file_type() {
     let bytes = b"fake";
@@ -17,6 +25,7 @@ fn test_determine_mime_type_from_file_type() {
     assert_eq!(mime, "image/jpeg");
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_determine_mime_type_guess_formats() {
     let jpeg = &[0xFF, 0xD8, 0xFF, 0xE0];
@@ -27,6 +36,7 @@ fn test_determine_mime_type_guess_formats() {
     assert_eq!(determine_mime_type("a", "", gif), "image/gif");
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_determine_mime_type_extensions() {
     assert_eq!(determine_mime_type("file.pdf", "", b""), "application/pdf");
@@ -41,12 +51,14 @@ fn test_determine_mime_type_extensions() {
     );
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_supported_mime() {
     assert!(is_supported_mime_type("image/png"));
     assert!(!is_supported_mime_type("text/plain"));
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_get_dimensions() {
     let img = image::RgbaImage::new(2, 3);
@@ -59,6 +71,7 @@ fn test_get_dimensions() {
     assert_eq!((w, h), (None, None));
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_parse_gps_coordinate() {
     let field = Field {
@@ -90,6 +103,7 @@ fn test_parse_gps_coordinate() {
     assert!(parse_gps_coordinate(&field_bad, &dummy).is_none());
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_extract_exif_data_gps() {
     let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();

@@ -35,4 +35,7 @@ gloo-file = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+
+# Only include cargo-llvm-cov for non-WASM targets (Unix/Linux systems)
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 cargo-llvm-cov = "0.6"

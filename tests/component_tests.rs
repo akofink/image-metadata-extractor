@@ -73,12 +73,14 @@ fn test_component_lifecycle_safety() {
 }
 
 // The output_format helper was removed; keep placeholder test for compilation
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 #[allow(dead_code)]
 fn test_output_format_placeholder() {
     assert_eq!(1 + 1, 2);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_generate_txt_includes_map_links() {
     use image_metadata_extractor::export::generate_txt;
