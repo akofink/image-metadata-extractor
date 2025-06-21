@@ -175,8 +175,8 @@ lint:
 coverage:
 	@echo "📈 Generating coverage report..."
 	cargo install cargo-llvm-cov --version 0.6.0
-	cargo llvm-cov
-	cargo llvm-cov report --html
+	RUSTFLAGS="-D warnings" cargo llvm-cov
+	RUSTFLAGS="-D warnings" cargo llvm-cov report --html
 	@echo "✅ Coverage report generated!"
 
 # Format code

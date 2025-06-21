@@ -6,6 +6,7 @@ use wasm_bindgen_test::*;
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
+#[allow(dead_code)] // WASM tests aren't recognized by regular cargo check
 async fn test_app_renders_heading_and_placeholder() {
     let div = document().create_element("div").unwrap();
     document().body().unwrap().append_child(&div).unwrap();
@@ -19,6 +20,7 @@ async fn test_app_renders_heading_and_placeholder() {
 }
 
 #[wasm_bindgen_test]
+#[allow(dead_code)] // WASM tests aren't recognized by regular cargo check
 async fn test_app_footer_present() {
     let div = document().create_element("div").unwrap();
     document().body().unwrap().append_child(&div).unwrap();
