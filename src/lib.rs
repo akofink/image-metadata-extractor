@@ -4,7 +4,7 @@ pub mod components;
 pub mod exif;
 pub mod export;
 pub mod image_cleaner;
-mod metadata_info;
+pub mod metadata_info;
 pub mod types;
 pub mod utils;
 
