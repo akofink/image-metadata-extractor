@@ -2,7 +2,7 @@
 # Convenient commands for development and deployment
 
 # Phony targets that don't create files
-.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage
+.PHONY: help clean check test lint format serve install setup-hooks dev prod deploy-check coverage check-warnings check-test-separation coverage-text coverage-compact coverage-summary
 
 # Default target
 all: pkg
