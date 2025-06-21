@@ -49,6 +49,10 @@ path = "tests/wasm/components/file_upload_tests.rs"
 name = "wasm_integration_tests"
 path = "tests/wasm/integration_tests.rs"
 
+[[test]]
+name = "wasm_node_tests"
+path = "tests/wasm/node_tests.rs"
+
 # Only include cargo-llvm-cov for non-WASM targets (Unix/Linux systems)
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 cargo-llvm-cov = "0.6"

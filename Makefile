@@ -21,6 +21,8 @@ help:
 	@echo "  make test-wasm-chrome - Run WebAssembly tests in Chrome only"
 	@echo "  make test-wasm-node - Run WebAssembly tests in Node.js (fallback)"
 	@echo "  make test-wasm-fallback - Try Chrome, fallback to Node.js if failed"
+	@echo "  make test-ci     - Run regular tests only (skip WASM for CI)"
+	@echo "  make test-auto   - Auto-detect Chrome and run appropriate tests"
 	@echo "  make test-all    - Run all tests (standard + WebAssembly)"
 	@echo "  make lint        - Run clippy linting"
 	@echo "  make coverage    - Generate code coverage report"
@@ -96,7 +98,7 @@ test-wasm-chrome:
 # Run WebAssembly tests in Node.js (fallback for environments without Chrome)
 test-wasm-node:
 	@echo "🌐 Running WebAssembly tests in Node.js..."
-	wasm-pack test --node -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
+	wasm-pack test --node -- --test wasm_node_tests
 	@echo "✅ Node.js WebAssembly tests complete!"
 
 # Try Chrome first, fallback to Node.js if Chrome fails
@@ -104,11 +106,25 @@ test-wasm-fallback:
 	@echo "🌐 Attempting WebAssembly tests in Chrome, falling back to Node.js..."
 	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests || \
 	(echo "⚠️  Chrome failed, trying Node.js..." && \
-	 wasm-pack test --node -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests)
+	 wasm-pack test --node -- --test wasm_node_tests)
 	@echo "✅ WebAssembly tests complete!"
 
 # Run all tests (standard + WebAssembly across all browsers)
 test-all: test test-wasm-all-browsers
+
+# Run only regular tests (skip WASM tests for CI/remote environments)
+test-ci: test
+	@echo "✅ CI tests complete (WASM tests skipped)!"
+
+# Check if Chrome is available and run appropriate tests
+test-auto:
+	@if command -v google-chrome >/dev/null 2>&1 && command -v chromedriver >/dev/null 2>&1; then \
+		echo "🌐 Chrome detected, running full test suite..."; \
+		$(MAKE) test test-wasm-chrome; \
+	else \
+		echo "⚠️  Chrome not available, running regular tests only..."; \
+		$(MAKE) test-ci; \
+	fi
 
 # Run clippy linting
 lint:
