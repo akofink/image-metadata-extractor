@@ -1,3 +1,9 @@
+//! Lossless metadata removal operating directly on image byte streams.
+//!
+//! The [`BinaryCleaner`] utility exposes functions to strip metadata from many
+//! common formats without decoding the image data. This keeps the original
+//! quality intact while removing identifying information.
+
 use little_exif::filetype::FileExtension;
 use little_exif::metadata::Metadata;
 #[cfg(target_arch = "wasm32")]
@@ -17,6 +23,7 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
+/// Helper type with functions for metadata stripping.
 pub struct BinaryCleaner;
 
 impl BinaryCleaner {

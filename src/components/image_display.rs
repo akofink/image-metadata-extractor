@@ -1,7 +1,10 @@
+//! Renders the uploaded image and basic information.
+
 use crate::types::ImageData;
 use crate::utils::format_file_size;
 use yew::prelude::*;
 
+/// Properties for [`ImageDisplay`].
 #[derive(Properties, PartialEq)]
 pub struct ImageDisplayProps {
     pub image_data: ImageData,
@@ -10,6 +13,7 @@ pub struct ImageDisplayProps {
     pub on_upload_new: Option<Callback<web_sys::MouseEvent>>,
 }
 
+/// Preview component showing the file and optional GPS information.
 #[function_component(ImageDisplay)]
 pub fn image_display(props: &ImageDisplayProps) -> Html {
     let data = &props.image_data;

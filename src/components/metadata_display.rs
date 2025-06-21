@@ -1,8 +1,11 @@
+//! Displays extracted metadata with selection controls.
+
 use crate::metadata_info::{get_metadata_category, get_metadata_explanation};
 use crate::types::ImageData;
 use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
 
+/// Properties for [`MetadataDisplay`].
 #[derive(Properties, PartialEq)]
 pub struct MetadataDisplayProps {
     pub image_data: ImageData,
@@ -12,6 +15,7 @@ pub struct MetadataDisplayProps {
     pub on_toggle_explanations: Callback<web_sys::MouseEvent>,
 }
 
+/// Shows metadata grouped by category with checkboxes and explanations.
 #[function_component(MetadataDisplay)]
 pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
     let data = &props.image_data;

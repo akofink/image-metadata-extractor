@@ -1,3 +1,6 @@
+//! Functions for reading EXIF metadata and converting uploaded files into
+//! structured [`ImageData`](crate::types::ImageData).
+
 use crate::types::ImageData;
 use crate::utils::base64_encode;
 use exif::{Exif, Field, In, Reader, Tag, Value};
@@ -9,12 +12,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::File;
 
+/// Read the contents of a [`File`] into a byte vector.
 pub async fn file_bytes(file: &File) -> Result<Vec<u8>, JsValue> {
     let array_buffer = JsFuture::from(file.array_buffer()).await?;
     let uint8_array = Uint8Array::new(&array_buffer);
     Ok(uint8_array.to_vec())
 }
 
+/// Guess the MIME type of a file based on provided hints and header bytes.
 pub fn determine_mime_type(name: &str, file_type: &str, bytes: &[u8]) -> String {
     if !file_type.is_empty() {
         return file_type.to_string();
@@ -46,6 +51,7 @@ pub fn determine_mime_type(name: &str, file_type: &str, bytes: &[u8]) -> String 
     }
 }
 
+/// Returns `true` if the MIME type is one the application knows how to handle.
 pub fn is_supported_mime_type(mime: &str) -> bool {
     const SUPPORTED: &[&str] = &[
         "image/png",
@@ -62,10 +68,12 @@ pub fn is_supported_mime_type(mime: &str) -> bool {
     SUPPORTED.contains(&mime)
 }
 
+/// Create a data URL from raw bytes for preview in the browser.
 pub fn create_data_url(mime: &str, bytes: &[u8]) -> String {
     format!("data:{};base64,{}", mime, base64_encode(bytes))
 }
 
+/// Attempt to read image width and height from the byte stream.
 pub fn get_dimensions(mime: &str, bytes: &[u8]) -> (Option<u32>, Option<u32>) {
     if mime.starts_with("image/") && mime != "image/svg+xml" {
         match get_image_dimensions(bytes) {
@@ -76,6 +84,7 @@ pub fn get_dimensions(mime: &str, bytes: &[u8]) -> (Option<u32>, Option<u32>) {
         (None, None)
     }
 }
+/// Convert an uploaded [`File`] into [`ImageData`](crate::types::ImageData).
 pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let name = file.name();
     let size = file.size() as u64;
@@ -113,6 +122,7 @@ fn get_image_dimensions(bytes: &[u8]) -> Result<(u32, u32), JsValue> {
     }
 }
 
+/// Parse EXIF metadata and GPS coordinates from a byte slice.
 pub fn extract_exif_data(bytes: &[u8]) -> (HashMap<String, String>, Option<(f64, f64)>) {
     let mut exif_map = HashMap::new();
     let mut gps_coords = None;
@@ -185,6 +195,7 @@ fn apply_gps_ref(exif: &Exif, coords: &mut (f64, f64)) {
     }
 }
 
+/// Convert a GPS coordinate field into decimal degrees.
 pub fn parse_gps_coordinate(field: &Field, _exifreader: &Exif) -> Option<f64> {
     if let Value::Rational(ref rationals) = field.value {
         if rationals.len() >= 3 {

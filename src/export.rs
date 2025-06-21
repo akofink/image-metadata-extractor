@@ -1,6 +1,9 @@
+//! Helpers for exporting selected metadata in various formats.
+
 use crate::types::ImageData;
 use crate::utils::format_file_size;
 
+/// Create a CSV representation of the provided [`ImageData`].
 pub fn generate_csv(data: &ImageData) -> String {
     let mut csv = String::new();
     csv.push_str("Property,Value\n");
@@ -33,6 +36,7 @@ pub fn generate_csv(data: &ImageData) -> String {
     csv
 }
 
+/// Produce a human readable text report for the selected metadata.
 pub fn generate_txt(data: &ImageData) -> String {
     let mut txt = String::new();
     txt.push_str("FILE METADATA REPORT\n");

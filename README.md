@@ -25,6 +25,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Metadata removal**: Strip ALL EXIF data, GPS, and camera information
 - **Format conversion**: Convert between JPEG and PNG regardless of input format
 - **Quality control**: Adjustable JPEG compression (30%-100%)
+- **Binary metadata removal**: Lossless cleaning for JPEG, PNG, WebP, GIF and more
 - **One-click download**: Privacy-safe images with zero metadata
 
 ### 📊 **Advanced Export Capabilities**
@@ -238,6 +239,7 @@ This automatically runs code checks, formatting, and linting on every commit, en
 - **Canvas-based processing**: Uses HTML5 Canvas API for reliable metadata removal
 - **Format flexibility**: Convert between JPEG and PNG during cleaning
 - **Quality control**: Adjustable JPEG compression for size vs. quality balance
+- **Binary metadata removal**: Lossless cleaning for JPEG, PNG, WebP, GIF and more
 - **One-click downloads**: Browser-native downloads with cleaned filenames
 
 ### Advanced Export System

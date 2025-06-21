@@ -1,6 +1,9 @@
+//! Miscellaneous helpers for encoding, formatting and downloading data.
+
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlAnchorElement, Url};
 
+/// Convert a byte slice into a base64 encoded string using the browser API.
 pub fn base64_encode(bytes: &[u8]) -> String {
     let window = web_sys::window().unwrap();
     let btoa = js_sys::Reflect::get(&window, &JsValue::from_str("btoa")).unwrap();
@@ -14,6 +17,7 @@ pub fn base64_encode(bytes: &[u8]) -> String {
     result.as_string().unwrap()
 }
 
+/// Format a raw byte count into a human readable string.
 pub fn format_file_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut size = bytes as f64;
@@ -27,6 +31,7 @@ pub fn format_file_size(bytes: u64) -> String {
     format!("{:.1} {}", size, UNITS[unit_index])
 }
 
+/// Trigger a text file download in the browser.
 pub fn download_file(content: &str, filename: &str, mime_type: &str) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
@@ -60,6 +65,7 @@ pub fn download_file(content: &str, filename: &str, mime_type: &str) {
     Url::revoke_object_url(&url).unwrap();
 }
 
+/// Trigger a binary file download in the browser.
 pub fn download_binary_file(bytes: &[u8], filename: &str, mime_type: &str) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();

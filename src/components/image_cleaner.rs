@@ -1,14 +1,18 @@
+//! Download a copy of the file with all metadata stripped.
+
 use crate::binary_cleaner::BinaryCleaner;
 use crate::types::ImageData;
 use crate::utils::download_binary_file;
 use base64::{Engine as _, engine::general_purpose};
 use yew::prelude::*;
 
+/// Properties for [`ImageCleaner`].
 #[derive(Properties, PartialEq)]
 pub struct ImageCleanerProps {
     pub image_data: ImageData,
 }
 
+/// Button that performs binary metadata removal and triggers a download.
 #[function_component(ImageCleaner)]
 pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
     let download_cleaned_image_cb = {

@@ -1,3 +1,8 @@
+//! Root Yew component orchestrating file upload, display, cleaning and export.
+//!
+//! This module wires together the high level components to form the single page
+//! application.
+
 use crate::components::{
     file_upload::FileUpload, image_cleaner::ImageCleaner, image_display::ImageDisplay,
     metadata_display::MetadataDisplay, metadata_export::MetadataExport,

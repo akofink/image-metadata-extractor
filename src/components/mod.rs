@@ -1,3 +1,5 @@
+//! Yew UI components used throughout the application.
+
 pub mod file_upload;
 pub mod image_cleaner;
 pub mod image_display;

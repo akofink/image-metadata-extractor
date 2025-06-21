@@ -1,8 +1,11 @@
+//! Component for uploading files and initiating metadata extraction.
+
 use crate::exif::process_file;
 use crate::types::ImageData;
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 
+/// Properties for [`FileUpload`].
 #[derive(Properties, PartialEq, Debug)]
 pub struct FileUploadProps {
     pub on_file_loaded: Callback<ImageData>,
@@ -10,6 +13,7 @@ pub struct FileUploadProps {
     pub on_error: Callback<String>,
 }
 
+/// File input element that parses the selected file and emits [`ImageData`].
 #[function_component(FileUpload)]
 pub fn file_upload(props: &FileUploadProps) -> Html {
     let input_ref = use_node_ref();

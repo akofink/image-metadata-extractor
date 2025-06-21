@@ -1,6 +1,9 @@
+//! Shared data structures used throughout the application.
+
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
+/// Metadata extracted from an uploaded file.
 #[derive(Clone, PartialEq, Serialize)]
 pub struct ImageData {
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -26,6 +29,7 @@ fn is_zero(value: &u64) -> bool {
 }
 
 impl ImageData {
+    /// Return a new `ImageData` containing only the selected metadata fields.
     pub fn filter_metadata(
         &self,
         selected_keys: &HashSet<String>,

@@ -1,3 +1,6 @@
+//! Provide human readable explanations and categories for metadata keys.
+
+/// Return an explanatory string for a given metadata key.
 pub fn get_metadata_explanation(key: &str) -> Option<&'static str> {
     match key {
         // Camera Information
@@ -105,6 +108,7 @@ pub fn get_metadata_explanation(key: &str) -> Option<&'static str> {
     }
 }
 
+/// Determine the display category emoji for a metadata key.
 pub fn get_metadata_category(key: &str) -> &'static str {
     match key {
         k if k.contains("GPS") => "📍 Location",

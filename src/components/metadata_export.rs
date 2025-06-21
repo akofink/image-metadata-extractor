@@ -1,15 +1,19 @@
+//! Allows users to download selected metadata in various formats.
+
 use crate::export::{generate_csv, generate_txt};
 use crate::types::ImageData;
 use crate::utils::download_file;
 use std::collections::HashSet;
 use yew::prelude::*;
 
+/// Properties for [`MetadataExport`].
 #[derive(Properties, PartialEq)]
 pub struct MetadataExportProps {
     pub image_data: ImageData,
     pub selected_metadata: HashSet<String>,
 }
 
+/// Controls for exporting chosen metadata fields to JSON, CSV or text.
 #[function_component(MetadataExport)]
 pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let include_basic_info = use_state(|| true);
