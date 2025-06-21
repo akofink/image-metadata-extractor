@@ -2,7 +2,6 @@ use gloo::utils::document;
 use image_metadata_extractor::app::App;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_test::*;
-use yew::prelude::*;
 
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
