@@ -36,6 +36,19 @@ gloo-file = "0.3"
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
+# Test configurations
+[[test]]
+name = "wasm_component_tests"
+path = "tests/wasm/component_tests.rs"
+
+[[test]]
+name = "wasm_file_upload_tests"
+path = "tests/wasm/components/file_upload_tests.rs"
+
+[[test]]
+name = "wasm_integration_tests"
+path = "tests/wasm/integration_tests.rs"
+
 # Only include cargo-llvm-cov for non-WASM targets (Unix/Linux systems)
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 cargo-llvm-cov = "0.6"

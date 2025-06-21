@@ -73,22 +73,22 @@ test: build
 # Run WebAssembly tests in browser (Chrome - most reliable)
 test-wasm:
 	@echo "🌐 Running WebAssembly tests in browser..."
-	wasm-pack test --headless --chrome
+	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
 	@echo "✅ WebAssembly tests complete!"
 
 # Run WebAssembly tests across multiple browsers (requires all drivers)
 test-wasm-all-browsers:
 	@echo "🌐 Attempting WebAssembly tests across all browsers..."
 	@echo "Note: This requires Chrome, Firefox, and Safari drivers to be installed"
-	wasm-pack test --headless --chrome --firefox --safari || \
+	wasm-pack test --headless --chrome --firefox --safari -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests || \
 	(echo "⚠️  Some browsers failed. Falling back to Chrome only..." && \
-	 wasm-pack test --headless --chrome)
+	 wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests)
 	@echo "✅ Multi-browser WebAssembly tests complete!"
 
 # Run WebAssembly tests in Chrome only (fast option)
 test-wasm-chrome:
 	@echo "🌐 Running WebAssembly tests in Chrome..."
-	wasm-pack test --headless --chrome
+	wasm-pack test --headless --chrome -- --test wasm_component_tests --test wasm_file_upload_tests --test wasm_integration_tests
 	@echo "✅ Chrome WebAssembly tests complete!"
 
 # Run all tests (standard + WebAssembly across all browsers)
