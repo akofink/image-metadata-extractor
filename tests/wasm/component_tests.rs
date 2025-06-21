@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use std::collections::HashMap;
 use wasm_bindgen_test::*;
 use yew::prelude::*;
