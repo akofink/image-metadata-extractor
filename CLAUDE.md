@@ -79,7 +79,6 @@ The application uses a modern component-based architecture for maintainability a
 #### **Core Logic Modules** (`src/`)
 - **`exif.rs`**: EXIF metadata extraction and GPS coordinate parsing
 - **`export.rs`**: CSV and text export generation functions
-- **`image_cleaner.rs`**: Format detection utilities for cleaned image output
 - **`metadata_info.rs`**: Field explanations, categorization, and help text
 - **`types.rs`**: Data structures, filtering logic, and serialization
 - **`utils.rs`**: File downloads, size formatting, and utility functions

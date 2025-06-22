@@ -9,7 +9,6 @@ pub mod binary_cleaner;
 pub mod components;
 pub mod exif;
 pub mod export;
-pub mod image_cleaner;
 pub mod metadata_info;
 pub mod types;
 pub mod utils;
