@@ -1,4 +1,5 @@
 use image_metadata_extractor::types::ImageData;
+use serde_json;
 use std::collections::{HashMap, HashSet};
 
 #[test]
@@ -263,4 +264,81 @@ fn test_image_data_partial_eq() {
     };
 
     assert_eq!(data1, data2);
+}
+
+#[test]
+fn test_image_data_serialization() {
+    let mut exif = HashMap::new();
+    exif.insert("ISO".to_string(), "200".to_string());
+
+    let data = ImageData {
+        name: "test.jpg".to_string(),
+        size: 1024,
+        mime_type: "image/jpeg".to_string(), // Should be skipped
+        data_url: "data:...".to_string(),    // Should be skipped
+        width: Some(800),
+        height: Some(600),
+        exif_data: exif,
+        gps_coords: Some((37.7749, -122.4194)),
+    };
+
+    let json = serde_json::to_string(&data).unwrap();
+    assert!(json.contains("\"name\":\"test.jpg\""));
+    assert!(json.contains("\"size\":1024"));
+    assert!(json.contains("\"width\":800"));
+    assert!(json.contains("\"height\":600"));
+    assert!(json.contains("\"ISO\":\"200\""));
+    assert!(json.contains("\"gps_coords\":[37.7749,-122.4194]"));
+
+    // These should be skipped in serialization
+    assert!(!json.contains("mime_type"));
+    assert!(!json.contains("data_url"));
+}
+
+#[test]
+fn test_image_data_serialization_empty_values() {
+    // Test the serde skip conditions
+    let data = ImageData {
+        name: "".to_string(), // Should be skipped (empty string)
+        size: 0,              // Should be skipped (zero)
+        mime_type: "image/jpeg".to_string(),
+        data_url: "data:...".to_string(),
+        width: None,               // Should be skipped (None)
+        height: None,              // Should be skipped (None)
+        exif_data: HashMap::new(), // Should be skipped (empty)
+        gps_coords: None,          // Should be skipped (None)
+    };
+
+    let json = serde_json::to_string(&data).unwrap();
+    // Should only have empty object since everything gets skipped
+    assert_eq!(json, "{}");
+}
+
+#[test]
+fn test_image_data_serialization_partial_skip() {
+    let mut exif = HashMap::new();
+    exif.insert("Camera".to_string(), "Canon".to_string());
+
+    let data = ImageData {
+        name: "photo.jpg".to_string(),         // Included (non-empty)
+        size: 0,                               // Skipped (zero)
+        mime_type: "image/jpeg".to_string(),   // Always skipped
+        data_url: "data:...".to_string(),      // Always skipped
+        width: Some(1920),                     // Included (Some value)
+        height: None,                          // Skipped (None)
+        exif_data: exif,                       // Included (non-empty)
+        gps_coords: Some((40.7128, -74.0060)), // Included (Some value)
+    };
+
+    let json = serde_json::to_string(&data).unwrap();
+    assert!(json.contains("\"name\":\"photo.jpg\""));
+    assert!(json.contains("\"width\":1920"));
+    assert!(json.contains("\"Camera\":\"Canon\""));
+    assert!(json.contains("\"gps_coords\"")); // Just check field exists
+
+    // These should be skipped
+    assert!(!json.contains("size"));
+    assert!(!json.contains("height"));
+    assert!(!json.contains("mime_type"));
+    assert!(!json.contains("data_url"));
 }

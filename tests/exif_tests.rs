@@ -248,3 +248,91 @@ fn test_extract_exif_data_various_inputs() {
     assert!(map.is_empty());
     assert!(gps.is_none());
 }
+
+#[test]
+fn test_get_dimensions_non_image_types() {
+    // Test get_dimensions returns None for non-image mime types
+    // (avoiding actual image parsing which requires wasm APIs)
+    let data = b"some data";
+
+    // Non-image types should return None
+    let (w, h) = get_dimensions("text/plain", data);
+    assert_eq!((w, h), (None, None));
+
+    let (w, h) = get_dimensions("application/pdf", data);
+    assert_eq!((w, h), (None, None));
+
+    let (w, h) = get_dimensions("application/json", data);
+    assert_eq!((w, h), (None, None));
+
+    // SVG should also return None as it's excluded
+    let (w, h) = get_dimensions("image/svg+xml", data);
+    assert_eq!((w, h), (None, None));
+}
+
+#[test]
+fn test_determine_mime_type_priority_order() {
+    // Test that provided file_type takes priority over detection
+    let jpeg_bytes = &[0xFF, 0xD8, 0xFF, 0xE0];
+
+    // When file_type is provided, it should be used regardless of bytes
+    let mime = determine_mime_type("test.jpg", "custom/type", jpeg_bytes);
+    assert_eq!(mime, "custom/type");
+
+    // When file_type is empty, should fall back to detection
+    let mime = determine_mime_type("test.jpg", "", jpeg_bytes);
+    assert_eq!(mime, "image/jpeg");
+}
+
+#[test]
+fn test_determine_mime_type_fallback_behavior() {
+    // Test fallback to extension when image detection fails
+    let unknown_bytes = &[0x00, 0x01, 0x02, 0x03];
+
+    // Should use extension when detection fails
+    let mime = determine_mime_type("document.pdf", "", unknown_bytes);
+    assert_eq!(mime, "application/pdf");
+
+    // Should fall back to octet-stream for unknown extensions
+    let mime = determine_mime_type("file.unknown", "", unknown_bytes);
+    assert_eq!(mime, "application/octet-stream");
+}
+
+#[test]
+fn test_extract_exif_data_comprehensive_parsing() {
+    // Test the extract_exif_data function with actual JPEG that has GPS
+    let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
+    let (exif_map, gps_coords) = extract_exif_data(&bytes);
+
+    // Should extract EXIF fields
+    assert!(!exif_map.is_empty(), "Should extract EXIF metadata");
+
+    // Should extract GPS coordinates
+    assert!(gps_coords.is_some(), "Should extract GPS coordinates");
+
+    if let Some((lat, lon)) = gps_coords {
+        // Verify coordinates are reasonable (from the test image)
+        assert!(lat.abs() < 90.0, "Latitude should be valid");
+        assert!(lon.abs() < 180.0, "Longitude should be valid");
+    }
+}
+
+#[test]
+fn test_determine_mime_type_all_supported_extensions() {
+    // Test all supported file extensions are correctly mapped
+    let test_cases = [
+        ("file.pdf", "application/pdf"),
+        ("image.svg", "image/svg+xml"),
+        ("photo.tiff", "image/tiff"),
+        ("photo.tif", "image/tiff"),
+        ("shot.heif", "image/heif"),
+        ("shot.heic", "image/heif"),
+        ("modern.avif", "image/avif"),
+        ("new.jxl", "image/jxl"),
+    ];
+
+    for (filename, expected_mime) in test_cases.iter() {
+        let result = determine_mime_type(filename, "", &[]);
+        assert_eq!(result, *expected_mime, "Failed for {}", filename);
+    }
+}
