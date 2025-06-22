@@ -318,3 +318,252 @@ fn clean_metadata_case_insensitive() {
     let cleaned_lower = BinaryCleaner::clean_metadata(&jpeg, "jpeg").unwrap();
     assert_eq!(cleaned_upper, cleaned_lower);
 }
+
+// JPEG Edge Cases - High Priority Coverage Improvements
+#[test]
+fn clean_jpeg_truncated_at_segment_boundary() {
+    // Test JPEG truncated during segment length reading
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00]); // APP1 with incomplete length
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("Truncated JPEG file"));
+}
+
+#[test]
+fn clean_jpeg_segment_length_extends_beyond_file() {
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x20]); // APP1 with length 32
+    data.extend_from_slice(&[0x01, 0x02, 0x03]); // Only 3 bytes of data (need 30 more)
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    // The cleaner gracefully handles incomplete segments by preserving what it can
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should preserve SOI marker and handle truncated segment gracefully
+    assert_eq!(cleaned, vec![0xFF, 0xD8]);
+    assert!(cleaned.len() < data.len());
+}
+
+#[test]
+fn clean_jpeg_segment_with_maximum_length() {
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0xFF, 0xFF]); // APP1 with max length 65535
+    // Don't add the full data - test boundary condition
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    // The cleaner gracefully handles incomplete segments by preserving what it can
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should preserve SOI marker and handle truncated segment gracefully
+    assert_eq!(cleaned, vec![0xFF, 0xD8]);
+    assert!(cleaned.len() < data.len());
+}
+
+#[test]
+fn clean_jpeg_zero_length_segment() {
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x02]); // APP1 with length 2 (just length field)
+    data.extend_from_slice(&[0xFF, 0xDA, 0x00, 0x04, 0x01, 0x02]); // SOS
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    assert!(cleaned.len() < data.len());
+}
+
+#[test]
+fn clean_jpeg_multiple_consecutive_app_segments() {
+    let mut data = vec![0xFF, 0xD8]; // SOI
+
+    // Multiple APP segments back-to-back
+    for app_num in 0..16 {
+        data.extend_from_slice(&[0xFF, 0xE0 + app_num, 0x00, 0x04]); // APPx with length 4
+        data.extend_from_slice(&[0x00, 0x00]); // 2 bytes of data
+    }
+
+    data.extend_from_slice(&[0xFF, 0xDA, 0x00, 0x04, 0x01, 0x02]); // SOS
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should have removed all APP segments
+    assert!(cleaned.len() < data.len());
+    assert!(cleaned.windows(2).any(|w| w == [0xFF, 0xDA])); // SOS preserved
+}
+
+// PNG Edge Cases
+#[test]
+fn clean_png_chunk_with_zero_length() {
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // PNG signature
+
+    // IHDR chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Zero-length metadata chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, b't', b'E', b'X', b't']);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // IEND chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, b'I', b'E', b'N', b'D', 0, 0, 0, 0]);
+
+    let result = BinaryCleaner::clean_metadata(&png, "png");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    assert!(!cleaned.windows(4).any(|w| w == b"tEXt"));
+}
+
+#[test]
+fn clean_png_chunk_length_extends_beyond_file() {
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // PNG signature
+
+    // IHDR chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Chunk with length that extends beyond file
+    png.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF, b't', b'E', b'X', b't']); // Huge length
+    png.extend_from_slice(&[0x01, 0x02]); // Only 2 bytes of data
+
+    let result = BinaryCleaner::clean_metadata(&png, "png");
+    // PNG cleaner gracefully handles malformed chunks by breaking out of parsing
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should preserve PNG signature and IHDR but stop parsing at malformed chunk
+    assert!(cleaned.len() < png.len());
+}
+
+#[test]
+fn clean_png_truncated_at_chunk_header() {
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // PNG signature
+
+    // IHDR chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Truncated chunk (only length, no type)
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x10]); // Length but no chunk type
+
+    let result = BinaryCleaner::clean_metadata(&png, "png");
+    // PNG cleaner gracefully handles truncated chunks by breaking out of parsing
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should preserve PNG signature and IHDR
+    assert!(cleaned.windows(4).any(|w| w == b"IHDR"));
+}
+
+// WebP Edge Cases
+#[test]
+fn clean_webp_file_size_update_verification() {
+    let mut webp = b"RIFF".to_vec();
+    webp.extend_from_slice(&[0x30, 0x00, 0x00, 0x00]); // Initial file size (48 bytes)
+    webp.extend_from_slice(b"WEBP");
+
+    // VP8 chunk (image data)
+    webp.extend_from_slice(b"VP8 ");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]); // Data
+
+    // EXIF chunk (metadata to be removed)
+    webp.extend_from_slice(b"EXIF");
+    webp.extend_from_slice(&[0x10, 0x00, 0x00, 0x00]); // Chunk size (16 bytes)
+    webp.extend_from_slice(&[0x00; 16]); // 16 bytes of EXIF data
+
+    let original_size = webp.len();
+    let cleaned = BinaryCleaner::clean_metadata(&webp, "webp").unwrap();
+
+    // Verify EXIF chunk was removed
+    assert!(!cleaned.windows(4).any(|w| w == b"EXIF"));
+
+    // Verify RIFF file size was updated correctly
+    let new_file_size = u32::from_le_bytes([cleaned[4], cleaned[5], cleaned[6], cleaned[7]]);
+    let expected_size = (cleaned.len() - 8) as u32; // File size excluding RIFF header
+    assert_eq!(new_file_size, expected_size);
+
+    // Verify file is smaller
+    assert!(cleaned.len() < original_size);
+}
+
+#[test]
+fn clean_webp_chunk_with_odd_size_padding() {
+    let mut webp = b"RIFF".to_vec();
+    webp.extend_from_slice(&[0x24, 0x00, 0x00, 0x00]); // File size
+    webp.extend_from_slice(b"WEBP");
+
+    // VP8 chunk
+    webp.extend_from_slice(b"VP8 ");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]); // Data
+
+    // EXIF chunk with odd size (requires padding)
+    webp.extend_from_slice(b"EXIF");
+    webp.extend_from_slice(&[0x05, 0x00, 0x00, 0x00]); // Odd chunk size (5 bytes)
+    webp.extend_from_slice(&[0xAA, 0xBB, 0xCC, 0xDD, 0xEE]); // 5 bytes of data
+    webp.push(0x00); // Padding byte for alignment
+
+    let cleaned = BinaryCleaner::clean_metadata(&webp, "webp").unwrap();
+
+    // Should handle padding correctly and remove EXIF chunk
+    assert!(!cleaned.windows(4).any(|w| w == b"EXIF"));
+    assert!(cleaned.windows(4).any(|w| w == b"VP8 "));
+}
+
+// GIF Edge Cases
+#[test]
+fn clean_gif_truncated_extension_block() {
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]); // Screen descriptor
+
+    // Truncated comment extension (missing terminator)
+    gif.extend_from_slice(&[0x21, 0xFE, 0x05]); // Comment extension, 5 bytes
+    gif.extend_from_slice(b"hello"); // 5 bytes of comment
+    // Missing 0x00 terminator
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    // GIF cleaner gracefully handles truncated extensions by breaking out of parsing
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should preserve GIF header and screen descriptor
+    assert!(cleaned.starts_with(b"GIF89a"));
+}
+
+#[test]
+fn clean_gif_application_extension_with_sub_blocks() {
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]); // Screen descriptor
+
+    // Application extension with multiple sub-blocks
+    gif.extend_from_slice(&[0x21, 0xFF, 0x0B]); // Application extension + block size
+    gif.extend_from_slice(b"NETSCAPE2.0"); // Application identifier
+
+    // Sub-block 1
+    gif.extend_from_slice(&[0x03, 0x01, 0x00, 0x00]); // 3 bytes: loop forever
+
+    // Sub-block 2
+    gif.extend_from_slice(&[0x05, b'h', b'e', b'l', b'l', b'o']); // 5 bytes of data
+
+    // Block terminator
+    gif.extend_from_slice(&[0x00]);
+
+    // Trailer
+    gif.push(0x3B);
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should remove the entire application extension
+    assert!(!cleaned.windows(2).any(|w| w == [0x21, 0xFF]));
+    assert_eq!(cleaned.last(), Some(&0x3B)); // Trailer preserved
+}
