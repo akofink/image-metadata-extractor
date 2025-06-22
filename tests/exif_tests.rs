@@ -336,3 +336,266 @@ fn test_determine_mime_type_all_supported_extensions() {
         assert_eq!(result, *expected_mime, "Failed for {}", filename);
     }
 }
+
+#[test]
+fn test_parse_gps_coordinate_decimal_values() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test with decimal GPS coordinates (degrees, minutes, seconds)
+    let decimal_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 37, denom: 1 }, // 37 degrees
+            Rational { num: 26, denom: 1 }, // 26 minutes
+            Rational {
+                num: 2140,
+                denom: 100,
+            }, // 21.40 seconds
+        ]),
+    };
+
+    let result = parse_gps_coordinate(&decimal_field, &dummy_exif).unwrap();
+    let expected = 37.0 + 26.0 / 60.0 + 21.40 / 3600.0;
+    assert!(
+        (result - expected).abs() < 1e-6,
+        "GPS calculation incorrect: {} vs {}",
+        result,
+        expected
+    );
+}
+
+#[test]
+fn test_parse_gps_coordinate_fractional_values() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test with fractional values in degrees/minutes/seconds
+    let fractional_field = Field {
+        tag: Tag::GPSLongitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 122, denom: 2 }, // 61 degrees (122/2)
+            Rational { num: 90, denom: 3 },  // 30 minutes (90/3)
+            Rational {
+                num: 450,
+                denom: 15,
+            }, // 30 seconds (450/15)
+        ]),
+    };
+
+    let result = parse_gps_coordinate(&fractional_field, &dummy_exif).unwrap();
+    let expected = 61.0 + 30.0 / 60.0 + 30.0 / 3600.0;
+    assert!(
+        (result - expected).abs() < 1e-6,
+        "GPS fractional calculation incorrect: {} vs {}",
+        result,
+        expected
+    );
+}
+
+#[test]
+fn test_parse_gps_coordinate_zero_values() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test with zero values
+    let zero_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 0, denom: 1 },
+            Rational { num: 0, denom: 1 },
+            Rational { num: 0, denom: 1 },
+        ]),
+    };
+
+    let result = parse_gps_coordinate(&zero_field, &dummy_exif).unwrap();
+    assert_eq!(result, 0.0, "Zero GPS coordinates should return 0.0");
+}
+
+#[test]
+fn test_parse_gps_coordinate_maximum_values() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test with maximum valid GPS values
+    let max_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 89, denom: 1 }, // 89 degrees (max latitude)
+            Rational { num: 59, denom: 1 }, // 59 minutes (max minutes)
+            Rational { num: 59, denom: 1 }, // 59 seconds (max seconds)
+        ]),
+    };
+
+    let result = parse_gps_coordinate(&max_field, &dummy_exif).unwrap();
+    let expected = 89.0 + 59.0 / 60.0 + 59.0 / 3600.0;
+    assert!(
+        (result - expected).abs() < 1e-6,
+        "Max GPS calculation incorrect: {} vs {}",
+        result,
+        expected
+    );
+    assert!(result < 90.0, "Latitude should be less than 90 degrees");
+}
+
+#[test]
+fn test_extract_exif_data_with_gps_coordinates() {
+    // Test extract_exif_data with a JPEG that contains GPS data
+    let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
+    let (exif_map, gps_coords) = extract_exif_data(&bytes);
+
+    // Should extract metadata
+    assert!(!exif_map.is_empty(), "Should extract EXIF fields");
+
+    // Should extract GPS coordinates
+    assert!(gps_coords.is_some(), "Should extract GPS coordinates");
+
+    if let Some((lat, lon)) = gps_coords {
+        // Verify coordinate ranges
+        assert!(
+            lat >= -90.0 && lat <= 90.0,
+            "Latitude out of range: {}",
+            lat
+        );
+        assert!(
+            lon >= -180.0 && lon <= 180.0,
+            "Longitude out of range: {}",
+            lon
+        );
+
+        // These are the specific coordinates from the test image
+        assert!(
+            (lat - 1.0).abs() < 1e-5,
+            "Expected latitude ~1.0, got {}",
+            lat
+        );
+        assert!(
+            (lon + 2.5).abs() < 1e-5,
+            "Expected longitude ~-2.5, got {}",
+            lon
+        );
+    }
+}
+
+#[test]
+fn test_extract_exif_data_metadata_field_extraction() {
+    // Test that EXIF field extraction works correctly
+    let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
+    let (exif_map, _) = extract_exif_data(&bytes);
+
+    // Should have extracted multiple fields
+    assert!(
+        exif_map.len() >= 3,
+        "Should extract multiple EXIF fields, got {}",
+        exif_map.len()
+    );
+
+    // Check for common EXIF tags (field names are tag descriptions)
+    let has_common_tags = exif_map.keys().any(|key| {
+        key.contains("GPS")
+            || key.contains("DateTime")
+            || key.contains("Image")
+            || key.contains("Photo")
+    });
+
+    assert!(
+        has_common_tags,
+        "Should contain common EXIF tags. Found keys: {:?}",
+        exif_map.keys().collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn test_extract_exif_data_corrupted_gps() {
+    // Create test data with corrupted GPS but valid EXIF structure
+    let mut test_exif_data = general_purpose::STANDARD.decode(JPG_B64).unwrap();
+
+    // Truncate to simulate corruption while keeping basic structure
+    if test_exif_data.len() > 20 {
+        test_exif_data.truncate(test_exif_data.len() / 2);
+    }
+
+    let (exif_map, gps_coords) = extract_exif_data(&test_exif_data);
+
+    // Corrupted data should gracefully return empty results
+    assert!(
+        exif_map.is_empty(),
+        "Corrupted data should return empty EXIF map"
+    );
+    assert!(
+        gps_coords.is_none(),
+        "Corrupted data should return no GPS coordinates"
+    );
+}
+
+#[test]
+fn test_parse_gps_coordinate_with_different_tag_types() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test GPS longitude parsing (same logic as latitude but different tag)
+    let longitude_field = Field {
+        tag: Tag::GPSLongitude, // Different tag type
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 120, denom: 1 },
+            Rational { num: 15, denom: 1 },
+            Rational { num: 30, denom: 1 },
+        ]),
+    };
+
+    let result = parse_gps_coordinate(&longitude_field, &dummy_exif).unwrap();
+    let expected = 120.0 + 15.0 / 60.0 + 30.0 / 3600.0;
+    assert!(
+        (result - expected).abs() < 1e-6,
+        "GPS longitude calculation incorrect"
+    );
+}
+
+// Note: test_get_dimensions_with_invalid_image_data removed because get_dimensions
+// calls internal image loading functions that require WASM APIs not available in native tests
+
+#[test]
+fn test_get_dimensions_non_image_mime_types_comprehensive() {
+    // Test that non-image MIME types consistently return None
+    let non_image_types = [
+        "application/pdf",
+        "application/json",
+        "text/plain",
+        "video/mp4",
+        "audio/mp3",
+        "application/zip",
+        "text/html",
+    ];
+
+    let dummy_data = &[0x00, 0x01, 0x02, 0x03];
+
+    for mime_type in non_image_types.iter() {
+        let (w, h) = get_dimensions(mime_type, dummy_data);
+        assert_eq!(
+            (w, h),
+            (None, None),
+            "Non-image type {} should return None",
+            mime_type
+        );
+    }
+}
