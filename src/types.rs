@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
 /// Metadata extracted from an uploaded file.
-#[derive(Clone, PartialEq, Serialize)]
+#[derive(Clone, PartialEq, Serialize, Debug)]
 pub struct ImageData {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub name: String,
