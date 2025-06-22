@@ -2,6 +2,8 @@ use base64::Engine;
 use base64::engine::general_purpose;
 use exif::Rational;
 use exif::{Field, In, Tag, Value};
+#[cfg(target_arch = "wasm32")]
+use image_metadata_extractor::exif::create_data_url;
 use image_metadata_extractor::exif::{
     determine_mime_type, extract_exif_data, get_dimensions, is_supported_mime_type,
     parse_gps_coordinate,
@@ -101,4 +103,148 @@ fn test_extract_exif_data_gps() {
     let (map2, gps2) = extract_exif_data(b"not exif");
     assert!(map2.is_empty());
     assert!(gps2.is_none());
+}
+
+// create_data_url uses web APIs - test in WASM environment only
+#[cfg(target_arch = "wasm32")]
+#[test]
+fn test_create_data_url() {
+    let data = b"hello world";
+    let url = create_data_url("text/plain", data);
+    assert!(url.starts_with("data:text/plain;base64,"));
+    assert!(url.contains("aGVsbG8gd29ybGQ=")); // base64 of "hello world"
+}
+
+#[test]
+fn test_determine_mime_type_webp() {
+    // Test WebP format detection
+    let webp_header = b"RIFF\x20\x00\x00\x00WEBP";
+    let mime = determine_mime_type("test.webp", "", webp_header);
+    assert_eq!(mime, "image/webp");
+}
+
+#[test]
+fn test_determine_mime_type_tif_extension() {
+    // Test .tif extension (not just .tiff)
+    let mime = determine_mime_type("image.tif", "", b"unknown");
+    assert_eq!(mime, "image/tiff");
+}
+
+#[test]
+fn test_determine_mime_type_case_insensitive() {
+    // Test case insensitive extension matching
+    let mime1 = determine_mime_type("IMAGE.PDF", "", b"unknown");
+    assert_eq!(mime1, "application/pdf");
+
+    let mime2 = determine_mime_type("photo.HEIC", "", b"unknown");
+    assert_eq!(mime2, "image/heif");
+}
+
+#[test]
+fn test_is_supported_mime_type_comprehensive() {
+    // Test all supported MIME types
+    let supported_types = [
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "image/svg+xml",
+        "image/tiff",
+        "image/heif",
+        "image/avif",
+        "image/jxl",
+    ];
+
+    for mime_type in &supported_types {
+        assert!(
+            is_supported_mime_type(mime_type),
+            "Should support {}",
+            mime_type
+        );
+    }
+
+    // Test unsupported types
+    let unsupported_types = [
+        "text/plain",
+        "application/json",
+        "image/bmp",
+        "video/mp4",
+        "audio/mp3",
+    ];
+
+    for mime_type in &unsupported_types {
+        assert!(
+            !is_supported_mime_type(mime_type),
+            "Should not support {}",
+            mime_type
+        );
+    }
+}
+
+#[test]
+fn test_get_dimensions_svg_exclusion() {
+    // Test that SVG is excluded from dimension parsing
+    let svg_data = b"<svg width='100' height='200'></svg>";
+    let (w, h) = get_dimensions("image/svg+xml", svg_data);
+    assert_eq!((w, h), (None, None));
+}
+
+// Note: Invalid image test removed due to dependency issues in test environment
+
+#[test]
+fn test_parse_gps_coordinate_edge_cases() {
+    let dummy_exif = exif::Reader::new()
+        .read_from_container(&mut Cursor::new(
+            general_purpose::STANDARD.decode(JPG_B64).unwrap(),
+        ))
+        .unwrap();
+
+    // Test with empty rational array
+    let empty_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![]),
+    };
+    assert!(parse_gps_coordinate(&empty_field, &dummy_exif).is_none());
+
+    // Test with only 2 rational values (should be 3 for DMS)
+    let short_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Rational(vec![
+            Rational { num: 40, denom: 1 },
+            Rational { num: 30, denom: 1 },
+        ]),
+    };
+    assert!(parse_gps_coordinate(&short_field, &dummy_exif).is_none());
+
+    // Test non-rational value
+    let string_field = Field {
+        tag: Tag::GPSLatitude,
+        ifd_num: In::PRIMARY,
+        value: Value::Ascii(vec![b"40.123".to_vec()]),
+    };
+    assert!(parse_gps_coordinate(&string_field, &dummy_exif).is_none());
+}
+
+#[test]
+fn test_extract_exif_data_various_inputs() {
+    // Test with empty data
+    let (map, gps) = extract_exif_data(&[]);
+    assert!(map.is_empty());
+    assert!(gps.is_none());
+
+    // Test with PNG data (should work for some PNG files with EXIF)
+    let png_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde";
+    let (map, gps) = extract_exif_data(png_data);
+    // PNG without EXIF should return empty
+    assert!(map.is_empty());
+    assert!(gps.is_none());
+
+    // Test with random binary data
+    let random_data = &[0x00, 0x01, 0x02, 0x03, 0xFF, 0xFE, 0xFD];
+    let (map, gps) = extract_exif_data(random_data);
+    assert!(map.is_empty());
+    assert!(gps.is_none());
 }

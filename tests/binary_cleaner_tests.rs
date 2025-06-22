@@ -1,5 +1,6 @@
 use image_metadata_extractor::binary_cleaner::BinaryCleaner;
 
+// JPEG Tests
 #[test]
 fn remove_jpeg_app_segments_strips_app_data() {
     let mut data = vec![0xFF, 0xD8];
@@ -16,6 +17,52 @@ fn remove_jpeg_app_segments_strips_app_data() {
 }
 
 #[test]
+fn clean_jpeg_multiple_app_segments() {
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    // APP0 segment
+    data.extend_from_slice(&[0xFF, 0xE0, 0x00, 0x10]);
+    data.extend_from_slice(b"JFIF\0\x01\x01\x01\0\x48\0\x48\0\0");
+    // APP1 segment (EXIF)
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x06]);
+    data.extend_from_slice(b"EXIF");
+    // Start of scan
+    data.extend_from_slice(&[0xFF, 0xDA, 0x00, 0x04, 0x01, 0x02]);
+
+    let cleaned = BinaryCleaner::clean_metadata(&data, "jpeg").unwrap();
+    assert_eq!(&cleaned[0..2], &[0xFF, 0xD8]); // SOI preserved
+    assert_eq!(&cleaned[2..4], &[0xFF, 0xDA]); // SOS preserved
+    assert!(cleaned.len() < data.len()); // APP segments removed
+}
+
+#[test]
+fn clean_jpeg_invalid_soi_marker() {
+    // Missing SOI marker - our validation catches this
+    let result = BinaryCleaner::clean_metadata(&[0x00, 0x01, 0x02, 0x03], "jpg");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("missing SOI marker"));
+}
+
+#[test]
+fn clean_jpeg_with_proper_segments() {
+    // Test a properly formed JPEG with segments that can be cleanly removed
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    // Add a properly formed APP0 segment
+    data.extend_from_slice(&[0xFF, 0xE0, 0x00, 0x10]); // APP0, length 16
+    data.extend_from_slice(&[0x4A, 0x46, 0x49, 0x46, 0x00]); // "JFIF\0"
+    data.extend_from_slice(&[
+        0x01, 0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0x00, 0x00,
+    ]); // JFIF data
+    // Add SOS to end parsing
+    data.extend_from_slice(&[0xFF, 0xDA, 0x00, 0x02, 0x01, 0x02]); // Start of scan
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    assert!(cleaned.len() < data.len()); // APP0 should be removed
+}
+
+// PNG Tests
+#[test]
 fn clean_png_metadata_drops_text_chunks() {
     let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
     png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, b'I', b'H', b'D', b'R', 0, 0, 0, 0]);
@@ -28,6 +75,104 @@ fn clean_png_metadata_drops_text_chunks() {
 }
 
 #[test]
+fn clean_png_metadata_removes_all_metadata_chunks() {
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    // IHDR (critical)
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Add metadata chunks that should be removed
+    let metadata_chunks = [
+        (b"tIME", 7u32),
+        (b"pHYs", 9u32),
+        (b"gAMA", 4u32),
+        (b"cHRM", 32u32),
+        (b"sRGB", 1u32),
+        (b"iCCP", 10u32),
+        (b"zTXt", 8u32),
+        (b"iTXt", 12u32),
+    ];
+
+    for (chunk_name, size) in metadata_chunks.iter() {
+        png.extend_from_slice(&size.to_be_bytes());
+        png.extend_from_slice(*chunk_name);
+        png.extend_from_slice(&vec![0u8; *size as usize]);
+        png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+    }
+
+    // IEND (critical)
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, b'I', b'E', b'N', b'D', 0, 0, 0, 0]);
+
+    let cleaned = BinaryCleaner::clean_metadata(&png, "png").unwrap();
+    assert!(cleaned.windows(4).any(|w| w == b"IHDR"));
+    assert!(cleaned.windows(4).any(|w| w == b"IEND"));
+
+    // Verify metadata chunks are removed
+    for (chunk_name, _) in metadata_chunks.iter() {
+        assert!(
+            !cleaned.windows(4).any(|w| w == *chunk_name),
+            "Chunk {:?} should be removed",
+            std::str::from_utf8(*chunk_name)
+        );
+    }
+}
+
+#[test]
+fn clean_png_invalid_files() {
+    // Too short
+    let result = BinaryCleaner::clean_metadata(&[0x89, 0x50], "png");
+    assert!(result.is_err());
+
+    // Invalid signature
+    let bad_png = vec![0x00, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    let result = BinaryCleaner::clean_metadata(&bad_png, "png");
+    assert!(result.is_err());
+}
+
+// WebP Tests
+#[test]
+fn clean_webp_metadata_removes_exif_xmp() {
+    let mut webp = b"RIFF".to_vec();
+    webp.extend_from_slice(&[0x20, 0x00, 0x00, 0x00]); // File size (little-endian)
+    webp.extend_from_slice(b"WEBP");
+
+    // VP8 chunk (image data)
+    webp.extend_from_slice(b"VP8 ");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]); // Data
+
+    // EXIF chunk (metadata)
+    webp.extend_from_slice(b"EXIF");
+    webp.extend_from_slice(&[0x04, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0xAA, 0xBB, 0xCC, 0xDD]); // Metadata
+
+    let cleaned = BinaryCleaner::clean_metadata(&webp, "webp").unwrap();
+    assert!(cleaned.windows(4).any(|w| w == b"VP8 "));
+    assert!(!cleaned.windows(4).any(|w| w == b"EXIF"));
+}
+
+#[test]
+fn clean_webp_invalid_files() {
+    // Too short
+    let result = BinaryCleaner::clean_metadata(&[b'R', b'I'], "webp");
+    assert!(result.is_err());
+
+    // Invalid RIFF header
+    let bad_webp = b"JUNK1234WEBP".to_vec();
+    let result = BinaryCleaner::clean_metadata(&bad_webp, "webp");
+    assert!(result.is_err());
+
+    // Missing WEBP signature
+    let bad_webp = b"RIFF\x10\x00\x00\x00JUNK".to_vec();
+    let result = BinaryCleaner::clean_metadata(&bad_webp, "webp");
+    assert!(result.is_err());
+}
+
+// GIF Tests
+#[test]
 fn clean_gif_metadata_removes_comment_extension() {
     let mut gif = b"GIF89a".to_vec();
     gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]);
@@ -39,6 +184,75 @@ fn clean_gif_metadata_removes_comment_extension() {
 }
 
 #[test]
+fn clean_gif_metadata_removes_application_extension() {
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]); // Screen descriptor
+    // Application extension with XMP data
+    gif.extend_from_slice(&[0x21, 0xFF, 0x0B]); // Application extension + block size
+    gif.extend_from_slice(b"XMP DataXMP"); // Application identifier
+    gif.extend_from_slice(&[0x05, b'h', b'e', b'l', b'l', b'o']); // Sub-block
+    gif.extend_from_slice(&[0x00]); // Block terminator
+    gif.push(0x3B); // Trailer
+
+    let cleaned = BinaryCleaner::clean_metadata(&gif, "gif").unwrap();
+    assert!(!cleaned.windows(2).any(|w| w == [0x21, 0xFF]));
+    assert_eq!(cleaned.last(), Some(&0x3B));
+}
+
+#[test]
+fn clean_gif_invalid_files() {
+    // Too short
+    let result = BinaryCleaner::clean_metadata(&[b'G', b'I'], "gif");
+    assert!(result.is_err());
+
+    // Invalid signature
+    let bad_gif = b"NOTGIF".to_vec();
+    let result = BinaryCleaner::clean_metadata(&bad_gif, "gif");
+    assert!(result.is_err());
+
+    // Invalid version
+    let bad_gif = b"GIF99a".to_vec();
+    let result = BinaryCleaner::clean_metadata(&bad_gif, "gif");
+    assert!(result.is_err());
+}
+
+// TIFF Tests
+#[test]
+fn clean_tiff_metadata_basic() {
+    // Create minimal TIFF header
+    let mut tiff = vec![0x49, 0x49, 0x2A, 0x00]; // Little-endian TIFF header
+    tiff.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // IFD offset
+
+    let cleaned = BinaryCleaner::clean_metadata(&tiff, "tiff").unwrap();
+    // Should return the data (little_exif clears metadata)
+    assert_eq!(cleaned.len(), tiff.len());
+}
+
+#[test]
+fn clean_tiff_alternative_extension() {
+    let tiff = vec![0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08]; // Big-endian TIFF
+    let cleaned = BinaryCleaner::clean_metadata(&tiff, "tif").unwrap();
+    assert_eq!(cleaned.len(), tiff.len());
+}
+
+// HEIF Tests
+#[test]
+fn clean_heif_metadata_basic() {
+    // Create minimal HEIF data
+    let heif = vec![0x00, 0x00, 0x00, 0x20, b'f', b't', b'y', b'p']; // HEIF box header
+    let cleaned = BinaryCleaner::clean_metadata(&heif, "heif").unwrap();
+    assert_eq!(cleaned.len(), heif.len());
+}
+
+#[test]
+fn clean_heic_metadata_basic() {
+    let heic = vec![0x00, 0x00, 0x00, 0x20, b'f', b't', b'y', b'p'];
+    let cleaned = BinaryCleaner::clean_metadata(&heic, "heic").unwrap();
+    assert_eq!(cleaned.len(), heic.len());
+}
+
+// SVG Tests
+#[test]
 fn clean_svg_metadata_removes_metadata_elements() {
     let svg = b"<svg>\n<metadata>secret</metadata>\n<rect width='1' height='1'/>\n</svg>";
     let cleaned = BinaryCleaner::clean_metadata(svg, "svg").unwrap();
@@ -48,11 +262,22 @@ fn clean_svg_metadata_removes_metadata_elements() {
 }
 
 #[test]
+fn clean_svg_metadata_removes_rdf_elements() {
+    let svg = b"<svg xmlns:rdf=\"test\">\n<rdf:Description>data</rdf:Description>\n<circle r='5'/>\n</svg>";
+    let cleaned = BinaryCleaner::clean_metadata(svg, "svg").unwrap();
+    let cleaned_str = String::from_utf8(cleaned).unwrap();
+    assert!(!cleaned_str.contains("xmlns:rdf"));
+    assert!(!cleaned_str.contains("<rdf:"));
+    assert!(cleaned_str.contains("<circle"));
+}
+
+#[test]
 fn clean_svg_metadata_invalid_input() {
     let result = BinaryCleaner::clean_metadata(b"not svg", "svg");
     assert!(result.is_err());
 }
 
+// PDF Tests
 #[test]
 fn clean_pdf_metadata_basic_validation() {
     let pdf = b"%PDF-1.4\n%1234";
@@ -60,4 +285,36 @@ fn clean_pdf_metadata_basic_validation() {
     assert_eq!(cleaned, pdf);
     let bad = BinaryCleaner::clean_metadata(b"not a pdf", "pdf");
     assert!(bad.is_err());
+}
+
+// Unimplemented format tests
+#[test]
+fn clean_avif_not_implemented() {
+    let result = BinaryCleaner::clean_metadata(&[0x01, 0x02], "avif");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("not fully implemented"));
+}
+
+#[test]
+fn clean_jxl_not_implemented() {
+    let result = BinaryCleaner::clean_metadata(&[0x01, 0x02], "jxl");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("not fully implemented"));
+}
+
+// Unsupported format test
+#[test]
+fn clean_unsupported_format() {
+    let result = BinaryCleaner::clean_metadata(&[0x01, 0x02], "xyz");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("Unsupported format"));
+}
+
+// Test case sensitivity
+#[test]
+fn clean_metadata_case_insensitive() {
+    let jpeg = vec![0xFF, 0xD8, 0xFF, 0xDA, 0x00, 0x04, 0x01, 0x02];
+    let cleaned_upper = BinaryCleaner::clean_metadata(&jpeg, "JPEG").unwrap();
+    let cleaned_lower = BinaryCleaner::clean_metadata(&jpeg, "jpeg").unwrap();
+    assert_eq!(cleaned_upper, cleaned_lower);
 }
