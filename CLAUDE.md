@@ -59,7 +59,7 @@ After starting the server, open `http://localhost:8000` in your browser.
 - **Yew Framework**: React-like component framework for Rust web applications
 - **kamadak-exif**: EXIF metadata parsing library
 - **image crate**: Image format support and dimension extraction
-- **web-sys**: Browser API bindings for file handling, DOM manipulation, and Canvas operations
+- **web-sys**: Browser API bindings for file handling and DOM manipulation
 
 ### Modular Component Architecture
 The application uses a modern component-based architecture for maintainability and reusability:
@@ -79,7 +79,7 @@ The application uses a modern component-based architecture for maintainability a
 #### **Core Logic Modules** (`src/`)
 - **`exif.rs`**: EXIF metadata extraction and GPS coordinate parsing
 - **`export.rs`**: CSV and text export generation functions
-- **`image_cleaner.rs`**: Canvas-based metadata removal and image processing
+- **`image_cleaner.rs`**: Format detection utilities for cleaned image output
 - **`metadata_info.rs`**: Field explanations, categorization, and help text
 - **`types.rs`**: Data structures, filtering logic, and serialization
 - **`utils.rs`**: File downloads, size formatting, and utility functions
@@ -92,7 +92,7 @@ The application uses a modern component-based architecture for maintainability a
 
 ### Browser Integration
 - **File API**: Advanced file handling with drag-and-drop support
-- **Canvas API**: Image processing for metadata removal and format conversion
+- **Binary Processing**: Direct byte-stream metadata removal preserving image quality
 - **Blob API**: Dynamic file generation for downloads
 - **Local Storage**: No data persistence (privacy-first design)
 - **Responsive Design**: Mobile-optimized layouts and interactions
@@ -132,11 +132,11 @@ The build process generates the `pkg/` directory containing:
 ## Supported Features
 
 ### Image Processing
-- **Image Formats**: JPEG (full EXIF), PNG, GIF, WebP
+- **Image Formats**: JPEG (full EXIF), PNG, GIF, WebP, TIFF, HEIF, SVG, PDF
 - **Metadata Extraction**: Camera settings, timestamps, GPS location, technical specifications
-- **Privacy Cleaning**: Complete metadata removal via Canvas API
-- **Format Conversion**: JPEG ↔ PNG during cleaning process
-- **Quality Control**: Adjustable JPEG compression (30%-100%)
+- **Privacy Cleaning**: Complete metadata removal via binary stream processing (little_exif library)
+- **Format Detection**: Automatic MIME type detection and format validation
+- **Lossless Processing**: Direct byte-stream manipulation preserves original image quality
 
 ### Data Export
 - **Export Formats**: JSON (structured), CSV (spreadsheet), TXT (human-readable)
@@ -206,9 +206,9 @@ The build process generates the `pkg/` directory containing:
 - Enhanced spacing and sizing for mobile devices
 
 ### Privacy Features (Latest)
-- Canvas-based image cleaning for complete metadata removal
-- Format conversion capabilities during cleaning process
-- Quality controls for size vs. quality optimization
+- Binary stream-based image cleaning for complete metadata removal using little_exif library
+- Lossless metadata stripping preserving original image quality
+- Support for multiple image formats (JPEG, PNG, GIF, WebP, TIFF, HEIF, SVG, PDF)
 - Browser-native downloads with cleaned filenames
 
 The codebase maintains high standards through automated tooling, comprehensive pre-commit checks, and a focus on user experience across all device types.
