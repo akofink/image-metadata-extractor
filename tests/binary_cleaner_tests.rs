@@ -567,3 +567,327 @@ fn clean_gif_application_extension_with_sub_blocks() {
     assert!(!cleaned.windows(2).any(|w| w == [0x21, 0xFF]));
     assert_eq!(cleaned.last(), Some(&0x3B)); // Trailer preserved
 }
+
+// High Priority Coverage Tests - Targeting Specific Uncovered Lines
+
+#[test]
+fn clean_jpeg_segment_boundary_conditions() {
+    // Test JPEG with valid segments at boundary conditions
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x02]); // APP1 with minimum valid length (2)
+    data.extend_from_slice(&[0xFF, 0xDA]); // Start of scan to terminate parsing
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should remove the APP1 segment and preserve SOI and SOS
+    assert!(cleaned.starts_with(&[0xFF, 0xD8]));
+    assert!(cleaned.windows(2).any(|w| w == [0xFF, 0xDA]));
+}
+
+#[test]
+fn clean_jpeg_marker_sequence_handling() {
+    // Test JPEG with various marker sequences
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE0, 0x00, 0x04, 0x01, 0x02]); // APP0 with 2 bytes data
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x06, 0x03, 0x04, 0x05, 0x06]); // APP1 with 4 bytes data
+    data.extend_from_slice(&[0xFF, 0xDA]); // Start of scan
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should remove both APP segments but preserve structure
+    assert!(cleaned.starts_with(&[0xFF, 0xD8]));
+    assert!(cleaned.windows(2).any(|w| w == [0xFF, 0xDA]));
+    assert!(cleaned.len() < data.len()); // Should be smaller due to removed segments
+}
+
+#[test]
+fn clean_jpeg_non_app_segment_with_invalid_length() {
+    // Target lines 131-134: Non-APP segment with invalid length
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xDB, 0xFF, 0xFF]); // Quantization table with huge length
+    data.extend_from_slice(&[0x01, 0x02]); // Only 2 bytes of data
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+    // Should gracefully handle by copying remaining data
+    assert!(cleaned.len() >= 4); // At least SOI + partial segment
+}
+
+#[test]
+fn clean_png_preserves_unknown_ancillary_chunks() {
+    // Target lines 185-186: Unknown ancillary chunk preservation
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // PNG signature
+
+    // IHDR chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Unknown ancillary chunk "bKGD" (background color)
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x06, b'b', b'K', b'G', b'D']);
+    png.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00]); // 6 bytes of background data
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // IEND chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, b'I', b'E', b'N', b'D', 0, 0, 0, 0]);
+
+    let result = BinaryCleaner::clean_metadata(&png, "png");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should preserve unknown ancillary chunks like bKGD
+    assert!(
+        cleaned.windows(4).any(|w| w == b"bKGD"),
+        "Should preserve unknown ancillary chunk bKGD"
+    );
+    assert!(
+        cleaned.windows(4).any(|w| w == b"IHDR"),
+        "Should preserve IHDR"
+    );
+    assert!(
+        cleaned.windows(4).any(|w| w == b"IEND"),
+        "Should preserve IEND"
+    );
+}
+
+#[test]
+fn clean_png_chunk_header_truncated_at_7_bytes() {
+    // Target lines 160-163: Truncated exactly at 7 bytes into chunk header
+    let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // PNG signature
+
+    // IHDR chunk
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x0D, b'I', b'H', b'D', b'R']);
+    png.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00,
+    ]);
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // CRC
+
+    // Truncated chunk header - 7 bytes instead of 8
+    png.extend_from_slice(&[0x00, 0x00, 0x00, 0x10, b't', b'E', b'X']); // Missing final 't'
+
+    let result = BinaryCleaner::clean_metadata(&png, "png");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should handle truncation gracefully
+    assert!(cleaned.windows(4).any(|w| w == b"IHDR"));
+    assert!(cleaned.len() < png.len()); // Should stop at truncation
+}
+
+#[test]
+fn clean_webp_preserves_unknown_chunks() {
+    // Target lines 246-249: Unknown chunk preservation in WebP
+    let mut webp = b"RIFF".to_vec();
+    webp.extend_from_slice(&[0x28, 0x00, 0x00, 0x00]); // File size
+    webp.extend_from_slice(b"WEBP");
+
+    // VP8 chunk (image data)
+    webp.extend_from_slice(b"VP8 ");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]); // Data
+
+    // Unknown chunk "UNKN" that should be preserved
+    webp.extend_from_slice(b"UNKN");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22]); // 8 bytes data
+
+    let cleaned = BinaryCleaner::clean_metadata(&webp, "webp").unwrap();
+
+    // Should preserve unknown chunks
+    assert!(
+        cleaned.windows(4).any(|w| w == b"UNKN"),
+        "Should preserve unknown chunk UNKN"
+    );
+    assert!(
+        cleaned.windows(4).any(|w| w == b"VP8 "),
+        "Should preserve VP8 chunk"
+    );
+
+    // Verify file size was updated correctly
+    let new_file_size = u32::from_le_bytes([cleaned[4], cleaned[5], cleaned[6], cleaned[7]]);
+    let expected_size = (cleaned.len() - 8) as u32;
+    assert_eq!(
+        new_file_size, expected_size,
+        "File size should be updated correctly"
+    );
+}
+
+#[test]
+fn clean_webp_unknown_chunk_with_odd_size() {
+    // Target lines 224-228: Odd chunk size padding for unknown chunks
+    let mut webp = b"RIFF".to_vec();
+    webp.extend_from_slice(&[0x20, 0x00, 0x00, 0x00]); // File size
+    webp.extend_from_slice(b"WEBP");
+
+    // VP8 chunk
+    webp.extend_from_slice(b"VP8 ");
+    webp.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // Chunk size
+    webp.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]); // Data
+
+    // Unknown chunk "TEST" with odd size (requires padding)
+    webp.extend_from_slice(b"TEST");
+    webp.extend_from_slice(&[0x03, 0x00, 0x00, 0x00]); // Odd chunk size (3 bytes)
+    webp.extend_from_slice(&[0xAA, 0xBB, 0xCC]); // 3 bytes of data
+    webp.push(0x00); // Padding byte for alignment
+
+    let cleaned = BinaryCleaner::clean_metadata(&webp, "webp").unwrap();
+
+    // Should handle odd-sized unknown chunks correctly with padding
+    assert!(
+        cleaned.windows(4).any(|w| w == b"TEST"),
+        "Should preserve unknown chunk TEST"
+    );
+    assert!(
+        cleaned.windows(4).any(|w| w == b"VP8 "),
+        "Should preserve VP8 chunk"
+    );
+}
+
+#[test]
+fn clean_gif_with_global_color_table() {
+    // Target lines 282-290: Global color table handling
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00]); // Screen width/height
+    gif.push(0x80 | 0x01); // Global color table flag set + 2-color table (bits 0-2 = 001)
+    gif.extend_from_slice(&[0x00, 0x00]); // Background color index and pixel aspect ratio
+
+    // Global color table (2 colors * 3 bytes = 6 bytes)
+    gif.extend_from_slice(&[0xFF, 0x00, 0x00]); // Color 0: Red
+    gif.extend_from_slice(&[0x00, 0xFF, 0x00]); // Color 1: Green
+
+    // Image data
+    gif.push(0x2C); // Image separator
+    gif.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00]); // Image descriptor
+    gif.push(0x3B); // Trailer
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should preserve global color table
+    assert!(cleaned.starts_with(b"GIF89a"), "Should preserve GIF header");
+    assert!(
+        cleaned.len() >= gif.len() - 10,
+        "Should preserve most of the file including color table"
+    );
+    assert_eq!(cleaned.last(), Some(&0x3B), "Should preserve trailer");
+}
+
+#[test]
+fn clean_gif_graphics_control_extension() {
+    // Target lines 338-354: Non-metadata extension preservation
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]); // Screen descriptor
+
+    // Graphics Control Extension (should be preserved, not metadata)
+    gif.extend_from_slice(&[0x21, 0xF9, 0x04]); // Graphics control extension + block size
+    gif.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // 4 bytes: disposal + user input + transparent + delay
+    gif.push(0x00); // Block terminator
+
+    // Image data
+    gif.push(0x2C); // Image separator
+    gif.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00]); // Image descriptor
+    gif.push(0x3B); // Trailer
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should preserve graphics control extension (not metadata)
+    assert!(
+        cleaned.windows(2).any(|w| w == [0x21, 0xF9]),
+        "Should preserve graphics control extension"
+    );
+    assert_eq!(cleaned.last(), Some(&0x3B), "Should preserve trailer");
+}
+
+#[test]
+fn clean_gif_unexpected_byte_in_data_stream() {
+    // Target lines 362-365: Unknown data handling
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]); // Screen descriptor
+
+    // Unexpected byte (not extension, image separator, or trailer)
+    gif.push(0x99); // Random unexpected byte
+
+    // Proper trailer to end
+    gif.push(0x3B);
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should handle unexpected data gracefully
+    assert!(cleaned.starts_with(b"GIF89a"), "Should preserve GIF header");
+    assert_eq!(cleaned.last(), Some(&0x3B), "Should preserve trailer");
+}
+
+#[test]
+fn clean_svg_removes_dublin_core_elements() {
+    // Target SVG line filtering for Dublin Core
+    let svg = b"<svg xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:title>Secret Title</dc:title>\n<dc:creator>Secret Author</dc:creator>\n<rect width='100' height='100'/>\n</svg>";
+
+    let cleaned = BinaryCleaner::clean_metadata(svg, "svg").unwrap();
+    let cleaned_str = String::from_utf8(cleaned).unwrap();
+
+    // Should remove Dublin Core elements and namespace
+    assert!(
+        !cleaned_str.contains("<dc:"),
+        "Should remove Dublin Core elements"
+    );
+    assert!(
+        !cleaned_str.contains("xmlns:dc"),
+        "Should remove Dublin Core namespace"
+    );
+    assert!(
+        cleaned_str.contains("<rect"),
+        "Should preserve SVG graphics elements"
+    );
+}
+
+#[test]
+fn clean_svg_removes_creative_commons_elements() {
+    // Target SVG line filtering for Creative Commons
+    let svg = b"<svg xmlns:cc=\"http://creativecommons.org/ns#\">\n<cc:license>Secret License</cc:license>\n<cc:work>Secret Work</cc:work>\n<circle r='50'/>\n</svg>";
+
+    let cleaned = BinaryCleaner::clean_metadata(svg, "svg").unwrap();
+    let cleaned_str = String::from_utf8(cleaned).unwrap();
+
+    // Should remove Creative Commons elements and namespace
+    assert!(
+        !cleaned_str.contains("<cc:"),
+        "Should remove Creative Commons elements"
+    );
+    assert!(
+        !cleaned_str.contains("xmlns:cc"),
+        "Should remove Creative Commons namespace"
+    );
+    assert!(
+        cleaned_str.contains("<circle"),
+        "Should preserve SVG graphics elements"
+    );
+}
+
+#[test]
+fn clean_gif_truncated_screen_descriptor() {
+    // Target lines 277-291: GIF with insufficient data for screen descriptor
+    let mut gif = b"GIF89a".to_vec();
+    gif.extend_from_slice(&[0x01, 0x00, 0x01]); // Only 9 bytes total (need 13 for full descriptor)
+
+    let result = BinaryCleaner::clean_metadata(&gif, "gif");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should handle incomplete screen descriptor gracefully
+    assert!(cleaned.starts_with(b"GIF89a"), "Should preserve GIF header");
+    assert_eq!(
+        cleaned.len(),
+        gif.len(),
+        "Should preserve all available data"
+    );
+}

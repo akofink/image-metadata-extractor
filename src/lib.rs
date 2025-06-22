@@ -8,10 +8,14 @@ pub mod app;
 pub mod binary_cleaner;
 pub mod components;
 pub mod exif;
+pub mod exif_core;
+pub mod exif_wasm;
 pub mod export;
 pub mod metadata_info;
 pub mod types;
 pub mod utils;
+pub mod utils_core;
+pub mod utils_wasm;
 
 use app::App;
 use wasm_bindgen::prelude::*;
