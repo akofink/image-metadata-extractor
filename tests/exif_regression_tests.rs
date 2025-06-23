@@ -1,5 +1,4 @@
-// Tests specifically targeting uncovered lines and regions in exif.rs
-// Focus on GPS reference handling, image dimensions, and format detection edge cases
+// Regression tests for GPS reference handling, image dimensions, and format detection edge cases
 
 use base64::Engine;
 use base64::engine::general_purpose;
@@ -10,7 +9,7 @@ const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAA
 
 #[test]
 fn test_get_dimensions_non_image_mime_comprehensive() {
-    // Target line 84: Non-image mime type path
+    // Test non-image mime type handling
     let dummy_data = &[0x01, 0x02, 0x03, 0x04];
 
     let non_image_types = [
@@ -34,7 +33,7 @@ fn test_get_dimensions_non_image_mime_comprehensive() {
 
 #[test]
 fn test_determine_mime_type_format_detection_failure() {
-    // Target lines 34-50: File extension fallback when image::guess_format() fails
+    // Test file extension fallback when image format detection fails
     let unrecognized_header = &[0x12, 0x34, 0x56, 0x78]; // Not a known image format
 
     // Should fall back to extension-based detection
@@ -91,7 +90,7 @@ fn test_determine_mime_type_edge_case_extensions() {
 
 #[test]
 fn test_extract_exif_data_gps_coordinate_building() {
-    // Target lines 130-145: GPS coordinate building and finalization
+    // Test GPS coordinate building and finalization
     let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
     let (exif_map, gps_coords) = extract_exif_data(&bytes);
 
@@ -204,7 +203,7 @@ fn test_determine_mime_type_comprehensive_format_detection() {
 
 #[test]
 fn test_extract_exif_data_field_iteration() {
-    // Target lines 131-136: EXIF field iteration and GPS building
+    // Test EXIF field iteration and GPS building
     let bytes = general_purpose::STANDARD.decode(JPG_B64).unwrap();
     let (exif_map, gps_coords) = extract_exif_data(&bytes);
 

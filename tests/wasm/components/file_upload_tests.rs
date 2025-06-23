@@ -43,7 +43,6 @@ fn test_file_upload_props_equality() {
     };
 
     // Test that props can be created without panicking
-    // Note: Callbacks cannot be compared for equality since they are function pointers
     // This test just verifies the props can be constructed and cloned without errors
     assert!(true);
 }

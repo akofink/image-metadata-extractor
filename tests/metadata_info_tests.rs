@@ -42,8 +42,7 @@ fn test_metadata_categories() {
 
 #[test]
 fn test_all_database_entries_accessible() {
-    // This test ensures 100% coverage of the database
-    // and validates that every entry is properly accessible
+    // This test validates that every database entry is properly accessible
     for (key, expected_info) in METADATA_DB {
         let explanation = get_metadata_explanation(key);
         let category = get_metadata_category(key);

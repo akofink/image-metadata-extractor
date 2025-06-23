@@ -190,8 +190,6 @@ fn test_get_dimensions_svg_exclusion() {
     assert_eq!((w, h), (None, None));
 }
 
-// Note: Invalid image test removed due to dependency issues in test environment
-
 #[test]
 fn test_parse_gps_coordinate_edge_cases() {
     let dummy_exif = exif::Reader::new()
@@ -570,9 +568,6 @@ fn test_parse_gps_coordinate_with_different_tag_types() {
         "GPS longitude calculation incorrect"
     );
 }
-
-// Note: test_get_dimensions_with_invalid_image_data removed because get_dimensions
-// calls internal image loading functions that require WASM APIs not available in native tests
 
 #[test]
 fn test_get_dimensions_non_image_mime_types_comprehensive() {

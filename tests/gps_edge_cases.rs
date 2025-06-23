@@ -4,7 +4,6 @@
 use image_metadata_extractor::exif_core::extract_exif_data;
 
 // Test data with specific GPS coordinate patterns to trigger different code paths
-// Note: These are simplified test cases focusing on hitting specific uncovered lines
 
 #[test]
 fn test_gps_southern_hemisphere_coordinates() {

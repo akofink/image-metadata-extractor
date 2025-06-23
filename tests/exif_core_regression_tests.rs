@@ -1,5 +1,5 @@
-// Final coverage tests specifically targeting the last uncovered lines in exif_core.rs
-// These tests focus on GPS coordinate edge cases and reference direction handling
+// Regression tests for GPS coordinate edge cases and reference direction handling
+// These tests ensure proper GPS coordinate parsing and reference application
 
 use base64::Engine;
 use base64::engine::general_purpose;
@@ -7,7 +7,7 @@ use image_metadata_extractor::exif_core::extract_exif_data;
 
 #[test]
 fn test_gps_coordinate_update_latitude_when_longitude_exists() {
-    // Target line 84: Setting GPS coordinates when latitude is found but longitude already exists
+    // Test GPS coordinate update when latitude is found but longitude already exists
     // This tests the specific case where longitude was parsed first, then latitude
 
     // Use the base64 JPEG with GPS that we know works
@@ -28,8 +28,7 @@ fn test_gps_coordinate_update_latitude_when_longitude_exists() {
 
 #[test]
 fn test_gps_coordinate_update_longitude_when_latitude_missing() {
-    // Target line 95: Setting GPS coordinates when longitude is found but no latitude exists yet
-    // This is harder to test with real EXIF data, so we test the parsing functions more directly
+    // Test GPS coordinate update when longitude is found but no latitude exists yet
 
     // Use a known JPEG with GPS data
     const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
@@ -55,8 +54,7 @@ fn test_gps_coordinate_update_longitude_when_latitude_missing() {
 
 #[test]
 fn test_gps_latitude_reference_south() {
-    // Target lines 113, 115-117: Negating latitude for 'S' (South) GPS reference
-    // This test specifically targets the GPS reference application for South coordinates
+    // Test GPS latitude reference application for 'S' (South) coordinates
 
     const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
 
@@ -82,8 +80,7 @@ fn test_gps_latitude_reference_south() {
 
 #[test]
 fn test_gps_longitude_reference_west() {
-    // Target lines 124-127: GPS longitude reference processing for 'W' (West)
-    // This tests the longitude reference application logic
+    // Test GPS longitude reference application for 'W' (West) coordinates
 
     const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
 
@@ -105,8 +102,7 @@ fn test_gps_longitude_reference_west() {
 
 #[test]
 fn test_extract_exif_data_comprehensive_gps_parsing() {
-    // This test exercises the full GPS coordinate parsing and reference application pipeline
-    // targeting all the GPS coordinate handling edge cases
+    // Test the full GPS coordinate parsing and reference application pipeline
 
     const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
 
@@ -144,8 +140,7 @@ fn test_extract_exif_data_comprehensive_gps_parsing() {
 
 #[test]
 fn test_gps_coordinate_field_processing_edge_cases() {
-    // Target the GPS coordinate update logic edge cases
-    // This test ensures all GPS field processing branches are exercised
+    // Test GPS coordinate update logic edge cases
 
     const JPG_B64: &str = "/9j/4QCMRXhpZgAASUkqAAgAAAABACWIBAABAAAAHAAAAAAAAAAAAAQAAQACAAIAAABOAAAAAgAFAAMAAABUAAAAAwACAAIAAABXAAAABAAFAAMAAABsAAAAAAAAAAAAAQAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAAeAAAAAQAAAAAAAAABAAAA/9k=";
 
