@@ -891,3 +891,76 @@ fn clean_gif_truncated_screen_descriptor() {
         "Should preserve all available data"
     );
 }
+
+// Final Coverage Tests - Targeting Last Remaining Uncovered Lines for 100%
+
+#[test]
+fn clean_jpeg_too_short_file() {
+    // Target line 84: "Invalid JPEG file: too short" error
+    let short_data = &[0xFF, 0xD8, 0xFF]; // Only 3 bytes (need at least 4)
+
+    let result = BinaryCleaner::clean_metadata(short_data, "jpg");
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("too short"));
+}
+
+#[test]
+fn clean_jpeg_app_segment_at_end_boundary() {
+    // Target line 118 and boundary condition: APP segment at very end of file
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xE1, 0x00, 0x02]); // APP1 with length 2 (minimum valid) but no data
+    // No actual segment data provided - file ends here
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    // This should either succeed (handling the boundary case) or fail gracefully
+    // The important thing is that it exercises the segment length validation logic
+    if result.is_err() {
+        // If it fails, it should be due to segment handling, not library panic
+        let error = result.unwrap_err();
+        assert!(error.contains("segment") || error.contains("Invalid") || error.contains("length"));
+    } else {
+        // If it succeeds, verify it handled the boundary case correctly
+        let cleaned = result.unwrap();
+        assert!(cleaned.starts_with(&[0xFF, 0xD8]));
+    }
+}
+
+#[test]
+fn clean_jpeg_truncated_at_non_app_marker() {
+    // Target lines 127-128: Truncated file handling in default marker case
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xDB]); // Quantization table marker but no length bytes
+    // File is truncated here - not enough bytes for length
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should handle truncation gracefully by copying remaining data
+    assert!(cleaned.starts_with(&[0xFF, 0xD8]));
+    assert!(cleaned.contains(&0xDB)); // Should contain the partial marker
+}
+
+#[test]
+fn clean_jpeg_valid_non_app_segment_preservation() {
+    // Target lines 135-136: Valid non-APP segment copying and position increment
+    let mut data = vec![0xFF, 0xD8]; // SOI
+    data.extend_from_slice(&[0xFF, 0xDB, 0x00, 0x06]); // Quantization table with length 6
+    data.extend_from_slice(&[0x01, 0x02, 0x03, 0x04, 0x05, 0x06]); // 6 bytes of data
+    data.extend_from_slice(&[0xFF, 0xDA]); // Start of scan to end parsing
+
+    let result = BinaryCleaner::clean_metadata(&data, "jpg");
+    assert!(result.is_ok());
+    let cleaned = result.unwrap();
+
+    // Should preserve the quantization table (non-APP segment)
+    assert!(cleaned.starts_with(&[0xFF, 0xD8]));
+    assert!(cleaned.windows(2).any(|w| w == [0xFF, 0xDB]));
+    assert!(cleaned.windows(2).any(|w| w == [0xFF, 0xDA]));
+    // Should preserve the quantization table data
+    assert!(
+        cleaned
+            .windows(6)
+            .any(|w| w == [0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
+    );
+}

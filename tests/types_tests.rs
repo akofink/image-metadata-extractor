@@ -209,62 +209,7 @@ fn test_filter_metadata_empty_exif() {
     assert!(filtered.gps_coords.is_none());
 }
 
-#[test]
-fn test_image_data_clone() {
-    let mut exif = HashMap::new();
-    exif.insert("Camera".to_string(), "iPhone".to_string());
-
-    let original = ImageData {
-        name: "original.jpg".to_string(),
-        size: 2048,
-        mime_type: "image/jpeg".to_string(),
-        data_url: "data:...".to_string(),
-        width: Some(1024),
-        height: Some(768),
-        exif_data: exif,
-        gps_coords: Some((51.5074, -0.1278)),
-    };
-
-    let cloned = original.clone();
-    assert_eq!(original.name, cloned.name);
-    assert_eq!(original.size, cloned.size);
-    assert_eq!(original.mime_type, cloned.mime_type);
-    assert_eq!(original.exif_data, cloned.exif_data);
-    assert_eq!(original.gps_coords, cloned.gps_coords);
-}
-
-#[test]
-fn test_image_data_partial_eq() {
-    let mut exif1 = HashMap::new();
-    exif1.insert("ISO".to_string(), "100".to_string());
-
-    let mut exif2 = HashMap::new();
-    exif2.insert("ISO".to_string(), "100".to_string());
-
-    let data1 = ImageData {
-        name: "test.jpg".to_string(),
-        size: 1024,
-        mime_type: "image/jpeg".to_string(),
-        data_url: "data:...".to_string(),
-        width: Some(800),
-        height: Some(600),
-        exif_data: exif1,
-        gps_coords: Some((1.0, 2.0)),
-    };
-
-    let data2 = ImageData {
-        name: "test.jpg".to_string(),
-        size: 1024,
-        mime_type: "image/jpeg".to_string(),
-        data_url: "data:...".to_string(),
-        width: Some(800),
-        height: Some(600),
-        exif_data: exif2,
-        gps_coords: Some((1.0, 2.0)),
-    };
-
-    assert_eq!(data1, data2);
-}
+// Removed tests for derived traits (Clone, PartialEq) as they test compiler-guaranteed functionality
 
 #[test]
 fn test_image_data_serialization() {

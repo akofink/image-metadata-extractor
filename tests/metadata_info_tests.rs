@@ -73,46 +73,17 @@ fn test_database_consistency() {
 
 #[test]
 fn test_category_emojis_present() {
-    // Ensure all categories have proper emoji prefixes
+    // Ensure all categories have our specific emoji prefixes
+    let expected_emojis = ["📷", "⚙️", "🖼️", "🕒", "📍", "🔍", "📊"];
+
     for (_, info) in METADATA_DB {
+        let has_expected_emoji = expected_emojis
+            .iter()
+            .any(|emoji| info.category.starts_with(emoji));
         assert!(
-            info.category
-                .chars()
-                .next()
-                .unwrap()
-                .is_emoji_modifier_base()
-                || info
-                    .category
-                    .chars()
-                    .next()
-                    .unwrap()
-                    .is_emoji_presentation()
-                || info.category.starts_with("📷")
-                || info.category.starts_with("⚙️")
-                || info.category.starts_with("🖼️")
-                || info.category.starts_with("🕒")
-                || info.category.starts_with("📍")
-                || info.category.starts_with("🔍")
-                || info.category.starts_with("📊"),
-            "Category missing emoji: {}",
+            has_expected_emoji,
+            "Category should start with one of our expected emojis: {}",
             info.category
         );
-    }
-}
-
-trait EmojiCheck {
-    fn is_emoji_modifier_base(&self) -> bool;
-    fn is_emoji_presentation(&self) -> bool;
-}
-
-impl EmojiCheck for char {
-    fn is_emoji_modifier_base(&self) -> bool {
-        // Basic emoji detection - this is simplified
-        matches!(*self as u32, 0x1F600..=0x1F64F | 0x1F300..=0x1F5FF | 0x1F680..=0x1F6FF | 0x1F1E6..=0x1F1FF)
-    }
-
-    fn is_emoji_presentation(&self) -> bool {
-        // This checks for common emoji ranges
-        matches!(*self as u32, 0x231A..=0x231B | 0x23E9..=0x23EC | 0x23F0 | 0x23F3 | 0x25FD..=0x25FE | 0x2614..=0x2615)
     }
 }

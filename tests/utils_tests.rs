@@ -65,26 +65,7 @@ fn test_format_file_size_precision() {
     assert_eq!(format_file_size(1024 + 500), "1.5 KB"); // 1524 bytes
 }
 
-// WASM-only tests for browser API functions
-#[cfg(target_arch = "wasm32")]
-#[test]
-fn test_base64_encode() {
-    // Test base64 encoding of simple data
-    let data = b"hello world";
-    let encoded = base64_encode(data);
-
-    // Should be a valid base64 string
-    assert!(encoded.len() > 0);
-    assert!(
-        encoded
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=')
-    );
-
-    // Test with empty data
-    let empty_encoded = base64_encode(&[]);
-    assert_eq!(empty_encoded, "");
-}
+// Removed base64_encode test as it tests external library functionality rather than our application logic
 
 // Note: download_file and download_binary_file can't be easily tested
 // without a full browser environment as they manipulate the DOM
