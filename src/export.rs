@@ -4,6 +4,21 @@ use crate::types::ImageData;
 use crate::utils::format_file_size;
 use std::fmt::Write as _;
 
+fn xml_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for ch in s.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
 fn sorted_exif_pairs(data: &ImageData) -> Vec<(String, String)> {
     let mut v: Vec<(String, String)> = data
         .exif_data
@@ -108,4 +123,104 @@ pub fn generate_txt(data: &ImageData) -> String {
     }
 
     txt
+}
+
+/// Generate a Markdown report (deterministic ordering).
+pub fn generate_md(data: &ImageData) -> String {
+    let mut out = String::new();
+    out.push_str("# File Metadata\n\n");
+    out.push_str("## File Information\n");
+    let _ = writeln!(out, "- Filename: {}", data.name);
+    let _ = writeln!(out, "- File Size: {}", format_file_size(data.size));
+    if let (Some(w), Some(h)) = (data.width, data.height) {
+        let _ = writeln!(out, "- Dimensions: {}x{} pixels", w, h);
+    }
+    out.push('\n');
+
+    if let Some((lat, lon)) = data.gps_coords {
+        out.push_str("## GPS Location\n");
+        let _ = writeln!(out, "- Latitude: {}", lat);
+        let _ = writeln!(out, "- Longitude: {}", lon);
+        let _ = writeln!(
+            out,
+            "- Google Maps: https://maps.google.com/maps?q={},{}",
+            lat, lon
+        );
+        let _ = writeln!(
+            out,
+            "- Apple Maps: https://maps.apple.com/?ll={},{}",
+            lat, lon
+        );
+        let _ = writeln!(
+            out,
+            "- OpenStreetMap: https://www.openstreetmap.org/?mlat={}&mlon={}",
+            lat, lon
+        );
+        out.push('\n');
+    }
+
+    out.push_str("## Metadata\n");
+    for (k, v) in sorted_exif_pairs(data) {
+        let _ = writeln!(out, "- {}: {}", k, v);
+    }
+    out
+}
+
+/// Generate a YAML document (deterministic ordering).
+pub fn generate_yaml(data: &ImageData) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "name: {}", data.name);
+    let _ = writeln!(out, "size: {}", data.size);
+    if let (Some(w), Some(h)) = (data.width, data.height) {
+        let _ = writeln!(out, "dimensions: \"{}x{}\"", w, h);
+    }
+    if let Some((lat, lon)) = data.gps_coords {
+        let _ = writeln!(out, "gps:");
+        let _ = writeln!(out, "  lat: {}", lat);
+        let _ = writeln!(out, "  lon: {}", lon);
+    }
+    if !data.exif_data.is_empty() {
+        out.push_str("exif:\n");
+        for (k, v) in sorted_exif_pairs(data) {
+            let _ = writeln!(
+                out,
+                "  \"{}\": \"{}\"",
+                k.replace('"', "\\\""),
+                v.replace('"', "\\\"")
+            );
+        }
+    }
+    out
+}
+
+/// Generate a minimal XML export (deterministic ordering).
+pub fn generate_xml(data: &ImageData) -> String {
+    let mut out = String::new();
+    out.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    out.push_str("<metadata>\n");
+    let _ = writeln!(out, "  <name>{}</name>", xml_escape(&data.name));
+    let _ = writeln!(out, "  <size>{}</size>", data.size);
+    if let (Some(w), Some(h)) = (data.width, data.height) {
+        let _ = writeln!(out, "  <dimensions>{}x{}</dimensions>", w, h);
+    }
+    if let Some((lat, lon)) = data.gps_coords {
+        out.push_str("  <gps>\n");
+        let _ = writeln!(out, "    <lat>{}</lat>", lat);
+        let _ = writeln!(out, "    <lon>{}</lon>", lon);
+        out.push_str("  </gps>\n");
+    }
+    if !data.exif_data.is_empty() {
+        out.push_str("  <exif>\n");
+        for (k, v) in sorted_exif_pairs(data) {
+            let _ = writeln!(
+                out,
+                "    <tag name=\"{}\">{}</tag>",
+                xml_escape(&k),
+                xml_escape(&v)
+            );
+        }
+        out.push_str("  </exif>\n");
+    }
+    out.push_str("</metadata>\n");
+    out
 }
