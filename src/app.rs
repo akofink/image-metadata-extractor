@@ -4,8 +4,9 @@
 //! application.
 
 use crate::components::{
-    file_upload::FileUpload, image_cleaner::ImageCleaner, image_display::ImageDisplay,
-    metadata_display::MetadataDisplay, metadata_export::MetadataExport,
+    batch_manager::BatchManager, file_upload::FileUpload, image_cleaner::ImageCleaner,
+    image_display::ImageDisplay, metadata_display::MetadataDisplay,
+    metadata_export::MetadataExport,
 };
 use crate::types::ImageData;
 use std::collections::HashSet;
@@ -35,6 +36,11 @@ pub fn app() -> Html {
             error_message.set(None);
         })
     };
+
+    // Batch state for progress visualization
+    let batch_in_progress = use_state(|| false);
+    let batch_processed = use_state(|| 0usize);
+    let batch_total = use_state(|| 0usize);
 
     let on_file_error = {
         let error_message = error_message.clone();
@@ -103,6 +109,12 @@ pub fn app() -> Html {
                     on_file_loaded={on_file_loaded}
                     trigger_file_input={on_trigger_file_input}
                     on_error={on_file_error}
+                />
+
+                <BatchManager
+                    in_progress={*batch_in_progress}
+                    processed={*batch_processed}
+                    total={*batch_total}
                 />
 
                 // Main content area with consistent layout
