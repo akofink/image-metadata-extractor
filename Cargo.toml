@@ -54,6 +54,10 @@ path = "tests/wasm/integration_tests.rs"
 name = "app_tests"
 path = "tests/wasm/app_tests.rs"
 
+[[test]]
+name = "wasm_batch_manager_tests"
+path = "tests/wasm/components/batch_manager_tests.rs"
+
 # Only include cargo-llvm-cov for non-WASM targets (Unix/Linux systems)
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 cargo-llvm-cov = "0.6"
