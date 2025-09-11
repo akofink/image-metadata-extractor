@@ -2,6 +2,17 @@
 
 use crate::types::ImageData;
 use crate::utils::format_file_size;
+use std::fmt::Write as _;
+
+fn sorted_exif_pairs(data: &ImageData) -> Vec<(String, String)> {
+    let mut v: Vec<(String, String)> = data
+        .exif_data
+        .iter()
+        .map(|(k, val)| (k.clone(), val.clone()))
+        .collect();
+    v.sort_by(|a, b| a.0.cmp(&b.0));
+    v
+}
 
 /// Create a CSV representation of the provided [`ImageData`].
 pub fn generate_csv(data: &ImageData) -> String {
@@ -24,13 +35,23 @@ pub fn generate_csv(data: &ImageData) -> String {
         csv.push_str(&format!("GPS Longitude,{}\n", lon));
     }
 
-    // EXIF data
-    for (key, value) in &data.exif_data {
-        csv.push_str(&format!(
-            "\"{}\",\"{}\"\n",
-            key.replace("\"", "\"\""),
-            value.replace("\"", "\"\"")
-        ));
+    // EXIF data (sorted for deterministic output)
+    for (key, value) in sorted_exif_pairs(data) {
+        let mut esc_key = String::new();
+        let mut esc_val = String::new();
+        for ch in key.chars() {
+            if ch == '"' {
+                esc_key.push('"');
+            }
+            esc_key.push(ch);
+        }
+        for ch in value.chars() {
+            if ch == '"' {
+                esc_val.push('"');
+            }
+            esc_val.push(ch);
+        }
+        let _ = writeln!(csv, "\"{}\",\"{}\"", esc_key, esc_val);
     }
 
     csv
@@ -77,7 +98,7 @@ pub fn generate_txt(data: &ImageData) -> String {
     if !data.exif_data.is_empty() {
         txt.push_str("METADATA\n");
         txt.push_str("--------\n");
-        for (key, value) in &data.exif_data {
+        for (key, value) in sorted_exif_pairs(data) {
             txt.push_str(&format!("{}: {}\n", key, value));
         }
     } else {
