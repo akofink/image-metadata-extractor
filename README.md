@@ -1,6 +1,6 @@
 # Image Metadata Extractor
 
-A comprehensive browser-based image metadata extraction tool built entirely in Rust using Yew framework.
+A comprehensive browser-based image metadata extraction tool built entirely in Rust using Yew framework. See [ROADMAP.md](./ROADMAP.md) for the planned feature roadmap.
 
 ## Project Overview
 
