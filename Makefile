@@ -303,12 +303,49 @@ dev: check format lint pkg
 # Production workflow - full checks and optimized build  
 prod: check test-all lint format pkg-release
 
+# Configuration: minimum coverage percentage
+COVERAGE_MIN ?= 60
+
+# Ensure required tools are installed
+ensure-tools:
+	@echo "🧰 Ensuring dev tools are installed..."
+	@command -v cargo-llvm-cov >/dev/null 2>&1 || cargo install cargo-llvm-cov --version 0.6.0
+	@command -v cargo-deny >/dev/null 2>&1 || cargo install cargo-deny
+	@command -v cargo-audit >/dev/null 2>&1 || cargo install cargo-audit
+	@echo "✅ Tools ready!"
+
+# Dependency and vulnerability checks
+audit:
+	@echo "🔒 Running security audit (advisory DB)..."
+	@cargo audit
+	@echo "✅ Audit complete!"
+
+deny:
+	@echo "📦 Checking dependencies policy (cargo-deny)..."
+	@cargo deny check
+	@echo "✅ Dependency policy check complete!"
+
+# Verify coverage exceeds threshold
+coverage-verify:
+	@echo "📈 Verifying code coverage (min: $(COVERAGE_MIN)%)..."
+	@cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs)$$" >/dev/null
+	@PCT=$$(cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs)$$" 2>/dev/null | tail -n 1 | awk '{print $$10}' | tr -d '%'); \
+	if [ -z "$$PCT" ]; then echo "❌ Unable to parse coverage"; exit 1; fi; \
+	PCT_INT=$$(printf '%.0f' $$PCT); \
+	echo "   • Lines coverage: $$PCT%"; \
+	if [ $$PCT_INT -lt $(COVERAGE_MIN) ]; then \
+	  echo "❌ Coverage ($$PCT%) is below threshold ($(COVERAGE_MIN)%)"; exit 1; \
+	else \
+	  echo "✅ Coverage verified (>= $(COVERAGE_MIN)%)"; \
+	fi
+
 # Install git pre-commit hooks
 setup-hooks:
 	@echo "🪝 Setting up git pre-commit hooks..."
 	@echo '#!/bin/bash' > .git/hooks/pre-commit
 	@echo 'set -e' >> .git/hooks/pre-commit
 	@echo 'echo "🔍 Running pre-commit checks..."' >> .git/hooks/pre-commit
+	@echo 'make ensure-tools' >> .git/hooks/pre-commit
 	@echo 'make check && make format && make lint' >> .git/hooks/pre-commit
 	@echo '' >> .git/hooks/pre-commit
 	@echo '# Also check tests specifically for warnings' >> .git/hooks/pre-commit
@@ -319,12 +356,19 @@ setup-hooks:
 	@echo 'echo "🔬 Checking test organization..."' >> .git/hooks/pre-commit
 	@echo 'make check-test-separation' >> .git/hooks/pre-commit
 	@echo '' >> .git/hooks/pre-commit
+	@echo '# Verify coverage threshold' >> .git/hooks/pre-commit
+	@echo 'make coverage-verify' >> .git/hooks/pre-commit
+	@echo '' >> .git/hooks/pre-commit
+	@echo '# Security and dependency policy checks' >> .git/hooks/pre-commit
+	@echo 'make audit || (echo "⚠️  Audit found issues. Review before committing."; exit 1)' >> .git/hooks/pre-commit
+	@echo 'make deny || (echo "⚠️  Dependency policy failed. Review before committing."; exit 1)' >> .git/hooks/pre-commit
+	@echo '' >> .git/hooks/pre-commit
 	@echo 'git add -u  # Add any formatting changes' >> .git/hooks/pre-commit
 	@echo 'echo "✅ Pre-commit checks passed!"' >> .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
 	@echo "✅ Pre-commit hooks installed!"
 	@echo "   • Hooks will run automatically on each commit"
-	@echo "   • Runs: code check, format, lint, test warnings, test separation"
+	@echo "   • Runs: tools check, code check, format, lint, test warnings, test separation, coverage threshold ($(COVERAGE_MIN)%), audit, deny"
 
 # Quick deployment check
 deploy-check: pkg-release

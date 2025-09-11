@@ -1,0 +1,41 @@
+# cargo-deny configuration
+# Policies: disallow multiple versions of critical crates, deny unmaintained and yanked, warn on duplicates.
+
+[advisories]
+# Fetch the advisory DB; fail build on vulnerabilities.
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/RustSec/advisory-db"]
+ignore = []
+
+[yank]
+denied = "deny"
+
+[licenses]
+# Be conservative but permissive for common OSS licenses.
+# This is an example; adjust to your org’s policy if needed.
+allow = [
+  "Apache-2.0",
+  "MIT",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Unicode-DFS-2016",
+  "Zlib",
+]
+# Deny copyleft by default (change if needed)
+denies = [
+  { name = "GPL-3.0" },
+  { name = "AGPL-3.0" },
+]
+
+[bans]
+# Avoid multiple versions of the same crate where possible.
+multiple-versions = "warn"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+
+[graph]
+all-features = true
+

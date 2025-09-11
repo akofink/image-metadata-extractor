@@ -23,40 +23,32 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
             let filename = data.name.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
-                if let Some(file_extension) = filename.split('.').next_back() {
-                    // Convert data URL to bytes
-                    if let Some(base64_data) = data_url.strip_prefix("data:image/") {
-                        if let Some(comma_pos) = base64_data.find(',') {
-                            let base64_content = &base64_data[comma_pos + 1..];
-                            if let Ok(file_bytes) = general_purpose::STANDARD.decode(base64_content)
-                            {
-                                match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
-                                    Ok(cleaned_bytes) => {
-                                        // Create cleaned filename
-                                        let cleaned_filename = filename
-                                            .strip_suffix(&format!(".{}", file_extension))
-                                            .unwrap_or(&filename)
-                                            .to_string()
-                                            + "_cleaned."
-                                            + file_extension;
+                if let Some(file_extension) = filename.split('.').next_back()
+                    && let Some(base64_data) = data_url.strip_prefix("data:image/")
+                    && let Some(comma_pos) = base64_data.find(',')
+                    && let Ok(file_bytes) =
+                        general_purpose::STANDARD.decode(&base64_data[comma_pos + 1..])
+                {
+                    match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
+                        Ok(cleaned_bytes) => {
+                            // Create cleaned filename
+                            let cleaned_filename = filename
+                                .strip_suffix(&format!(".{}", file_extension))
+                                .unwrap_or(&filename)
+                                .to_string()
+                                + "_cleaned."
+                                + file_extension;
 
-                                        // Download cleaned file
-                                        let mime_type = format!("image/{}", file_extension);
-                                        download_binary_file(
-                                            &cleaned_bytes,
-                                            &cleaned_filename,
-                                            &mime_type,
-                                        );
-                                        return;
-                                    }
-                                    Err(e) => {
-                                        web_sys::console::log_1(
-                                            &format!("Binary cleaning failed: {}", e).into(),
-                                        );
-                                        return;
-                                    }
-                                }
-                            }
+                            // Download cleaned file
+                            let mime_type = format!("image/{}", file_extension);
+                            download_binary_file(&cleaned_bytes, &cleaned_filename, &mime_type);
+                            return;
+                        }
+                        Err(e) => {
+                            web_sys::console::log_1(
+                                &format!("Binary cleaning failed: {}", e).into(),
+                            );
+                            return;
                         }
                     }
                 }

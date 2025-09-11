@@ -106,24 +106,22 @@ fn apply_gps_ref(exif: &Exif, coords: &mut (f64, f64)) {
         exif.get_field(Tag::GPSLongitudeRef, In::PRIMARY),
     );
 
-    if let Some(field) = lat_ref {
-        if let Value::Ascii(ref vec) = field.value {
-            if let Some(val) = vec.first() {
-                if !val.is_empty() && val[0] == b'S' {
-                    coords.0 = -coords.0;
-                }
-            }
-        }
+    if let Some(field) = lat_ref
+        && let Value::Ascii(ref vec) = field.value
+        && let Some(val) = vec.first()
+        && !val.is_empty()
+        && val[0] == b'S'
+    {
+        coords.0 = -coords.0;
     }
 
-    if let Some(field) = lon_ref {
-        if let Value::Ascii(ref vec) = field.value {
-            if let Some(val) = vec.first() {
-                if !val.is_empty() && val[0] == b'W' {
-                    coords.1 = -coords.1;
-                }
-            }
-        }
+    if let Some(field) = lon_ref
+        && let Value::Ascii(ref vec) = field.value
+        && let Some(val) = vec.first()
+        && !val.is_empty()
+        && val[0] == b'W'
+    {
+        coords.1 = -coords.1;
     }
 }
 

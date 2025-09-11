@@ -1,0 +1,37 @@
+name: Quality Gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Install tools
+        run: |
+          cargo install cargo-llvm-cov --version 0.6.0
+          cargo install cargo-deny
+          cargo install cargo-audit
+      - name: Check format
+        run: |
+          make format
+          git diff --exit-code
+      - name: Lint
+        run: make lint
+      - name: Coverage (enforced)
+        env:
+          RUSTFLAGS: -D warnings
+        run: |
+          make coverage-verify COVERAGE_MIN=60
+      - name: Dependency policy
+        run: make deny
+      - name: Vulnerability audit
+        run: make audit

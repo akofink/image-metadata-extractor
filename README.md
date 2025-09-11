@@ -141,7 +141,7 @@ The project includes a comprehensive Makefile for streamlined development:
 - **`make prod`** - Production workflow (check + test + lint + format + build-release)
 - **`make help`** - Show all available commands
 
-### Pre-commit Hooks
+### Pre-commit Hooks and Quality Gate
 
 For consistent code quality, install git pre-commit hooks:
 
@@ -149,7 +149,9 @@ For consistent code quality, install git pre-commit hooks:
 make setup-hooks
 ```
 
-This automatically runs code checks, formatting, and linting on every commit, ensuring consistent code quality across the project.
+This automatically runs code checks, formatting, linting, test separation checks, an enforced coverage threshold (configurable via COVERAGE_MIN, default 60%), and security/dependency policy checks (cargo-audit, cargo-deny) on every commit.
+
+In CI, the Quality Gate workflow repeats these checks for pull requests, ensuring a consistent bar before merge.
 
 ### Project Structure
 
