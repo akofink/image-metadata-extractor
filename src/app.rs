@@ -77,6 +77,31 @@ pub fn app() -> Html {
         })
     };
 
+    // Batch progress handlers
+    let on_batch_progress = {
+        let batch_in_progress = batch_in_progress.clone();
+        let batch_processed = batch_processed.clone();
+        let batch_total = batch_total.clone();
+        Callback::from(move |(processed, total): (usize, usize)| {
+            batch_in_progress.set(total > 0 && processed < total);
+            batch_processed.set(processed);
+            batch_total.set(total);
+        })
+    };
+
+    let on_files_loaded = {
+        let batch_in_progress = batch_in_progress.clone();
+        let batch_processed = batch_processed.clone();
+        let batch_total = batch_total.clone();
+        Callback::from(move |_datas: Vec<ImageData>| {
+            batch_in_progress.set(false);
+            // processed and total already reflect completion
+            if *batch_total > 0 {
+                batch_processed.set(*batch_total);
+            }
+        })
+    };
+
     let on_placeholder_click = {
         let file_input_trigger = file_input_trigger.clone();
         Callback::from(move |_: web_sys::MouseEvent| {
@@ -109,6 +134,8 @@ pub fn app() -> Html {
                     on_file_loaded={on_file_loaded}
                     trigger_file_input={on_trigger_file_input}
                     on_error={on_file_error}
+                    on_files_loaded={Some(on_files_loaded)}
+                    on_progress={Some(on_batch_progress)}
                 />
 
                 <BatchManager
