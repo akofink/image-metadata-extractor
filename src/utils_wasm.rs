@@ -52,6 +52,18 @@ pub fn download_file(content: &str, filename: &str, mime_type: &str) {
     Url::revoke_object_url(&url).unwrap();
 }
 
+/// Copy a string to the clipboard using the async Clipboard API, with a fallback to a hidden textarea.
+pub fn copy_to_clipboard(text: &str) {
+    if let Some(window) = web_sys::window() {
+        // Use async Clipboard API; if unavailable at runtime, nothing happens.
+        let clipboard = window.navigator().clipboard();
+        let s = text.to_string();
+        wasm_bindgen_futures::spawn_local(async move {
+            let _ = wasm_bindgen_futures::JsFuture::from(clipboard.write_text(&s)).await;
+        });
+    }
+}
+
 /// Trigger a binary file download in the browser.
 pub fn download_binary_file(bytes: &[u8], filename: &str, mime_type: &str) {
     let window = web_sys::window().unwrap();

@@ -1,8 +1,8 @@
 //! Allows users to download selected metadata in various formats.
 
-use crate::export::{generate_csv, generate_txt};
+use crate::export::{generate_csv, generate_md, generate_txt, generate_xml, generate_yaml};
 use crate::types::ImageData;
-use crate::utils::download_file;
+use crate::utils::{copy_to_clipboard, download_file};
 use std::collections::HashSet;
 use yew::prelude::*;
 
@@ -74,6 +74,75 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                 &format!("{}_filtered_metadata.txt", data.name),
                 "text/plain",
             );
+        })
+    };
+
+    let export_md = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let md = generate_md(&filtered_data);
+            download_file(
+                &md,
+                &format!("{}_filtered_metadata.md", data.name),
+                "text/markdown",
+            );
+        })
+    };
+
+    let export_yaml = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let yaml = generate_yaml(&filtered_data);
+            download_file(
+                &yaml,
+                &format!("{}_filtered_metadata.yaml", data.name),
+                "text/yaml",
+            );
+        })
+    };
+
+    let export_xml = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let xml = generate_xml(&filtered_data);
+            download_file(
+                &xml,
+                &format!("{}_filtered_metadata.xml", data.name),
+                "application/xml",
+            );
+        })
+    };
+
+    let copy_json = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
+                copy_to_clipboard(&json);
+            }
         })
     };
 
@@ -152,7 +221,8 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
             </div>
 
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button
+                <button title="Download JSON"
+
                     onclick={if has_anything_to_export { export_json.clone() } else { Callback::noop() }}
                     disabled={!has_anything_to_export}
                     style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
@@ -165,7 +235,16 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                 >
                     {"📄 JSON"}
                 </button>
-                <button
+                <button title="Copy JSON to clipboard"
+                    onclick={if has_anything_to_export { copy_json.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: 1px solid #007bff; padding: 8px 16px; border-radius: 4px; font-weight: bold; background: white; color: #007bff; {}",
+                        if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                    )}
+                >
+                    {"📋 Copy JSON"}
+                </button>
+                <button title="Download CSV"
                     onclick={if has_anything_to_export { export_csv.clone() } else { Callback::noop() }}
                     disabled={!has_anything_to_export}
                     style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
@@ -178,7 +257,34 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                 >
                     {"📊 CSV"}
                 </button>
-                <button
+                <button title="Download Markdown"
+                    onclick={if has_anything_to_export { export_md.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export { "background: #6f42c1; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                    )}
+                >
+                    {"🗒️ Markdown"}
+                </button>
+                <button title="Download YAML"
+                    onclick={if has_anything_to_export { export_yaml.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export { "background: #20c997; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                    )}
+                >
+                    {"🧾 YAML"}
+                </button>
+                <button title="Download XML"
+                    onclick={if has_anything_to_export { export_xml.clone() } else { Callback::noop() }}
+                    disabled={!has_anything_to_export}
+                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
+                        if has_anything_to_export { "background: #17a2b8; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                    )}
+                >
+                    {"🧩 XML"}
+                </button>
+                <button title="Download Text"
                     onclick={if has_anything_to_export { export_txt.clone() } else { Callback::noop() }}
                     disabled={!has_anything_to_export}
                     style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
