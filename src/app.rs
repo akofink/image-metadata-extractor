@@ -168,6 +168,68 @@ pub fn app() -> Html {
                         if let Some(ref data) = *image_data {
                             html! {
                                 <div style="opacity: 1; transition: opacity 0.3s ease-in-out;">
+                                   {
+                                       if !batch_items.is_empty() && batch_items.len() > 1 {
+                                           let has_prev = *batch_index > 0;
+                                           let has_next = *batch_index + 1 < batch_items.len();
+
+                                           let on_prev = {
+                                               let batch_index = batch_index.clone();
+                                               let batch_items = batch_items.clone();
+                                               let selected_metadata = selected_metadata.clone();
+                                               let image_state = image_data.clone();
+                                               Callback::from(move |_| {
+                                                   if *batch_index > 0 {
+                                                       let new_idx = *batch_index - 1;
+                                                       batch_index.set(new_idx);
+                                                       if let Some(item) = batch_items.get(new_idx) {
+                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
+                                                           selected_metadata.set(keys);
+                                                           image_state.set(Some(item.clone()));
+                                                       }
+                                                   }
+                                               })
+                                           };
+
+                                           let on_next = {
+                                               let batch_index = batch_index.clone();
+                                               let batch_items = batch_items.clone();
+                                               let selected_metadata = selected_metadata.clone();
+                                               let image_state = image_data.clone();
+                                               Callback::from(move |_| {
+                                                   if *batch_index + 1 < batch_items.len() {
+                                                       let new_idx = *batch_index + 1;
+                                                       batch_index.set(new_idx);
+                                                       if let Some(item) = batch_items.get(new_idx) {
+                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
+                                                           selected_metadata.set(keys);
+                                                           image_state.set(Some(item.clone()));
+                                                       }
+                                                   }
+                                               })
+                                           };
+
+                                           let prev_style = if has_prev {
+                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #007bff; color: white; cursor: pointer;"
+                                           } else {
+                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #6c757d; color: #aaa; cursor: not-allowed;"
+                                           };
+                                           let next_style = if has_next {
+                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #007bff; color: white; cursor: pointer;"
+                                           } else {
+                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #6c757d; color: #aaa; cursor: not-allowed;"
+                                           };
+
+                                           html! {
+                                               <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin:8px 0 12px 0;">
+                                                   <div style="font-size:12px;color:#666;">{ format!("Image {} of {}", *batch_index + 1, batch_items.len()) }</div>
+                                                   <button onclick={on_prev} disabled={!has_prev} style={prev_style}>{"⬅ Previous"}</button>
+                                                   <button onclick={on_next} disabled={!has_next} style={next_style}>{"Next ➡"}</button>
+                                               </div>
+                                           }
+                                       } else { html!{} }
+                                   }
+
                                     <ImageDisplay
                                         image_data={data.clone()}
                                         is_expanded={*is_expanded}
