@@ -313,7 +313,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
 
@@ -339,7 +339,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
 
@@ -365,7 +365,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
 
@@ -387,7 +387,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
 
@@ -409,7 +409,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
 
@@ -431,7 +431,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
-                        {"📋"}
+                        {"⧉"}
                     </button>
                 </div>
             </div>
