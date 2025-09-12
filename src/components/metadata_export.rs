@@ -309,7 +309,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy JSON to clipboard"
                         onclick={if has_anything_to_export { copy_json.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #007bff; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #007bff; font-size: 12px; {}",
+                        style={format!("border: 1px solid #007bff; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #007bff; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
@@ -335,7 +335,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy CSV to clipboard"
                         onclick={if has_anything_to_export { copy_csv.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #28a745; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #28a745; font-size: 12px; {}",
+                        style={format!("border: 1px solid #28a745; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #28a745; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
@@ -361,7 +361,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy Text to clipboard"
                         onclick={if has_anything_to_export { copy_txt.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #6c757d; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6c757d; font-size: 12px; {}",
+                        style={format!("border: 1px solid #6c757d; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6c757d; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
@@ -383,7 +383,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy Markdown to clipboard"
                         onclick={if has_anything_to_export { copy_md.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #6f42c1; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6f42c1; font-size: 12px; {}",
+                        style={format!("border: 1px solid #6f42c1; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6f42c1; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
@@ -405,7 +405,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy YAML to clipboard"
                         onclick={if has_anything_to_export { copy_yaml.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #20c997; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #20c997; font-size: 12px; {}",
+                        style={format!("border: 1px solid #20c997; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #20c997; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
@@ -427,7 +427,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                     <button title="Copy XML to clipboard"
                         onclick={if has_anything_to_export { copy_xml.clone() } else { Callback::noop() }}
                         disabled={!has_anything_to_export}
-                        style={format!("border: 1px solid #17a2b8; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #17a2b8; font-size: 12px; {}",
+                        style={format!("border: 1px solid #17a2b8; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #17a2b8; font-size: 14px; {}",
                             if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
                         )}
                     >
