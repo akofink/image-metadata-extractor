@@ -46,7 +46,9 @@ jobs:
       - name: Dependency policy (cargo-deny)
         run: make deny
       - name: Vulnerability audit (cargo-audit)
-        run: make audit
+        run: |
+          rm -rf ~/.cargo/advisory-db
+          make audit
 
   build:
     runs-on: ubuntu-latest
