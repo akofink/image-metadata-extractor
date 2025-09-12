@@ -20,6 +20,7 @@ jobs:
         run: |
           make format
           git diff --exit-code
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -32,7 +33,8 @@ jobs:
           components: clippy
       - name: Lint
         run: make lint
-  test:
+
+  tests_and_coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,11 +43,34 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      - name: Run tests
-        run: |
-          make coverage
+      - name: Install coverage tool
+        run: cargo install cargo-llvm-cov --version 0.6.0
+      - name: Enforce coverage threshold
+        env:
+          RUSTFLAGS: -D warnings
+        run: make coverage-verify COVERAGE_MIN=60
+      - name: Generate coverage report (HTML)
+        run: make coverage
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: target/llvm-cov/html
+
+  dependency_policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Install tools
+        run: |
+          cargo install cargo-deny
+          cargo install cargo-audit
+      - name: Dependency policy (cargo-deny)
+        run: make deny
+      - name: Vulnerability audit (cargo-audit)
+        run: make audit
