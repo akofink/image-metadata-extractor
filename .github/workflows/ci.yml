@@ -21,65 +21,12 @@ jobs:
           make format
           git diff --exit-code
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          components: clippy
-      - name: Lint
-        run: make lint
-
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-      - name: Check code and tests
-        run: make check-warnings
-
   check-test-separation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Check test organization
         run: make check-test-separation
-
-  tests_and_coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-      - name: Install and cache tools
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: "dev-tools"
-          shared-key: "dev-tools"
-      - name: Ensure dev tools are installed
-        run: make ensure-tools
-      - name: Enforce coverage threshold
-        env:
-          RUSTFLAGS: -D warnings
-        run: make coverage-verify COVERAGE_MIN=60
-      - name: Generate coverage report (HTML)
-        run: make coverage
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: target/llvm-cov/html
 
   dependency_policy:
     runs-on: ubuntu-latest
@@ -94,10 +41,102 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: "dev-tools"
-          shared-key: "dev-tools"
       - name: Ensure dev tools are installed
         run: make ensure-tools
       - name: Dependency policy (cargo-deny)
         run: make deny
       - name: Vulnerability audit (cargo-audit)
         run: make audit
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Cache dependencies and build artifacts
+        uses: Swatinem/rust-cache@v2
+      - name: Build dev target and all tests
+        run: RUSTFLAGS="-D warnings" cargo build --all-targets
+      - name: Upload target directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-dir
+          path: target
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: clippy
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Download target directory
+        uses: actions/download-artifact@v4
+        with:
+          name: target-dir
+          path: target
+      - name: Lint
+        run: make lint
+
+  check:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Download target directory
+        uses: actions/download-artifact@v4
+        with:
+          name: target-dir
+          path: target
+      - name: Check code and tests
+        run: make check-warnings
+
+  tests_and_coverage:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Install and cache tools
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: "dev-tools"
+      - name: Ensure dev tools are installed
+        run: make ensure-tools
+      - name: Download target directory
+        uses: actions/download-artifact@v4
+        with:
+          name: target-dir
+          path: target
+      - name: Enforce coverage threshold
+        env:
+          RUSTFLAGS: -D warnings
+        run: make coverage-verify COVERAGE_MIN=60
+      - name: Generate coverage report (HTML)
+        run: make coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/llvm-cov/html
