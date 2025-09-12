@@ -33,10 +33,11 @@ Unique differentiators (all client‑side):
 Objectives: improve the core experience, expand export options, and enable multi‑file workflows while keeping memory use and performance tight.
 
 User‑facing features:
-- Batch support (multi file):
-  - Drag‑and‑drop multiple images; process sequentially with progress reporting.
-  - Export combined metadata (single JSON/CSV/TXT) and per‑file outputs.
-  - Batch cleaning; optional ZIP download of cleaned files.
+- ✅ **Batch support (multi file)**: **IMPLEMENTED**
+  - ✅ Drag‑and‑drop multiple images; process sequentially with progress reporting.
+  - ✅ Previous/Next navigation buttons for switching between processed files.
+  - 🔄 Export combined metadata (single JSON/CSV/TXT) and per‑file outputs.
+  - 🔄 Batch cleaning; optional ZIP download of cleaned files.
 - Archive input:
   - Import ZIP/TAR (and explore 7z feasibility) directly; list, filter, and process selected files.
   - Streamed extraction in WASM to avoid large memory spikes.
@@ -47,7 +48,7 @@ User‑facing features:
   - Copy to clipboard for JSON/CSV/TXT/Markdown.
   - Stable schemas: include schema version, deterministic ordering, and optional JSON‑LD context.
 - UX polish:
-  - Dark mode and system theme auto‑detection.
+  - ✅ **Dark mode and system theme auto‑detection**: **IMPLEMENTED**
   - Command palette and keyboard shortcuts for import, select all, export, clean.
   - Improved keyboard navigation and focus management.
   - Persistent UI preferences (theme, default export options) via localStorage.

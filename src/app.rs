@@ -10,6 +10,7 @@ use crate::components::{
 };
 use crate::types::{ImageData, Theme};
 use std::collections::HashSet;
+use web_sys::window;
 use yew::prelude::*;
 
 struct AppColors {
@@ -51,6 +52,55 @@ pub fn app() -> Html {
     let file_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
     let theme = use_state(|| Theme::Light);
+
+    // Effect to save theme to localStorage
+    {
+        let theme = theme.clone();
+        use_effect_with(theme.clone(), move |theme| {
+            if let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) {
+                let theme_str = match **theme {
+                    Theme::Light => "light",
+                    Theme::Dark => "dark",
+                };
+                storage.set_item("theme", theme_str).ok();
+            }
+            || ()
+        });
+    }
+
+    // Effect for initial theme detection
+    {
+        let theme = theme.clone();
+        use_effect_with((), move |_| {
+            let storage = window().and_then(|w| w.local_storage().ok().flatten());
+            let initial_theme = if let Some(storage) = storage {
+                storage
+                    .get_item("theme")
+                    .ok()
+                    .flatten()
+                    .and_then(|t| match t.as_str() {
+                        "light" => Some(Theme::Light),
+                        "dark" => Some(Theme::Dark),
+                        _ => None,
+                    })
+            } else {
+                None
+            };
+
+            if let Some(initial_theme) = initial_theme {
+                theme.set(initial_theme);
+            } else if let Some(window) = window()
+                && let Ok(Some(media_query_list)) =
+                    window.match_media("(prefers-color-scheme: dark)")
+                && media_query_list.matches()
+            {
+                theme.set(Theme::Dark);
+            }
+
+            || ()
+        });
+    }
+
     // Batch browsing state
     let batch_items = use_state(Vec::<ImageData>::new);
     let batch_index = use_state(|| 0usize);
@@ -197,13 +247,24 @@ pub fn app() -> Html {
 
     let link_style = format!("color: {}; text-decoration: none;", colors.primary);
 
+    let theme_button_style = format!(
+        "padding: 8px 12px; border-radius: 4px; cursor: pointer; border: 1px solid {}; background-color: {}; color: {};",
+        colors.primary,
+        colors.primary,
+        if *theme == Theme::Light {
+            "white"
+        } else {
+            "black"
+        }
+    );
+
     html! {
         <div style={main_div_style}>
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h1>{"File Metadata Extractor"}</h1>
-                    <button onclick={on_theme_toggle} style="padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                        { match *theme { Theme::Light => "Switch to Dark Mode", Theme::Dark => "Switch to Light Mode" } }
+                    <button onclick={on_theme_toggle} style={theme_button_style}>
+                        { if *theme == Theme::Light { "🌙 Dark Mode" } else { "☀️ Light Mode" } }
                     </button>
                 </div>
 
@@ -274,20 +335,24 @@ pub fn app() -> Html {
                                                })
                                            };
 
-                                           let prev_style = if has_prev {
-                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #007bff; color: white; cursor: pointer;"
-                                           } else {
-                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #6c757d; color: #aaa; cursor: not-allowed;"
-                                           };
-                                           let next_style = if has_next {
-                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #007bff; color: white; cursor: pointer;"
-                                           } else {
-                                               "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: #6c757d; color: #aaa; cursor: not-allowed;"
-                                           };
+                                           let button_text_color = if *theme == Theme::Light { "white" } else { "black" };
+
+                                           let prev_style = format!(
+                                                "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: {}; color: {}; cursor: {};",
+                                                if has_prev { colors.primary } else { colors.secondary },
+                                                button_text_color,
+                                                if has_prev { "pointer" } else { "not-allowed" }
+                                           );
+                                           let next_style = format!(
+                                                "border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: {}; color: {}; cursor: {};",
+                                                if has_next { colors.primary } else { colors.secondary },
+                                                button_text_color,
+                                                if has_next { "pointer" } else { "not-allowed" }
+                                           );
 
                                            html! {
                                                <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin:8px 0 12px 0;">
-                                                   <div style="font-size:12px;color:#666;">{ format!("Image {} of {}", *batch_index + 1, batch_items.len()) }</div>
+                                                   <div style={format!("font-size:12px;color:{};", colors.text)}>{ format!("Image {} of {}", *batch_index + 1, batch_items.len()) }</div>
                                                    <button onclick={on_prev} disabled={!has_prev} style={prev_style}>{"⬅ Previous"}</button>
                                                    <button onclick={on_next} disabled={!has_next} style={next_style}>{"Next ➡"}</button>
                                                </div>
@@ -311,57 +376,6 @@ pub fn app() -> Html {
                                     />
 
                                     <ImageCleaner image_data={data.clone()} />
-
-                                   {
-                                       if !batch_items.is_empty() && batch_items.len() > 1 {
-                                           let has_prev = *batch_index > 0;
-                                           let has_next = *batch_index + 1 < batch_items.len();
-
-                                           let on_prev = {
-                                               let batch_index = batch_index.clone();
-                                               let batch_items = batch_items.clone();
-                                               let selected_metadata = selected_metadata.clone();
-                                               let image_state = image_data.clone();
-                                               Callback::from(move |_| {
-                                                   if *batch_index > 0 {
-                                                       let new_idx = *batch_index - 1;
-                                                       batch_index.set(new_idx);
-                                                       if let Some(item) = batch_items.get(new_idx) {
-                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
-                                                           selected_metadata.set(keys);
-                                                           image_state.set(Some(item.clone()));
-                                                       }
-                                                   }
-                                               })
-                                           };
-
-                                           let on_next = {
-                                               let batch_index = batch_index.clone();
-                                               let batch_items = batch_items.clone();
-                                               let selected_metadata = selected_metadata.clone();
-                                               let image_state = image_data.clone();
-                                               Callback::from(move |_| {
-                                                   if *batch_index + 1 < batch_items.len() {
-                                                       let new_idx = *batch_index + 1;
-                                                       batch_index.set(new_idx);
-                                                       if let Some(item) = batch_items.get(new_idx) {
-                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
-                                                           selected_metadata.set(keys);
-                                                           image_state.set(Some(item.clone()));
-                                                       }
-                                                   }
-                                               })
-                                           };
-
-                                           html! {
-                                               <div style="display:flex;gap:8px;align-items:center;margin:12px 0;">
-                                                   <button onclick={on_prev} disabled={!has_prev} style="padding:6px 10px;border-radius:4px;">{"⬅ Previous"}</button>
-                                                   <div style="font-size:12px;color:#666;">{ format!("Image {} of {}", *batch_index + 1, batch_items.len()) }</div>
-                                                   <button onclick={on_next} disabled={!has_next} style="padding:6px 10px;border-radius:4px;">{"Next ➡"}</button>
-                                               </div>
-                                           }
-                                       } else { html!{} }
-                                   }
 
                                    <MetadataExport
                                        image_data={data.clone()}

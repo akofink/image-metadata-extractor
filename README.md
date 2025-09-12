@@ -15,6 +15,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Comprehensive coverage**: All standard EXIF tags and values
 - **Smart explanations**: Toggle-able descriptions for each metadata field
 - **Auto-select on upload**: All metadata fields are selected by default
+- **Batch processing**: Upload multiple files with progress tracking and navigation
 
 ### 🖼️ **Image Display**
 - **Smart thumbnails**: Compact 300x200px display for better page layout
@@ -42,6 +43,8 @@ This application allows users to upload images and extract comprehensive metadat
 - **Stable rendering**: No more jumping sections during UI updates
 - **Modular components**: Clean, maintainable component architecture
 - **Professional styling**: Color-coded sections with intuitive icons
+- **Dark mode support**: Automatic system theme detection and manual toggle
+- **Batch navigation**: Previous/Next buttons for switching between uploaded files
 
 **Key Features:**
 - 🔒 **Complete privacy**: Runs entirely in the browser (no server required)
