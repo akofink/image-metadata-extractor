@@ -8,9 +8,39 @@ use crate::components::{
     image_display::ImageDisplay, metadata_display::MetadataDisplay,
     metadata_export::MetadataExport,
 };
-use crate::types::ImageData;
+use crate::types::{ImageData, Theme};
 use std::collections::HashSet;
 use yew::prelude::*;
+
+struct AppColors {
+    background: &'static str,
+    text: &'static str,
+    primary: &'static str,
+    secondary: &'static str,
+    border: &'static str,
+    placeholder_bg: &'static str,
+    placeholder_border: &'static str,
+}
+
+const LIGHT_THEME: AppColors = AppColors {
+    background: "#ffffff",
+    text: "#333333",
+    primary: "#007bff",
+    secondary: "#6c757d",
+    border: "#ddd",
+    placeholder_bg: "#f8f9fa",
+    placeholder_border: "#dee2e6",
+};
+
+const DARK_THEME: AppColors = AppColors {
+    background: "#121212",
+    text: "#e0e0e0",
+    primary: "#bb86fc",
+    secondary: "#03dac6",
+    border: "#333",
+    placeholder_bg: "#1e1e1e",
+    placeholder_border: "#444",
+};
 
 #[function_component(App)]
 pub fn app() -> Html {
@@ -20,6 +50,7 @@ pub fn app() -> Html {
     let show_explanations = use_state(|| false);
     let file_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
+    let theme = use_state(|| Theme::Light);
     // Batch browsing state
     let batch_items = use_state(Vec::<ImageData>::new);
     let batch_index = use_state(|| 0usize);
@@ -138,10 +169,44 @@ pub fn app() -> Html {
         })
     };
 
+    let on_theme_toggle = {
+        let theme = theme.clone();
+        Callback::from(move |_: MouseEvent| {
+            let current_theme = *theme;
+            theme.set(match current_theme {
+                Theme::Light => Theme::Dark,
+                Theme::Dark => Theme::Light,
+            });
+        })
+    };
+
+    let colors = match *theme {
+        Theme::Light => LIGHT_THEME,
+        Theme::Dark => DARK_THEME,
+    };
+
+    let main_div_style = format!(
+        "min-height: 100vh; display: flex; flex-direction: column; background-color: {}; color: {};",
+        colors.background, colors.text
+    );
+
+    let footer_style = format!(
+        "margin-top: auto; padding: 20px 0; border-top: 1px solid {}; text-align: center; color: {}; font-size: 14px; background-color: {};",
+        colors.border, colors.secondary, colors.placeholder_bg
+    );
+
+    let link_style = format!("color: {}; text-decoration: none;", colors.primary);
+
     html! {
-        <div style="min-height: 100vh; display: flex; flex-direction: column;">
+        <div style={main_div_style}>
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
-                <h1>{"File Metadata Extractor"}</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>{"File Metadata Extractor"}</h1>
+                    <button onclick={on_theme_toggle} style="padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                        { match *theme { Theme::Light => "Switch to Dark Mode", Theme::Dark => "Switch to Light Mode" } }
+                    </button>
+                </div>
+
                 {
                     if let Some(msg) = &*error_message {
                         html! { <p style="color: red;">{msg}</p> }
@@ -305,10 +370,16 @@ pub fn app() -> Html {
                                 </div>
                             }
                         } else {
+                            let placeholder_style = format!(
+                                "text-align: center; padding: 40px 20px; color: {}; background: {}; border-radius: 8px; border: 2px dashed {}; cursor: pointer; transition: all 0.2s ease;",
+                                colors.text,
+                                colors.placeholder_bg,
+                                colors.placeholder_border
+                            );
                             html! {
                                 <div
                                     onclick={on_placeholder_click}
-                                    style="text-align: center; padding: 40px 20px; color: #666; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6; cursor: pointer; transition: all 0.2s ease; hover:background-color: #e9ecef; hover:border-color: #007bff;"
+                                    style={placeholder_style}
                                 >
                                     <div style="font-size: 48px; margin-bottom: 16px;">{"📁"}</div>
                                     <p style="font-size: 18px; margin-bottom: 8px; font-weight: 500;">{"Click here to select a file"}</p>
@@ -320,17 +391,17 @@ pub fn app() -> Html {
                 </div>
             </div>
 
-            <footer style="margin-top: auto; padding: 20px 0; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 14px; background-color: #f8f9fa;">
+            <footer style={footer_style}>
                 <p>
                     {"Built with ❤️ using Rust + WebAssembly • "}
-                    <a href="https://github.com/akofink/image-metadata-extractor" target="_blank" style="color: #007bff; text-decoration: none;">
+                    <a href="https://github.com/akofink/image-metadata-extractor" target="_blank" style={link_style.clone()}>
                         {"Open Source"}
                     </a>
                     {" • Privacy-First (No Server Uploads)"}
                 </p>
                 <p style="margin-top: 8px; font-size: 12px;">
                     {"© 2024 File Metadata Extractor • "}
-                    <a href="mailto:contact@image-metadata-extractor.com" style="color: #007bff; text-decoration: none;">
+                    <a href="mailto:contact@image-metadata-extractor.com" style={link_style.clone()}>
                         {"Contact"}
                     </a>
                 </p>

@@ -3,6 +3,12 @@
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Theme {
+    Light,
+    Dark,
+}
+
 /// Metadata extracted from an uploaded file.
 #[derive(Clone, PartialEq, Serialize, Debug)]
 pub struct ImageData {
