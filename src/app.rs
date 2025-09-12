@@ -20,6 +20,9 @@ pub fn app() -> Html {
     let show_explanations = use_state(|| false);
     let file_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
+    // Batch browsing state
+    let batch_items = use_state(Vec::<ImageData>::new);
+    let batch_index = use_state(|| 0usize);
 
     let on_file_loaded = {
         let image_data = image_data.clone();
@@ -93,11 +96,26 @@ pub fn app() -> Html {
         let batch_in_progress = batch_in_progress.clone();
         let batch_processed = batch_processed.clone();
         let batch_total = batch_total.clone();
-        Callback::from(move |_datas: Vec<ImageData>| {
+        let batch_items = batch_items.clone();
+        let batch_index = batch_index.clone();
+        let image_data = image_data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let is_expanded = is_expanded.clone();
+        Callback::from(move |datas: Vec<ImageData>| {
             batch_in_progress.set(false);
-            // processed and total already reflect completion
+            // Update progress to complete
             if *batch_total > 0 {
                 batch_processed.set(*batch_total);
+            }
+            // Save items and reset index
+            batch_items.set(datas.clone());
+            batch_index.set(0);
+            // Ensure first item is visible (already emitted earlier, but keep consistent)
+            if let Some(first) = datas.first() {
+                let all_keys: HashSet<String> = first.exif_data.keys().cloned().collect();
+                selected_metadata.set(all_keys);
+                image_data.set(Some(first.clone()));
+                is_expanded.set(false);
             }
         })
     };
@@ -167,10 +185,61 @@ pub fn app() -> Html {
 
                                     <ImageCleaner image_data={data.clone()} />
 
-                                    <MetadataExport
-                                        image_data={data.clone()}
-                                        selected_metadata={(*selected_metadata).clone()}
-                                    />
+                                   {
+                                       if !batch_items.is_empty() && batch_items.len() > 1 {
+                                           let has_prev = *batch_index > 0;
+                                           let has_next = *batch_index + 1 < batch_items.len();
+
+                                           let on_prev = {
+                                               let batch_index = batch_index.clone();
+                                               let batch_items = batch_items.clone();
+                                               let selected_metadata = selected_metadata.clone();
+                                               let image_state = image_data.clone();
+                                               Callback::from(move |_| {
+                                                   if *batch_index > 0 {
+                                                       let new_idx = *batch_index - 1;
+                                                       batch_index.set(new_idx);
+                                                       if let Some(item) = batch_items.get(new_idx) {
+                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
+                                                           selected_metadata.set(keys);
+                                                           image_state.set(Some(item.clone()));
+                                                       }
+                                                   }
+                                               })
+                                           };
+
+                                           let on_next = {
+                                               let batch_index = batch_index.clone();
+                                               let batch_items = batch_items.clone();
+                                               let selected_metadata = selected_metadata.clone();
+                                               let image_state = image_data.clone();
+                                               Callback::from(move |_| {
+                                                   if *batch_index + 1 < batch_items.len() {
+                                                       let new_idx = *batch_index + 1;
+                                                       batch_index.set(new_idx);
+                                                       if let Some(item) = batch_items.get(new_idx) {
+                                                           let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
+                                                           selected_metadata.set(keys);
+                                                           image_state.set(Some(item.clone()));
+                                                       }
+                                                   }
+                                               })
+                                           };
+
+                                           html! {
+                                               <div style="display:flex;gap:8px;align-items:center;margin:12px 0;">
+                                                   <button onclick={on_prev} disabled={!has_prev} style="padding:6px 10px;border-radius:4px;">{"⬅ Previous"}</button>
+                                                   <div style="font-size:12px;color:#666;">{ format!("Image {} of {}", *batch_index + 1, batch_items.len()) }</div>
+                                                   <button onclick={on_next} disabled={!has_next} style="padding:6px 10px;border-radius:4px;">{"Next ➡"}</button>
+                                               </div>
+                                           }
+                                       } else { html!{} }
+                                   }
+
+                                   <MetadataExport
+                                       image_data={data.clone()}
+                                       selected_metadata={(*selected_metadata).clone()}
+                                   />
                                 </div>
                             }
                         } else {
