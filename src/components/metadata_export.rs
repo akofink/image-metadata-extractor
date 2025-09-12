@@ -146,6 +146,76 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
         })
     };
 
+    let copy_csv = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let csv = generate_csv(&filtered_data);
+            copy_to_clipboard(&csv);
+        })
+    };
+
+    let copy_txt = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let txt = generate_txt(&filtered_data);
+            copy_to_clipboard(&txt);
+        })
+    };
+
+    let copy_md = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let md = generate_md(&filtered_data);
+            copy_to_clipboard(&md);
+        })
+    };
+
+    let copy_yaml = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let yaml = generate_yaml(&filtered_data);
+            copy_to_clipboard(&yaml);
+        })
+    };
+
+    let copy_xml = {
+        let data = data.clone();
+        let selected_metadata = selected_metadata.clone();
+        let include_basic_info = include_basic_info.clone();
+        let include_gps = include_gps.clone();
+
+        Callback::from(move |_| {
+            let filtered_data =
+                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let xml = generate_xml(&filtered_data);
+            copy_to_clipboard(&xml);
+        })
+    };
+
     // Only show export section if there's metadata to export
     if data.exif_data.is_empty()
         && data.gps_coords.is_none()
@@ -220,83 +290,150 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button title="Download JSON"
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                // JSON format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download JSON"
+                        onclick={if has_anything_to_export { export_json.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export {
+                                "background: #007bff; color: white; cursor: pointer;"
+                            } else {
+                                "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                            }
+                        )}
+                    >
+                        {"📄 JSON"}
+                    </button>
+                    <button title="Copy JSON to clipboard"
+                        onclick={if has_anything_to_export { copy_json.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #007bff; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #007bff; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
 
-                    onclick={if has_anything_to_export { export_json.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export {
-                            "background: #007bff; color: white; cursor: pointer;"
-                        } else {
-                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
-                        }
-                    )}
-                >
-                    {"📄 JSON"}
-                </button>
-                <button title="Copy JSON to clipboard"
-                    onclick={if has_anything_to_export { copy_json.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: 1px solid #007bff; padding: 8px 16px; border-radius: 4px; font-weight: bold; background: white; color: #007bff; {}",
-                        if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
-                    )}
-                >
-                    {"📋 Copy JSON"}
-                </button>
-                <button title="Download CSV"
-                    onclick={if has_anything_to_export { export_csv.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export {
-                            "background: #28a745; color: white; cursor: pointer;"
-                        } else {
-                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
-                        }
-                    )}
-                >
-                    {"📊 CSV"}
-                </button>
-                <button title="Download Markdown"
-                    onclick={if has_anything_to_export { export_md.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export { "background: #6f42c1; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
-                    )}
-                >
-                    {"🗒️ Markdown"}
-                </button>
-                <button title="Download YAML"
-                    onclick={if has_anything_to_export { export_yaml.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export { "background: #20c997; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
-                    )}
-                >
-                    {"🧾 YAML"}
-                </button>
-                <button title="Download XML"
-                    onclick={if has_anything_to_export { export_xml.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export { "background: #17a2b8; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
-                    )}
-                >
-                    {"🧩 XML"}
-                </button>
-                <button title="Download Text"
-                    onclick={if has_anything_to_export { export_txt.clone() } else { Callback::noop() }}
-                    disabled={!has_anything_to_export}
-                    style={format!("border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; {}",
-                        if has_anything_to_export {
-                            "background: #6c757d; color: white; cursor: pointer;"
-                        } else {
-                            "background: #6c757d; color: #aaa; cursor: not-allowed;"
-                        }
-                    )}
-                >
-                    {"📝 Text"}
-                </button>
+                // CSV format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download CSV"
+                        onclick={if has_anything_to_export { export_csv.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export {
+                                "background: #28a745; color: white; cursor: pointer;"
+                            } else {
+                                "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                            }
+                        )}
+                    >
+                        {"📊 CSV"}
+                    </button>
+                    <button title="Copy CSV to clipboard"
+                        onclick={if has_anything_to_export { copy_csv.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #28a745; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #28a745; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
+
+                // Text format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download Text"
+                        onclick={if has_anything_to_export { export_txt.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export {
+                                "background: #6c757d; color: white; cursor: pointer;"
+                            } else {
+                                "background: #6c757d; color: #aaa; cursor: not-allowed;"
+                            }
+                        )}
+                    >
+                        {"📝 Text"}
+                    </button>
+                    <button title="Copy Text to clipboard"
+                        onclick={if has_anything_to_export { copy_txt.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #6c757d; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6c757d; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
+
+                // Markdown format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download Markdown"
+                        onclick={if has_anything_to_export { export_md.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export { "background: #6f42c1; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                        )}
+                    >
+                        {"🗒️ MD"}
+                    </button>
+                    <button title="Copy Markdown to clipboard"
+                        onclick={if has_anything_to_export { copy_md.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #6f42c1; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #6f42c1; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
+
+                // YAML format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download YAML"
+                        onclick={if has_anything_to_export { export_yaml.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export { "background: #20c997; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                        )}
+                    >
+                        {"🧾 YAML"}
+                    </button>
+                    <button title="Copy YAML to clipboard"
+                        onclick={if has_anything_to_export { copy_yaml.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #20c997; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #20c997; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
+
+                // XML format
+                <div style="display: flex; gap: 2px;">
+                    <button title="Download XML"
+                        onclick={if has_anything_to_export { export_xml.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: none; padding: 6px 12px; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 12px; {}",
+                            if has_anything_to_export { "background: #17a2b8; color: white; cursor: pointer;" } else { "background: #6c757d; color: #aaa; cursor: not-allowed;" }
+                        )}
+                    >
+                        {"🧩 XML"}
+                    </button>
+                    <button title="Copy XML to clipboard"
+                        onclick={if has_anything_to_export { copy_xml.clone() } else { Callback::noop() }}
+                        disabled={!has_anything_to_export}
+                        style={format!("border: 1px solid #17a2b8; padding: 6px 8px; border-radius: 0 4px 4px 0; font-weight: bold; background: white; color: #17a2b8; font-size: 12px; {}",
+                            if has_anything_to_export { "cursor: pointer;" } else { "cursor: not-allowed; color: #aaa; border-color: #6c757d;" }
+                        )}
+                    >
+                        {"📋"}
+                    </button>
+                </div>
             </div>
         </div>
     }

@@ -18,13 +18,55 @@ Non‑goals:
 ## What will make this the most useful tool on the Internet
 
 Unique differentiators (all client‑side):
-- Archive & dataset native: Import ZIP/7z/TAR archives, deduplicate by hash, and process at scale without uploading files anywhere.
-- Cross‑file intelligence: Timeline view, location clustering heatmap, and cross‑image diff/dedupe to analyze entire shoots.
-- Privacy score & guidance: Automatic sensitive‑field warnings, GPS precision fuzzing, and share‑safety checklist with clear remediation.
-- Templated reporting: Custom, user‑defined report templates (Markdown/HTML/TXT) with local profile storage and schema versioning.
-- Minimal video metadata: Parse container metadata (MP4/MOV) and embedded XMP/EXIF sidecar basics to extend usefulness beyond still images.
-- Power‑user experience: Command palette, keyboard shortcuts, rule‑based redaction engine, and offline quick‑map preview (no external tiles).
-- Internationalization: Built‑in multilingual UI and field explanations, shipped with the app (no network fetch).
+- **Archive & dataset native**: Import ZIP/7z/TAR archives, deduplicate by hash, and process at scale without uploading files anywhere.
+- **Cross‑file intelligence**: Timeline view, location clustering heatmap, and cross‑image diff/dedupe to analyze entire shoots.
+- **Privacy score & guidance**: Automatic sensitive‑field warnings, GPS precision fuzzing, and share‑safety checklist with clear remediation.
+- **Templated reporting**: Custom, user‑defined report templates (Markdown/HTML/TXT) with local profile storage and schema versioning.
+- **Minimal video metadata**: Parse container metadata (MP4/MOV) and embedded XMP/EXIF sidecar basics to extend usefulness beyond still images.
+- **Power‑user experience**: Command palette, keyboard shortcuts, rule‑based redaction engine, and offline quick‑map preview (no external tiles).
+- **Internationalization**: Built‑in multilingual UI and field explanations, shipped with the app (no network fetch).
+- **Forensic analysis suite**: Error Level Analysis (ELA), timestamp anomaly detection, camera fingerprinting, and provenance tracking.
+- **AI-powered insights**: Automated privacy risk assessment, suspicious modification detection, and smart field categorization.
+- **Professional workflow integration**: Export profiles for journalism, law enforcement, real estate, and research use cases.
+- **Advanced visualization**: Interactive GPS tracks, photo timeline correlation, and metadata trend analysis across collections.
+- **Enterprise features**: Audit trails, compliance reporting, and bulk processing with customizable rules engines.
+
+---
+
+## Phase 0 — Immediate Impact Features (Next Priority)
+
+Objectives: Implement high-value features that differentiate us from competitors immediately, focusing on export flexibility and privacy features.
+
+User‑facing features:
+- **Export enhancements** (PRIORITY):
+  - 🔄 **Batch export combined metadata**: Single JSON/CSV/TXT containing all processed files
+  - ✅ **Copy to clipboard**: **IMPLEMENTED** - Direct copy for JSON/CSV/TXT/MD/YAML/XML metadata without downloads  
+  - 🔄 **Export profiles**: Save/load selection patterns for different use cases (journalism, real estate, forensics)
+  - ✅ **YAML and XML export**: **IMPLEMENTED** - Additional structured formats for professional workflows
+- **GPS privacy & security**:
+  - 🔄 **GPS precision degradation**: Fuzz coordinates to configurable precision levels (street, city, region)
+  - 🔄 **Privacy risk scoring**: Automatic warnings for sensitive location data
+  - 🔄 **Map link generation**: One-click copy of Google/Apple/OSM map links (no external requests)
+- **File integrity & forensics**:
+  - 🔄 **SHA-256 file hashing**: Generate checksums for provenance and deduplication
+  - 🔄 **Metadata consistency checks**: Flag inconsistent timestamp/GPS combinations
+  - 🔄 **Duplicate detection**: Identify identical files in batch uploads by hash
+- **UX improvements**:
+  - 🔄 **Command palette**: Keyboard-driven interface (Ctrl+K/Cmd+K) for power users
+  - 🔄 **Persistent preferences**: Remember theme, export settings, and field selections
+  - 🔄 **Keyboard shortcuts**: Space for image modal, Enter for export, etc.
+
+Technical notes:
+- Focus on features that can be implemented without Web Workers initially
+- Use localStorage for preferences and export profiles
+- Implement SHA-256 hashing using Web Crypto API
+- GPS fuzzing algorithms using coordinate math (no external services)
+
+Testing & acceptance:
+- Export functionality works across all supported formats
+- Privacy features effectively reduce location precision
+- Keyboard navigation works smoothly across all components
+- Settings persist across browser sessions
 
 ---
 
@@ -140,6 +182,46 @@ Testing & acceptance:
 
 ---
 
+## Phase 3.5 — AI-Powered Forensics & Intelligence (BREAKTHROUGH FEATURES)
+
+Objectives: Implement cutting-edge features that no competitor offers, positioning us as the definitive metadata intelligence platform.
+
+User‑facing features:
+- **AI-powered analysis** (using client-side ML models via WebAssembly):
+  - Smart privacy risk assessment: Automatically detect and score privacy-sensitive patterns
+  - Suspicious modification detection: Flag potential image manipulations using metadata patterns
+  - Camera fingerprinting: Identify unique camera signatures across image collections
+  - Automated field categorization: Intelligently organize custom/unknown metadata fields
+- **Advanced forensics suite**:
+  - Error Level Analysis (ELA): Detect image compression inconsistencies indicating modifications
+  - Timestamp anomaly detection: Flag suspicious date/time patterns across batch uploads
+  - Metadata provenance tracking: Build chains of custody and modification history
+  - Cross-image correlation: Detect relationships between images in large datasets
+- **Professional intelligence features**:
+  - **Journalism mode**: Flag potentially sensitive source-revealing metadata
+  - **Legal discovery mode**: Generate chain-of-custody reports with audit trails
+  - **Research mode**: Statistical analysis and pattern detection across datasets  
+  - **OSINT mode**: Optimize for open-source intelligence gathering workflows
+- **Advanced visualization dashboard**:
+  - Interactive GPS track reconstruction from photo sequences
+  - Timeline correlation with automatic clustering by location/time
+  - Metadata trend analysis with statistical charts and anomaly highlighting
+  - Cross-collection comparison and similarity analysis
+
+Technical notes:
+- Client-side ML models using WASM builds of TensorFlow Lite or ONNX Runtime
+- ELA implementation using canvas-based image recompression and pixel difference analysis
+- Statistical analysis using Rust-compiled math libraries for performance
+- All AI/ML processing remains entirely client-side for privacy
+
+Testing & acceptance:
+- AI models achieve >90% accuracy on standard forensic test datasets
+- ELA analysis matches or exceeds desktop tools like FotoForensics
+- Professional workflow modes generate industry-standard report formats
+- Performance remains responsive even with ML analysis on mobile devices
+
+---
+
 ## Phase 4 — Formats, Platforms, and Packaging
 
 Objectives: broaden file format compatibility and distribution options while maintaining the privacy promise.
@@ -200,17 +282,23 @@ Developer experience:
 
 ## Milestones Overview
 
-- M1 (Phase 1): Batch support, archive import, templated reports, dark mode, clipboard copy, GPS fuzz, hashing & integrity checks.  
-  Done when: multi‑file/archives stable, templates ship, accessibility and theme toggles ship.
+- **M0 (Phase 0)**: Export enhancements, GPS privacy features, file integrity, command palette, persistent preferences.  
+  **Done when**: Clipboard export works, GPS fuzzing implemented, SHA-256 hashing active, keyboard shortcuts functional.
 
-- M2 (Phase 2): PWA, IndexedDB session persistence, directory import, cleaning rule engine, limited write‑back, diff view, offline quick‑map.  
-  Done when: installable offline app, resume flows, granular cleaning rules tested.
+- **M1 (Phase 1)**: Archive import, templated reports, advanced export formats, full i18n support, integrity checks.  
+  **Done when**: ZIP/TAR import stable, YAML/XML export functional, multilingual UI ships.
 
-- M3 (Phase 3): IPTC/XMP parsing, cross‑file analytics (timeline/heatmap/diff), forensics (histogram/colors/ELA), suggestions & privacy score.  
-  Done when: broader metadata reliably parsed/exported with visual insights.
+- **M2 (Phase 2)**: PWA installation, IndexedDB persistence, directory import, advanced cleaning controls, diff views.  
+  **Done when**: Offline-capable installable app, session resume works, granular redaction rules tested.
 
-- M4 (Phase 4): HEIC/HEIF/DNG exploration, minimal video metadata, WebExtension + bookmarklet packaging.  
-  Done when: capability‑gated builds ship with graceful fallbacks.
+- **M3 (Phase 3)**: IPTC/XMP parsing, cross‑file analytics, timeline views, location clustering, privacy scoring.  
+  **Done when**: Comprehensive metadata parsing, visual analytics dashboard, automated privacy warnings.
+
+- **M3.5 (Phase 3.5)**: AI-powered forensics, ELA analysis, professional workflow modes, advanced intelligence features.  
+  **Done when**: Client-side ML models functional, forensic analysis matches desktop tools, professional reports generated.
+
+- **M4 (Phase 4)**: HEIC/HEIF/RAW support, video metadata, WebExtension packaging, enterprise distribution.  
+  **Done when**: Capability-gated builds ship, browser extension published, enterprise features tested.
 
 ---
 

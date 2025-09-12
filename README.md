@@ -31,12 +31,14 @@ This application allows users to upload images and extract comprehensive metadat
 
 ### 📊 **Advanced Export Capabilities**
 - **Selective export**: Choose exactly which metadata fields to include
-- **Multiple formats**: JSON, CSV, and human-readable text
+- **Multiple formats**: JSON, CSV, Text, Markdown, YAML, and XML
+- **Copy to clipboard**: Instant copy for all formats without downloading files
 - **File info options**: Toggle filename, size, and dimensions
 - **Smart filtering**: Visual checkboxes for granular control
 - **Auto-generated filenames**: Convenient downloads with descriptive names
 - **Select/deselect all**: Quickly toggle entire metadata sets
 - **Disabled export when empty**: Buttons stay inactive until something is selected
+- **Professional formats**: YAML and XML for enterprise and research workflows
 
 ### 📱 **Enhanced User Experience**
 - **Organized metadata**: Alphabetically sorted categories and fields
