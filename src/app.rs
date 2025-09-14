@@ -377,7 +377,7 @@ pub fn app() -> Html {
                                         theme={*theme}
                                     />
 
-                                    <ImageCleaner image_data={data.clone()} />
+                                    <ImageCleaner image_data={data.clone()} theme={*theme} />
 
                                    <MetadataExport
                                        image_data={data.clone()}

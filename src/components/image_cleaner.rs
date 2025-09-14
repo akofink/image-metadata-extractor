@@ -1,20 +1,53 @@
 //! Download a copy of the file with all metadata stripped.
 
 use crate::binary_cleaner::BinaryCleaner;
-use crate::types::ImageData;
+use crate::types::{ImageData, Theme};
 use crate::utils::download_binary_file;
 use base64::{Engine as _, engine::general_purpose};
 use yew::prelude::*;
+
+struct CleanerColors {
+    background: &'static str,
+    text: &'static str,
+    border: &'static str,
+    info_bg: &'static str,
+    info_text: &'static str,
+    button_bg: &'static str,
+}
+
+const LIGHT_CLEANER_COLORS: CleanerColors = CleanerColors {
+    background: "#d1ecf1",
+    text: "#0c5460",
+    border: "#bee5eb",
+    info_bg: "rgba(255,255,255,0.7)",
+    info_text: "#666",
+    button_bg: "#17a2b8",
+};
+
+const DARK_CLEANER_COLORS: CleanerColors = CleanerColors {
+    background: "#1a4548",
+    text: "#b8dce1",
+    border: "#2d5a5f",
+    info_bg: "rgba(255,255,255,0.1)",
+    info_text: "#aaa",
+    button_bg: "#20c997",
+};
 
 /// Properties for [`ImageCleaner`].
 #[derive(Properties, PartialEq)]
 pub struct ImageCleanerProps {
     pub image_data: ImageData,
+    pub theme: Theme,
 }
 
 /// Button that performs binary metadata removal and triggers a download.
 #[function_component(ImageCleaner)]
 pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
+    let colors = match props.theme {
+        Theme::Light => LIGHT_CLEANER_COLORS,
+        Theme::Dark => DARK_CLEANER_COLORS,
+    };
+
     let download_cleaned_image_cb = {
         let data = props.image_data.clone();
 
@@ -59,24 +92,24 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
     };
 
     html! {
-        <div style="background: #d1ecf1; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #bee5eb;">
+        <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid {}; color: {};", colors.background, colors.border, colors.text)}>
             <h3>{"🧹 Download Cleaned File"}</h3>
-            <p style="margin-bottom: 15px; color: #0c5460;">
+            <p style={format!("margin-bottom: 15px; color: {};", colors.text)}>
                 {"Download your file with all metadata removed for privacy:"}
             </p>
 
-            <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+            <div style={format!("margin-bottom: 15px; padding: 10px; background: {}; border-radius: 4px;", colors.info_bg)}>
+                <div style={format!("font-size: 14px; color: {}; margin-bottom: 8px;", colors.info_text)}>
                     {"High-performance binary metadata removal preserves original file quality"}
                 </div>
-                <div style="font-size: 12px; color: #666;">
+                <div style={format!("font-size: 12px; color: {};", colors.info_text)}>
                     {"Supports JPEG, PNG, WebP, GIF, TIFF, HEIF, PDF, SVG and more"}
                 </div>
             </div>
 
             <button
                 onclick={download_cleaned_image_cb}
-                style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;"
+                style={format!("background: {}; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;", colors.button_bg)}
             >
                 {"🧹 Download Privacy-Safe File"}
             </button>
