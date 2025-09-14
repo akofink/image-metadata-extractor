@@ -1,16 +1,41 @@
 //! Allows users to download selected metadata in various formats.
 
 use crate::export::{generate_csv, generate_md, generate_txt, generate_xml, generate_yaml};
-use crate::types::ImageData;
+use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, download_file};
 use std::collections::HashSet;
 use yew::prelude::*;
+
+struct ExportColors {
+    background: &'static str,
+    text: &'static str,
+    border: &'static str,
+    checkbox_bg: &'static str,
+    help_text: &'static str,
+}
+
+const LIGHT_EXPORT_COLORS: ExportColors = ExportColors {
+    background: "#fff3cd",
+    text: "#856404",
+    border: "#ffeaa7",
+    checkbox_bg: "rgba(255,255,255,0.7)",
+    help_text: "#666",
+};
+
+const DARK_EXPORT_COLORS: ExportColors = ExportColors {
+    background: "#3d3d0a",
+    text: "#fff3cd",
+    border: "#666600",
+    checkbox_bg: "rgba(255,255,255,0.1)",
+    help_text: "#aaa",
+};
 
 /// Properties for [`MetadataExport`].
 #[derive(Properties, PartialEq)]
 pub struct MetadataExportProps {
     pub image_data: ImageData,
     pub selected_metadata: HashSet<String>,
+    pub theme: Theme,
 }
 
 /// Controls for exporting chosen metadata fields to JSON, CSV or text.
@@ -21,6 +46,11 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
 
     let data = &props.image_data;
     let selected_metadata = &props.selected_metadata;
+
+    let colors = match props.theme {
+        Theme::Light => LIGHT_EXPORT_COLORS,
+        Theme::Dark => DARK_EXPORT_COLORS,
+    };
 
     let export_json = {
         let data = data.clone();
@@ -232,13 +262,13 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let has_anything_to_export = has_metadata || has_file_info || has_gps;
 
     html! {
-        <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid #ffeaa7;">
+        <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid {}; color: {};", colors.background, colors.border, colors.text)}>
             <h3>{"📊 Export Metadata"}</h3>
-            <p style="margin-bottom: 15px; color: #856404;">
+            <p style={format!("margin-bottom: 15px; color: {};", colors.text)}>
                 {"Download selected metadata in your preferred format:"}
             </p>
 
-            <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+            <div style={format!("margin-bottom: 15px; padding: 10px; background: {}; border-radius: 4px;", colors.checkbox_bg)}>
                 <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"Include in Export:"}</h4>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     {
@@ -284,7 +314,7 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                         }
                     }
                 </div>
-                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                <div style={format!("margin-top: 10px; font-size: 12px; color: {};", colors.help_text)}>
                     {format!("{} metadata fields selected", selected_metadata.len())}
                     {" • Use checkboxes above to select specific metadata"}
                 </div>

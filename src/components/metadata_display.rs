@@ -1,9 +1,36 @@
 //! Displays extracted metadata with selection controls.
 
 use crate::metadata_info::{get_metadata_category, get_metadata_explanation};
-use crate::types::ImageData;
+use crate::types::{ImageData, Theme};
 use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
+
+struct MetadataColors {
+    background: &'static str,
+    text: &'static str,
+    primary: &'static str,
+    secondary: &'static str,
+    border: &'static str,
+    section_bg: &'static str,
+}
+
+const LIGHT_METADATA_COLORS: MetadataColors = MetadataColors {
+    background: "#f0f8ff",
+    text: "#333333",
+    primary: "#007bff",
+    secondary: "#28a745",
+    border: "#ddd",
+    section_bg: "#f9f9f9",
+};
+
+const DARK_METADATA_COLORS: MetadataColors = MetadataColors {
+    background: "#1e1e1e",
+    text: "#e0e0e0",
+    primary: "#bb86fc",
+    secondary: "#03dac6",
+    border: "#444",
+    section_bg: "#2d2d2d",
+};
 
 /// Properties for [`MetadataDisplay`].
 #[derive(Properties, PartialEq)]
@@ -13,6 +40,7 @@ pub struct MetadataDisplayProps {
     pub show_explanations: bool,
     pub on_metadata_selection_change: Callback<HashSet<String>>,
     pub on_toggle_explanations: Callback<web_sys::MouseEvent>,
+    pub theme: Theme,
 }
 
 /// Shows metadata grouped by category with checkboxes and explanations.
@@ -22,9 +50,14 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
     let selected_metadata = &props.selected_metadata;
     let show_explanations = props.show_explanations;
 
+    let colors = match props.theme {
+        Theme::Light => LIGHT_METADATA_COLORS,
+        Theme::Dark => DARK_METADATA_COLORS,
+    };
+
     if data.exif_data.is_empty() {
         return html! {
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; color: #666;">
+            <div style={format!("background: {}; padding: 15px; border-radius: 4px; color: {}; border: 1px solid {};", colors.section_bg, colors.text, colors.border)}>
                 <h3>{"Metadata"}</h3>
                 <p>{"No metadata found in this file"}</p>
             </div>
@@ -50,7 +83,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
     let _all_selected = selected_metadata.len() == all_keys.len() && !all_keys.is_empty();
 
     html! {
-        <div style="background: #f0f8ff; padding: 15px; border-radius: 4px;">
+        <div style={format!("background: {}; padding: 15px; border-radius: 4px; border: 1px solid {}; color: {};", colors.background, colors.border, colors.text)}>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">{"Metadata"}</h3>
                 <div style="display: flex; gap: 10px;">
@@ -63,7 +96,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                     on_change.emit(all_keys.clone());
                                 })
                             }}
-                            style="background: #28a745; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;"
+                            style={format!("background: {}; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;", colors.secondary)}
                         >
                             {"Select All"}
                         </button>
@@ -81,7 +114,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                     </div>
                     <button
                         onclick={props.on_toggle_explanations.clone()}
-                        style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                        style={format!("background: {}; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;", colors.primary)}
                     >
                         {if show_explanations { "Hide Info" } else { "Show Info" }}
                     </button>
@@ -98,8 +131,8 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
 
                         html! {
                             <div key={*category} style="margin-bottom: 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-                                    <h4 style="margin: 0; color: #555; font-size: 14px;">
+                                <div style={format!("display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid {}; padding-bottom: 5px;", colors.border)}>
+                                    <h4 style={format!("margin: 0; color: {}; font-size: 14px;", colors.text)}>
                                         {*category}
                                     </h4>
                                     <div style="display: flex; gap: 3px;">
@@ -116,7 +149,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                                     on_change.emit(current);
                                                 })
                                             }}
-                                            style="background: #28a745; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;"
+                                            style={format!("background: {}; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;", colors.secondary)}
                                         >
                                             {"All"}
                                         </button>
@@ -147,7 +180,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                         let on_change = props.on_metadata_selection_change.clone();
 
                                         html! {
-                                            <div key={(*key).clone()} style="margin-bottom: 12px; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.5);">
+                                            <div key={(*key).clone()} style={format!("margin-bottom: 12px; padding: 8px; border-radius: 4px; background: {}; border: 1px solid {};", colors.section_bg, colors.border)}>
                                                 <div style="display: flex; align-items: flex-start; gap: 12px;">
                                                     <input
                                                         type="checkbox"
@@ -164,7 +197,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                                         style="margin-top: 2px;"
                                                     />
                                                     <div style="flex: 1;">
-                                                        <div style="margin-bottom: 2px;">
+                                                        <div style={format!("margin-bottom: 2px; color: {};", colors.text)}>
                                                             <strong>{format!("{}: ", key)}</strong>
                                                             <span style="word-break: break-all; overflow-wrap: break-word;">{*value}</span>
                                                         </div>
@@ -172,7 +205,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                                             if show_explanations {
                                                                 if let Some(explanation) = get_metadata_explanation(key) {
                                                                     html! {
-                                                                        <div style="font-size: 11px; color: #666; font-style: italic; margin-top: 2px;">
+                                                                        <div style={format!("font-size: 11px; color: {}; font-style: italic; margin-top: 2px;", if props.theme == Theme::Light { "#666" } else { "#aaa" })}>
                                                                             {explanation}
                                                                         </div>
                                                                     }

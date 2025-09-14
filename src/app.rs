@@ -365,6 +365,7 @@ pub fn app() -> Html {
                                         is_expanded={*is_expanded}
                                         on_image_click={on_image_click}
                                         on_upload_new={Some(on_upload_new)}
+                                        theme={*theme}
                                     />
 
                                     <MetadataDisplay
@@ -373,6 +374,7 @@ pub fn app() -> Html {
                                         show_explanations={*show_explanations}
                                         on_metadata_selection_change={on_metadata_selection_change}
                                         on_toggle_explanations={on_toggle_explanations}
+                                        theme={*theme}
                                     />
 
                                     <ImageCleaner image_data={data.clone()} />
@@ -380,6 +382,7 @@ pub fn app() -> Html {
                                    <MetadataExport
                                        image_data={data.clone()}
                                        selected_metadata={(*selected_metadata).clone()}
+                                       theme={*theme}
                                    />
                                 </div>
                             }

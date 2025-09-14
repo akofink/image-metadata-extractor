@@ -1,8 +1,38 @@
 //! Renders the uploaded image and basic information.
 
-use crate::types::ImageData;
+use crate::types::{ImageData, Theme};
 use crate::utils::format_file_size;
 use yew::prelude::*;
+
+struct ImageDisplayColors {
+    background: &'static str,
+    text: &'static str,
+    primary: &'static str,
+    border: &'static str,
+    hash_bg: &'static str,
+    secondary_text: &'static str,
+    gps_bg: &'static str,
+}
+
+const LIGHT_IMAGE_COLORS: ImageDisplayColors = ImageDisplayColors {
+    background: "#f5f5f5",
+    text: "#333333",
+    primary: "#007bff",
+    border: "#ddd",
+    hash_bg: "#f8f9fa",
+    secondary_text: "#666",
+    gps_bg: "#e8f5e8",
+};
+
+const DARK_IMAGE_COLORS: ImageDisplayColors = ImageDisplayColors {
+    background: "#1e1e1e",
+    text: "#e0e0e0",
+    primary: "#bb86fc",
+    border: "#444",
+    hash_bg: "#2d2d2d",
+    secondary_text: "#aaa",
+    gps_bg: "#1a3d1a",
+};
 
 /// Properties for [`ImageDisplay`].
 #[derive(Properties, PartialEq)]
@@ -11,6 +41,7 @@ pub struct ImageDisplayProps {
     pub is_expanded: bool,
     pub on_image_click: Callback<web_sys::MouseEvent>,
     pub on_upload_new: Option<Callback<web_sys::MouseEvent>>,
+    pub theme: Theme,
 }
 
 /// Preview component showing the file and optional GPS information.
@@ -19,6 +50,11 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
     let data = &props.image_data;
     let is_expanded = props.is_expanded;
     let on_image_click = props.on_image_click.clone();
+
+    let colors = match props.theme {
+        Theme::Light => LIGHT_IMAGE_COLORS,
+        Theme::Dark => DARK_IMAGE_COLORS,
+    };
 
     html! {
         <div>
@@ -79,7 +115,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                 }
             </div>
 
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid {}; color: {};", colors.background, colors.border, colors.text)}>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">{"File Information"}</h3>
                     {
@@ -87,7 +123,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                             html! {
                                 <button
                                     onclick={on_upload_new.clone()}
-                                    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease;"
+                                    style={format!("background: {}; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease;", colors.primary)}
                                     class="upload-new-button"
                                 >
                                     {"📁 Upload New File"}
@@ -114,8 +150,8 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                         html! {
                             <div>
                                 <p><strong>{"SHA-256 Hash: "}</strong></p>
-                                <p style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; word-break: break-all; margin: 4px 0;">{hash}</p>
-                                <p style="font-size: 11px; color: #666; margin: 4px 0 0 0;">{"Cryptographic fingerprint for forensics and deduplication"}</p>
+                                <p style={format!("font-family: monospace; font-size: 12px; background: {}; padding: 8px; border-radius: 4px; word-break: break-all; margin: 4px 0; border: 1px solid {};", colors.hash_bg, colors.border)}>{hash}</p>
+                                <p style={format!("font-size: 11px; color: {}; margin: 4px 0 0 0;", colors.secondary_text)}>{"Cryptographic fingerprint for forensics and deduplication"}</p>
                             </div>
                         }
                     } else {
@@ -127,7 +163,7 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
             {
                 if let Some((lat, lon)) = data.gps_coords {
                     html! {
-                        <div style="background: #e8f5e8; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid {}; color: {};", colors.gps_bg, colors.border, colors.text)}>
                             <h3>{"GPS Location"}</h3>
                             <p><strong>{"Latitude: "}</strong>{lat}</p>
                             <p><strong>{"Longitude: "}</strong>{lon}</p>
