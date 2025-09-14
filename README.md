@@ -41,12 +41,27 @@ This application allows users to upload images and extract comprehensive metadat
 - **Professional formats**: YAML and XML for enterprise and research workflows
 
 ### 📱 **Enhanced User Experience**
+- **Command palette**: Keyboard-driven interface for power users
 - **Organized metadata**: Alphabetically sorted categories and fields
 - **Stable rendering**: No more jumping sections during UI updates
 - **Modular components**: Clean, maintainable component architecture
 - **Professional styling**: Color-coded sections with intuitive icons
 - **Dark mode support**: Automatic system theme detection and manual toggle
 - **Batch navigation**: Previous/Next buttons for switching between uploaded files
+
+### ⌨️ **Keyboard Shortcuts**
+- **`Cmd/Ctrl + K`**: Open the command palette
+- **`Cmd/Ctrl + O`**: Open file dialog
+- **`Space`**: Expand/collapse image view
+- **`?`**: Toggle explanations
+- **`Cmd/Ctrl + A`**: Select all metadata
+- **`Cmd/Ctrl + D`**: Deselect all metadata
+- **`Cmd/Ctrl + 1`**: Export as JSON
+- **`Cmd/Ctrl + 2`**: Export as CSV
+- **`Cmd/Ctrl + 3`**: Export as Text
+- **`Cmd/Ctrl + Shift + 1`**: Copy as JSON
+- **`Cmd/Ctrl + Shift + 2`**: Copy as CSV
+- **`Cmd/Ctrl + Shift + 3`**: Copy as Text
 
 ### 🔍 **Forensic & Security Features**
 - **SHA-256 file hashing**: Cryptographic fingerprints for file integrity verification

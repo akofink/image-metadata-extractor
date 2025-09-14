@@ -350,58 +350,130 @@ pub fn app() -> Html {
         let image_data = image_data.clone();
         let on_preferences_change = on_preferences_change.clone();
 
-        Callback::from(move |action: CommandAction| {
-            match action {
-                CommandAction::ToggleTheme => {
-                    let current_theme = *theme;
-                    theme.set(match current_theme {
-                        Theme::Light => Theme::Dark,
-                        Theme::Dark => Theme::Light,
-                    });
+        Callback::from(move |action: CommandAction| match action {
+            CommandAction::ToggleTheme => {
+                let current_theme = *theme;
+                theme.set(match current_theme {
+                    Theme::Light => Theme::Dark,
+                    Theme::Dark => Theme::Light,
+                });
+            }
+            CommandAction::ToggleExplanations => {
+                let mut new_prefs = (*preferences).clone();
+                new_prefs.update_and_save(|prefs| {
+                    prefs.show_explanations = !prefs.show_explanations;
+                });
+                on_preferences_change.emit(new_prefs);
+            }
+            CommandAction::ToggleFileInfo => {
+                let mut new_prefs = (*preferences).clone();
+                new_prefs.update_and_save(|prefs| {
+                    prefs.include_basic_info = !prefs.include_basic_info;
+                });
+                on_preferences_change.emit(new_prefs);
+            }
+            CommandAction::ToggleGps => {
+                let mut new_prefs = (*preferences).clone();
+                new_prefs.update_and_save(|prefs| {
+                    prefs.include_gps = !prefs.include_gps;
+                });
+                on_preferences_change.emit(new_prefs);
+            }
+            CommandAction::ExpandImage => {
+                is_expanded.set(!*is_expanded);
+            }
+            CommandAction::UploadNew => {
+                if let Some(ref trigger) = *file_input_trigger {
+                    trigger.emit(());
                 }
-                CommandAction::ToggleExplanations => {
-                    let mut new_prefs = (*preferences).clone();
-                    new_prefs.update_and_save(|prefs| {
-                        prefs.show_explanations = !prefs.show_explanations;
-                    });
-                    on_preferences_change.emit(new_prefs);
+            }
+            CommandAction::SelectAllMetadata => {
+                if let Some(data) = &*image_data {
+                    let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
+                    selected_metadata.set(all_keys);
                 }
-                CommandAction::ToggleFileInfo => {
-                    let mut new_prefs = (*preferences).clone();
-                    new_prefs.update_and_save(|prefs| {
-                        prefs.include_basic_info = !prefs.include_basic_info;
-                    });
-                    on_preferences_change.emit(new_prefs);
-                }
-                CommandAction::ToggleGps => {
-                    let mut new_prefs = (*preferences).clone();
-                    new_prefs.update_and_save(|prefs| {
-                        prefs.include_gps = !prefs.include_gps;
-                    });
-                    on_preferences_change.emit(new_prefs);
-                }
-                CommandAction::ExpandImage => {
-                    is_expanded.set(!*is_expanded);
-                }
-                CommandAction::UploadNew => {
-                    if let Some(ref trigger) = *file_input_trigger {
-                        trigger.emit(());
-                    }
-                }
-                CommandAction::SelectAllMetadata => {
-                    if let Some(data) = &*image_data {
-                        let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
-                        selected_metadata.set(all_keys);
-                    }
-                }
-                CommandAction::DeselectAllMetadata => {
-                    selected_metadata.set(HashSet::new());
-                }
-                // TODO: Implement export and copy commands
-                _ => {
-                    web_sys::console::log_1(
-                        &format!("Command not yet implemented: {:?}", action).into(),
+            }
+            CommandAction::DeselectAllMetadata => {
+                selected_metadata.set(HashSet::new());
+            }
+            CommandAction::ExportJson => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
                     );
+                    if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
+                        crate::utils::download_file(
+                            &json,
+                            &format!("{}_filtered_metadata.json", data.name),
+                            "application/json",
+                        );
+                    }
+                }
+            }
+            CommandAction::ExportCsv => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
+                    );
+                    let csv = crate::export::generate_csv(&filtered_data);
+                    crate::utils::download_file(
+                        &csv,
+                        &format!("{}_filtered_metadata.csv", data.name),
+                        "text/csv",
+                    );
+                }
+            }
+            CommandAction::ExportTxt => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
+                    );
+                    let txt = crate::export::generate_txt(&filtered_data);
+                    crate::utils::download_file(
+                        &txt,
+                        &format!("{}_filtered_metadata.txt", data.name),
+                        "text/plain",
+                    );
+                }
+            }
+            CommandAction::CopyJson => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
+                    );
+                    if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
+                        crate::utils::copy_to_clipboard(&json);
+                    }
+                }
+            }
+            CommandAction::CopyCsv => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
+                    );
+                    let csv = crate::export::generate_csv(&filtered_data);
+                    crate::utils::copy_to_clipboard(&csv);
+                }
+            }
+            CommandAction::CopyTxt => {
+                if let Some(data) = &*image_data {
+                    let filtered_data = data.filter_metadata(
+                        &selected_metadata,
+                        preferences.include_basic_info,
+                        preferences.include_gps,
+                    );
+                    let txt = crate::export::generate_txt(&filtered_data);
+                    crate::utils::copy_to_clipboard(&txt);
                 }
             }
         })
