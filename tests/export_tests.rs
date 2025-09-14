@@ -14,6 +14,7 @@ fn test_generate_csv_minimal_data() {
         height: None,
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let csv = generate_csv(&data);
@@ -41,6 +42,7 @@ fn test_generate_txt_includes_map_links() {
         height: None,
         exif_data: HashMap::new(),
         gps_coords: Some((10.0, 20.0)),
+        sha256_hash: None,
     };
 
     let txt = generate_txt(&data);
@@ -60,6 +62,7 @@ fn test_generate_txt_no_metadata_message() {
         height: Some(200),
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let txt = generate_txt(&data);
@@ -82,6 +85,7 @@ fn test_generate_csv_includes_all_fields() {
         height: Some(300),
         exif_data: exif,
         gps_coords: Some((12.3, 45.6)),
+        sha256_hash: None,
     };
 
     let csv = generate_csv(&data);
@@ -109,6 +113,7 @@ fn test_generate_csv_dimensions_only() {
         height: Some(1080),
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let csv = generate_csv(&data);
@@ -135,6 +140,7 @@ fn test_generate_csv_gps_only() {
         height: None,
         exif_data: HashMap::new(),
         gps_coords: Some((37.7749, -122.4194)),
+        sha256_hash: None,
     };
 
     let csv = generate_csv(&data);
@@ -168,6 +174,7 @@ fn test_generate_csv_quote_escaping() {
         height: None,
         exif_data: exif,
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let csv = generate_csv(&data);
@@ -193,6 +200,7 @@ fn test_generate_txt_with_metadata() {
         height: Some(600),
         exif_data: exif,
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let txt = generate_txt(&data);
@@ -224,6 +232,7 @@ fn test_generate_txt_no_dimensions() {
         height: None,
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let txt = generate_txt(&data);
@@ -252,6 +261,7 @@ fn test_generate_txt_complete_report() {
         height: Some(3024),
         exif_data: exif,
         gps_coords: Some((40.7128, -74.0060)),
+        sha256_hash: None,
     };
 
     let txt = generate_txt(&data);

@@ -21,7 +21,7 @@ web-sys = { version = "0.3", features = [
     "Blob", "BlobPropertyBag", "Url", "Document", "Window", "Storage",
     "HtmlCanvasElement", "CanvasRenderingContext2d", "HtmlImageElement",
     "HtmlSelectElement", "InputEvent", "Navigator", "Clipboard",
-    "MediaQueryList", "MediaQueryListEvent"
+    "MediaQueryList", "MediaQueryListEvent", "Crypto", "SubtleCrypto"
 ] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"

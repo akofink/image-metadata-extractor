@@ -3,6 +3,7 @@
 
 use crate::exif_core;
 use crate::types::ImageData;
+use crate::utils_hash::calculate_sha256_hash;
 use image::GenericImageView;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
@@ -61,6 +62,9 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
 
+    // Calculate SHA-256 hash for forensics and deduplication
+    let sha256_hash = calculate_sha256_hash(&bytes).await.ok();
+
     Ok(ImageData {
         name,
         size,
@@ -70,5 +74,6 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
         height,
         exif_data,
         gps_coords,
+        sha256_hash,
     })
 }

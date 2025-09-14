@@ -28,6 +28,8 @@ pub struct ImageData {
     pub exif_data: HashMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gps_coords: Option<(f64, f64)>, // (latitude, longitude)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sha256_hash: Option<String>, // SHA-256 file hash for forensics and deduplication
 }
 
 fn is_zero(value: &u64) -> bool {
@@ -68,6 +70,11 @@ impl ImageData {
             },
             exif_data: filtered_exif,
             gps_coords: if include_gps { self.gps_coords } else { None },
+            sha256_hash: if include_basic_info {
+                self.sha256_hash.clone()
+            } else {
+                None
+            },
         }
     }
 }

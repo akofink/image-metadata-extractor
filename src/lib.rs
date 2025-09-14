@@ -15,6 +15,7 @@ pub mod metadata_info;
 pub mod types;
 pub mod utils;
 pub mod utils_core;
+pub mod utils_hash;
 pub mod utils_wasm;
 
 use app::App;

@@ -16,6 +16,7 @@ fn test_image_data_has_metadata() {
         height: Some(600),
         exif_data: exif,
         gps_coords: Some((1.0, 2.0)),
+        sha256_hash: None,
     };
 
     // Test logic that would be used in MetadataDisplay component
@@ -36,6 +37,7 @@ fn test_image_data_no_metadata() {
         height: Some(200),
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     // Test logic for empty metadata case in components
@@ -59,6 +61,7 @@ fn test_metadata_selection_logic() {
         height: Some(3000),
         exif_data: exif.clone(),
         gps_coords: Some((40.7128, -74.0060)),
+        sha256_hash: None,
     };
 
     // Test selection logic that would be used in MetadataExport component
@@ -92,6 +95,7 @@ fn test_component_props_equality() {
         height: Some(600),
         exif_data: exif.clone(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let data2 = ImageData {
@@ -103,6 +107,7 @@ fn test_component_props_equality() {
         height: Some(600),
         exif_data: exif,
         gps_coords: None,
+        sha256_hash: None,
     };
 
     // Test equality logic used in component prop comparison

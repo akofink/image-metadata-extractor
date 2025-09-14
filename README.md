@@ -48,6 +48,13 @@ This application allows users to upload images and extract comprehensive metadat
 - **Dark mode support**: Automatic system theme detection and manual toggle
 - **Batch navigation**: Previous/Next buttons for switching between uploaded files
 
+### 🔍 **Forensic & Security Features**
+- **SHA-256 file hashing**: Cryptographic fingerprints for file integrity verification
+- **Provenance tracking**: Unique file identifiers for chain of custody
+- **Deduplication support**: Identify identical files in batch uploads
+- **Privacy-first forensics**: All analysis performed locally in the browser
+- **Export integrity**: Hash values included in metadata exports for verification
+
 **Key Features:**
 - 🔒 **Complete privacy**: Runs entirely in the browser (no server required)
 - 🧹 **Metadata cleaning**: Remove all tracking data for privacy
@@ -56,6 +63,7 @@ This application allows users to upload images and extract comprehensive metadat
 - 📱 **Responsive design**: Mobile and desktop friendly
 - 🎨 **Professional UI**: Clean, intuitive interface with visual hierarchy
 - 🔧 **Format flexibility**: Convert between image formats while cleaning
+- 🔍 **Forensic analysis**: SHA-256 file hashing for provenance and deduplication
 
 ## Technology Stack
 

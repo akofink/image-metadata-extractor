@@ -17,6 +17,7 @@ fn test_image_data_creation() {
         height: Some(600),
         exif_data: exif.clone(),
         gps_coords: Some((37.7749, -122.4194)),
+        sha256_hash: None,
     };
 
     assert_eq!(data.name, "test.jpg");
@@ -43,6 +44,7 @@ fn test_filter_metadata_all_excluded() {
         height: Some(600),
         exif_data: exif,
         gps_coords: Some((1.0, 2.0)),
+        sha256_hash: None,
     };
 
     let keys = HashSet::new(); // No keys selected
@@ -74,6 +76,7 @@ fn test_filter_metadata_selective_exif() {
         height: Some(600),
         exif_data: exif,
         gps_coords: Some((1.0, 2.0)),
+        sha256_hash: None,
     };
 
     let mut keys = HashSet::new();
@@ -98,6 +101,7 @@ fn test_filter_metadata_include_basic_info() {
         height: Some(600),
         exif_data: HashMap::new(),
         gps_coords: Some((1.0, 2.0)),
+        sha256_hash: None,
     };
 
     let keys = HashSet::new();
@@ -121,6 +125,7 @@ fn test_filter_metadata_include_gps() {
         height: Some(600),
         exif_data: HashMap::new(),
         gps_coords: Some((37.7749, -122.4194)),
+        sha256_hash: None,
     };
 
     let keys = HashSet::new();
@@ -147,6 +152,7 @@ fn test_filter_metadata_include_all() {
         height: Some(1080),
         exif_data: exif,
         gps_coords: Some((40.7128, -74.0060)),
+        sha256_hash: None,
     };
 
     let mut keys = HashSet::new();
@@ -176,6 +182,7 @@ fn test_filter_metadata_nonexistent_keys() {
         height: Some(480),
         exif_data: exif,
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let mut keys = HashSet::new();
@@ -197,6 +204,7 @@ fn test_filter_metadata_empty_exif() {
         height: Some(100),
         exif_data: HashMap::new(),
         gps_coords: None,
+        sha256_hash: None,
     };
 
     let mut keys = HashSet::new();
@@ -225,6 +233,7 @@ fn test_image_data_serialization() {
         height: Some(600),
         exif_data: exif,
         gps_coords: Some((37.7749, -122.4194)),
+        sha256_hash: None,
     };
 
     let json = serde_json::to_string(&data).unwrap();
@@ -252,6 +261,7 @@ fn test_image_data_serialization_empty_values() {
         height: None,              // Should be skipped (None)
         exif_data: HashMap::new(), // Should be skipped (empty)
         gps_coords: None,          // Should be skipped (None)
+        sha256_hash: None,
     };
 
     let json = serde_json::to_string(&data).unwrap();
@@ -273,6 +283,7 @@ fn test_image_data_serialization_partial_skip() {
         height: None,                          // Skipped (None)
         exif_data: exif,                       // Included (non-empty)
         gps_coords: Some((40.7128, -74.0060)), // Included (Some value)
+        sha256_hash: None,
     };
 
     let json = serde_json::to_string(&data).unwrap();

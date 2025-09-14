@@ -109,6 +109,19 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                         html! {}
                     }
                 }
+                {
+                    if let Some(hash) = &data.sha256_hash {
+                        html! {
+                            <div>
+                                <p><strong>{"SHA-256 Hash: "}</strong></p>
+                                <p style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; word-break: break-all; margin: 4px 0;">{hash}</p>
+                                <p style="font-size: 11px; color: #666; margin: 4px 0 0 0;">{"Cryptographic fingerprint for forensics and deduplication"}</p>
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
             </div>
 
             {
