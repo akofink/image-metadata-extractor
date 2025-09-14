@@ -248,23 +248,21 @@ pub fn app() -> Html {
     let link_style = format!("color: {}; text-decoration: none;", colors.primary);
 
     let theme_button_style = format!(
-        "padding: 8px 12px; border-radius: 4px; cursor: pointer; border: 1px solid {}; background-color: {}; color: {};",
-        colors.primary,
-        colors.primary,
-        if *theme == Theme::Light {
-            "white"
-        } else {
-            "black"
-        }
+        "padding: 8px; border-radius: 50%; cursor: pointer; border: 1px solid {}; background-color: {}; color: {}; font-size: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;",
+        colors.border, colors.background, colors.text
     );
 
     html! {
         <div style={main_div_style}>
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h1>{"File Metadata Extractor"}</h1>
-                    <button onclick={on_theme_toggle} style={theme_button_style}>
-                        { if *theme == Theme::Light { "🌙 Dark Mode" } else { "☀️ Light Mode" } }
+                <div style="position: relative;">
+                    <h1 style="text-align: center; margin: 0 0 20px 0;">{"File Metadata Extractor"}</h1>
+                    <button
+                        onclick={on_theme_toggle}
+                        style={format!("{} position: absolute; top: 0; right: 0;", theme_button_style)}
+                        title={if *theme == Theme::Light { "Switch to dark mode" } else { "Switch to light mode" }}
+                    >
+                        { if *theme == Theme::Light { "🌙" } else { "☀️" } }
                     </button>
                 </div>
 
