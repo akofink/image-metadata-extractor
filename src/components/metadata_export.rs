@@ -1,6 +1,7 @@
 //! Allows users to download selected metadata in various formats.
 
 use crate::export::{generate_csv, generate_md, generate_txt, generate_xml, generate_yaml};
+use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, download_file};
 use std::collections::HashSet;
@@ -36,16 +37,16 @@ pub struct MetadataExportProps {
     pub image_data: ImageData,
     pub selected_metadata: HashSet<String>,
     pub theme: Theme,
+    pub preferences: UserPreferences,
+    pub on_preferences_change: Callback<UserPreferences>,
 }
 
 /// Controls for exporting chosen metadata fields to JSON, CSV or text.
 #[function_component(MetadataExport)]
 pub fn metadata_export(props: &MetadataExportProps) -> Html {
-    let include_basic_info = use_state(|| true);
-    let include_gps = use_state(|| true);
-
     let data = &props.image_data;
     let selected_metadata = &props.selected_metadata;
+    let preferences = &props.preferences;
 
     let colors = match props.theme {
         Theme::Light => LIGHT_EXPORT_COLORS,
@@ -55,12 +56,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_json = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
                 download_file(
                     &json,
@@ -74,12 +77,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_csv = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let csv = generate_csv(&filtered_data);
             download_file(
                 &csv,
@@ -92,12 +97,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_txt = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let txt = generate_txt(&filtered_data);
             download_file(
                 &txt,
@@ -110,12 +117,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_md = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let md = generate_md(&filtered_data);
             download_file(
                 &md,
@@ -128,12 +137,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_yaml = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let yaml = generate_yaml(&filtered_data);
             download_file(
                 &yaml,
@@ -146,12 +157,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let export_xml = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let xml = generate_xml(&filtered_data);
             download_file(
                 &xml,
@@ -164,12 +177,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_json = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             if let Ok(json) = serde_json::to_string_pretty(&filtered_data) {
                 copy_to_clipboard(&json);
             }
@@ -179,12 +194,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_csv = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let csv = generate_csv(&filtered_data);
             copy_to_clipboard(&csv);
         })
@@ -193,12 +210,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_txt = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let txt = generate_txt(&filtered_data);
             copy_to_clipboard(&txt);
         })
@@ -207,12 +226,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_md = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let md = generate_md(&filtered_data);
             copy_to_clipboard(&md);
         })
@@ -221,12 +242,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_yaml = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let yaml = generate_yaml(&filtered_data);
             copy_to_clipboard(&yaml);
         })
@@ -235,12 +258,14 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let copy_xml = {
         let data = data.clone();
         let selected_metadata = selected_metadata.clone();
-        let include_basic_info = include_basic_info.clone();
-        let include_gps = include_gps.clone();
+        let preferences = preferences.clone();
 
         Callback::from(move |_| {
-            let filtered_data =
-                data.filter_metadata(&selected_metadata, *include_basic_info, *include_gps);
+            let filtered_data = data.filter_metadata(
+                &selected_metadata,
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
             let xml = generate_xml(&filtered_data);
             copy_to_clipboard(&xml);
         })
@@ -257,8 +282,8 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
 
     // Calculate if there's anything to export
     let has_metadata = !selected_metadata.is_empty();
-    let has_file_info = *include_basic_info; // File info always includes at least name/size
-    let has_gps = *include_gps && data.gps_coords.is_some();
+    let has_file_info = preferences.include_basic_info; // File info always includes at least name/size
+    let has_gps = preferences.include_gps && data.gps_coords.is_some();
     let has_anything_to_export = has_metadata || has_file_info || has_gps;
 
     html! {
@@ -277,10 +302,17 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                             <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
                                 <input
                                     type="checkbox"
-                                    checked={*include_basic_info}
+                                    checked={preferences.include_basic_info}
                                     onchange={{
-                                        let include_basic_info = include_basic_info.clone();
-                                        Callback::from(move |_| include_basic_info.set(!*include_basic_info))
+                                        let preferences = preferences.clone();
+                                        let on_change = props.on_preferences_change.clone();
+                                        Callback::from(move |_| {
+                                            let mut new_prefs = preferences.clone();
+                                            new_prefs.update_and_save(|prefs| {
+                                                prefs.include_basic_info = !prefs.include_basic_info;
+                                            });
+                                            on_change.emit(new_prefs);
+                                        })
                                     }}
                                 />
                                 {
@@ -300,10 +332,17 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
                                 <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
                                     <input
                                         type="checkbox"
-                                        checked={*include_gps}
+                                        checked={preferences.include_gps}
                                         onchange={{
-                                            let include_gps = include_gps.clone();
-                                            Callback::from(move |_| include_gps.set(!*include_gps))
+                                            let preferences = preferences.clone();
+                                            let on_change = props.on_preferences_change.clone();
+                                            Callback::from(move |_| {
+                                                let mut new_prefs = preferences.clone();
+                                                new_prefs.update_and_save(|prefs| {
+                                                    prefs.include_gps = !prefs.include_gps;
+                                                });
+                                                on_change.emit(new_prefs);
+                                            })
                                         }}
                                     />
                                     {"GPS Location"}

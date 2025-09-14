@@ -8,6 +8,7 @@ use crate::components::{
     image_display::ImageDisplay, metadata_display::MetadataDisplay,
     metadata_export::MetadataExport,
 };
+use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
 use std::collections::HashSet;
 use web_sys::window;
@@ -48,7 +49,7 @@ pub fn app() -> Html {
     let image_data = use_state(|| None::<ImageData>);
     let is_expanded = use_state(|| false);
     let selected_metadata = use_state(HashSet::<String>::new);
-    let show_explanations = use_state(|| false);
+    let preferences = use_state(UserPreferences::load);
     let file_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
     let theme = use_state(|| Theme::Light);
@@ -148,9 +149,13 @@ pub fn app() -> Html {
     };
 
     let on_toggle_explanations = {
-        let show_explanations = show_explanations.clone();
+        let preferences = preferences.clone();
         Callback::from(move |_: web_sys::MouseEvent| {
-            show_explanations.set(!*show_explanations);
+            let mut new_prefs = (*preferences).clone();
+            new_prefs.update_and_save(|prefs| {
+                prefs.show_explanations = !prefs.show_explanations;
+            });
+            preferences.set(new_prefs);
         })
     };
 
@@ -227,6 +232,13 @@ pub fn app() -> Html {
                 Theme::Light => Theme::Dark,
                 Theme::Dark => Theme::Light,
             });
+        })
+    };
+
+    let on_preferences_change = {
+        let preferences = preferences.clone();
+        Callback::from(move |new_prefs: UserPreferences| {
+            preferences.set(new_prefs);
         })
     };
 
@@ -369,7 +381,7 @@ pub fn app() -> Html {
                                     <MetadataDisplay
                                         image_data={data.clone()}
                                         selected_metadata={(*selected_metadata).clone()}
-                                        show_explanations={*show_explanations}
+                                        show_explanations={preferences.show_explanations}
                                         on_metadata_selection_change={on_metadata_selection_change}
                                         on_toggle_explanations={on_toggle_explanations}
                                         theme={*theme}
@@ -381,6 +393,8 @@ pub fn app() -> Html {
                                        image_data={data.clone()}
                                        selected_metadata={(*selected_metadata).clone()}
                                        theme={*theme}
+                                       preferences={(*preferences).clone()}
+                                       on_preferences_change={on_preferences_change}
                                    />
                                 </div>
                             }

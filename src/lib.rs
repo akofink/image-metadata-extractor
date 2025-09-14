@@ -12,6 +12,7 @@ pub mod exif_core;
 pub mod exif_wasm;
 pub mod export;
 pub mod metadata_info;
+pub mod preferences;
 pub mod types;
 pub mod utils;
 pub mod utils_core;
