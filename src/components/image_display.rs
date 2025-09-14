@@ -156,17 +156,17 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
 
                         html! {
                             <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <p style="margin: 0;"><strong>{"SHA-256 Hash: "}</strong></p>
+                                <p><strong>{"SHA-256 Hash: "}</strong></p>
+                                <div style={format!("font-family: monospace; font-size: 12px; background: {}; padding: 8px; border-radius: 4px; word-break: break-all; margin: 4px 0; border: 1px solid {}; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;", colors.hash_bg, colors.border)}>
+                                    <span style="flex: 1; line-height: 1.4;">{hash}</span>
                                     <button
                                         onclick={copy_hash}
                                         title="Copy hash to clipboard"
-                                        style={format!("border: 1px solid {}; padding: 4px 6px; border-radius: 3px; font-weight: bold; background: {}; color: {}; font-size: 14px; cursor: pointer;", colors.primary, colors.hash_bg, colors.primary)}
+                                        style={format!("border: 1px solid {}; padding: 2px 4px; border-radius: 2px; font-weight: bold; background: {}; color: {}; font-size: 12px; cursor: pointer; flex-shrink: 0; line-height: 1;", colors.border, colors.background, colors.primary)}
                                     >
                                         {"⧉"}
                                     </button>
                                 </div>
-                                <p style={format!("font-family: monospace; font-size: 12px; background: {}; padding: 8px; border-radius: 4px; word-break: break-all; margin: 4px 0; border: 1px solid {};", colors.hash_bg, colors.border)}>{hash}</p>
                                 <p style={format!("font-size: 11px; color: {}; margin: 4px 0 0 0;", colors.secondary_text)}>{"Cryptographic fingerprint for forensics and deduplication"}</p>
                             </div>
                         }
