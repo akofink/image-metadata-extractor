@@ -4,13 +4,18 @@
 //! application.
 
 use crate::components::{
-    batch_manager::BatchManager, file_upload::FileUpload, image_cleaner::ImageCleaner,
-    image_display::ImageDisplay, metadata_display::MetadataDisplay,
+    batch_manager::BatchManager,
+    command_palette::{CommandAction, CommandPalette},
+    file_upload::FileUpload,
+    image_cleaner::ImageCleaner,
+    image_display::ImageDisplay,
+    metadata_display::MetadataDisplay,
     metadata_export::MetadataExport,
 };
 use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
 use std::collections::HashSet;
+use wasm_bindgen::JsCast;
 use web_sys::window;
 use yew::prelude::*;
 
@@ -53,6 +58,7 @@ pub fn app() -> Html {
     let file_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
     let theme = use_state(|| Theme::Light);
+    let command_palette_visible = use_state(|| false);
 
     // Effect to save theme to localStorage
     {
@@ -66,6 +72,92 @@ pub fn app() -> Html {
                 storage.set_item("theme", theme_str).ok();
             }
             || ()
+        });
+    }
+
+    // Global keyboard shortcuts
+    {
+        let command_palette_visible = command_palette_visible.clone();
+        let is_expanded = is_expanded.clone();
+        let file_input_trigger = file_input_trigger.clone();
+        let selected_metadata = selected_metadata.clone();
+        let preferences = preferences.clone();
+        let image_data = image_data.clone();
+
+        use_effect_with((), move |_| {
+            let command_palette_visible = command_palette_visible.clone();
+            let is_expanded = is_expanded.clone();
+            let file_input_trigger = file_input_trigger.clone();
+            let selected_metadata = selected_metadata.clone();
+            let preferences = preferences.clone();
+            let image_data = image_data.clone();
+
+            let keydown_handler = {
+                let command_palette_visible = command_palette_visible.clone();
+                let is_expanded = is_expanded.clone();
+                let file_input_trigger = file_input_trigger.clone();
+                let selected_metadata = selected_metadata.clone();
+                let preferences = preferences.clone();
+                let image_data = image_data.clone();
+
+                gloo::events::EventListener::new(
+                    &web_sys::window().unwrap(),
+                    "keydown",
+                    move |event| {
+                        let event = event.dyn_ref::<web_sys::KeyboardEvent>().unwrap();
+                        let ctrl_or_cmd = event.ctrl_key() || event.meta_key();
+
+                        match event.key().as_str() {
+                            "k" | "K" if ctrl_or_cmd => {
+                                event.prevent_default();
+                                command_palette_visible.set(true);
+                            }
+                            " " if !*command_palette_visible && image_data.is_some() => {
+                                // Only handle space if not typing in an input and we have an image
+                                if let Some(active_element) = web_sys::window()
+                                    .and_then(|w| w.document())
+                                    .and_then(|d| d.active_element())
+                                {
+                                    let tag_name = active_element.tag_name().to_lowercase();
+                                    if tag_name != "input" && tag_name != "textarea" {
+                                        event.prevent_default();
+                                        is_expanded.set(!*is_expanded);
+                                    }
+                                }
+                            }
+                            "o" if ctrl_or_cmd => {
+                                event.prevent_default();
+                                if let Some(ref trigger) = *file_input_trigger {
+                                    trigger.emit(());
+                                }
+                            }
+                            "a" if ctrl_or_cmd && image_data.is_some() => {
+                                event.prevent_default();
+                                if let Some(data) = &*image_data {
+                                    let all_keys: HashSet<String> =
+                                        data.exif_data.keys().cloned().collect();
+                                    selected_metadata.set(all_keys);
+                                }
+                            }
+                            "d" if ctrl_or_cmd && image_data.is_some() => {
+                                event.prevent_default();
+                                selected_metadata.set(HashSet::new());
+                            }
+                            "?" if image_data.is_some() => {
+                                event.prevent_default();
+                                let mut new_prefs = (*preferences).clone();
+                                new_prefs.update_and_save(|prefs| {
+                                    prefs.show_explanations = !prefs.show_explanations;
+                                });
+                                preferences.set(new_prefs);
+                            }
+                            _ => {}
+                        }
+                    },
+                )
+            };
+
+            move || drop(keydown_handler)
         });
     }
 
@@ -239,6 +331,79 @@ pub fn app() -> Html {
         let preferences = preferences.clone();
         Callback::from(move |new_prefs: UserPreferences| {
             preferences.set(new_prefs);
+        })
+    };
+
+    let on_command_palette_close = {
+        let command_palette_visible = command_palette_visible.clone();
+        Callback::from(move |_| {
+            command_palette_visible.set(false);
+        })
+    };
+
+    let on_command = {
+        let theme = theme.clone();
+        let preferences = preferences.clone();
+        let is_expanded = is_expanded.clone();
+        let file_input_trigger = file_input_trigger.clone();
+        let selected_metadata = selected_metadata.clone();
+        let image_data = image_data.clone();
+        let on_preferences_change = on_preferences_change.clone();
+
+        Callback::from(move |action: CommandAction| {
+            match action {
+                CommandAction::ToggleTheme => {
+                    let current_theme = *theme;
+                    theme.set(match current_theme {
+                        Theme::Light => Theme::Dark,
+                        Theme::Dark => Theme::Light,
+                    });
+                }
+                CommandAction::ToggleExplanations => {
+                    let mut new_prefs = (*preferences).clone();
+                    new_prefs.update_and_save(|prefs| {
+                        prefs.show_explanations = !prefs.show_explanations;
+                    });
+                    on_preferences_change.emit(new_prefs);
+                }
+                CommandAction::ToggleFileInfo => {
+                    let mut new_prefs = (*preferences).clone();
+                    new_prefs.update_and_save(|prefs| {
+                        prefs.include_basic_info = !prefs.include_basic_info;
+                    });
+                    on_preferences_change.emit(new_prefs);
+                }
+                CommandAction::ToggleGps => {
+                    let mut new_prefs = (*preferences).clone();
+                    new_prefs.update_and_save(|prefs| {
+                        prefs.include_gps = !prefs.include_gps;
+                    });
+                    on_preferences_change.emit(new_prefs);
+                }
+                CommandAction::ExpandImage => {
+                    is_expanded.set(!*is_expanded);
+                }
+                CommandAction::UploadNew => {
+                    if let Some(ref trigger) = *file_input_trigger {
+                        trigger.emit(());
+                    }
+                }
+                CommandAction::SelectAllMetadata => {
+                    if let Some(data) = &*image_data {
+                        let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
+                        selected_metadata.set(all_keys);
+                    }
+                }
+                CommandAction::DeselectAllMetadata => {
+                    selected_metadata.set(HashSet::new());
+                }
+                // TODO: Implement export and copy commands
+                _ => {
+                    web_sys::console::log_1(
+                        &format!("Command not yet implemented: {:?}", action).into(),
+                    );
+                }
+            }
         })
     };
 
@@ -435,6 +600,18 @@ pub fn app() -> Html {
                     </a>
                 </p>
             </footer>
+
+            <CommandPalette
+                visible={*command_palette_visible}
+                theme={*theme}
+                on_close={on_command_palette_close}
+                on_command={on_command}
+                has_image={image_data.is_some()}
+                is_expanded={*is_expanded}
+                show_explanations={preferences.show_explanations}
+                include_file_info={preferences.include_basic_info}
+                include_gps={preferences.include_gps}
+            />
         </div>
     }
 }
