@@ -255,11 +255,11 @@ pub fn app() -> Html {
     html! {
         <div style={main_div_style}>
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
-                <div style="position: relative;">
-                    <h1 style="text-align: center; margin: 0 0 20px 0;">{"File Metadata Extractor"}</h1>
+                <div style="position: relative; margin-bottom: 20px;">
+                    <h1 style="text-align: center; margin: 0; padding-right: 50px;">{"File Metadata Extractor"}</h1>
                     <button
                         onclick={on_theme_toggle}
-                        style={format!("{} position: absolute; top: 0; right: 0;", theme_button_style)}
+                        style={format!("{} position: absolute; top: 50%; right: 0; transform: translateY(-50%);", theme_button_style)}
                         title={if *theme == Theme::Light { "Switch to dark mode" } else { "Switch to light mode" }}
                     >
                         { if *theme == Theme::Light { "🌙" } else { "☀️" } }
