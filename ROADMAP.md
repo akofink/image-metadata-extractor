@@ -52,9 +52,9 @@ User‑facing features:
   - 🔄 **Metadata consistency checks**: Flag inconsistent timestamp/GPS combinations
   - 🔄 **Duplicate detection**: Identify identical files in batch uploads by hash
 - **UX improvements**:
-  - 🔄 **Command palette**: **PARTIALLY IMPLEMENTED** - Keyboard-driven interface (Ctrl+K/Cmd+K) for power users. Export and copy commands are now available.
+  - ✅ **Command palette**: **IMPLEMENTED** - Keyboard-driven interface (Ctrl+K/Cmd+K) for power users with commands for theme, export, copy, and metadata selection.
   - ✅ **Persistent preferences**: **IMPLEMENTED** - Remember theme, export settings, and field selections
-  - 🔄 **Keyboard shortcuts**: **PARTIALLY IMPLEMENTED** - Space for image modal, Ctrl+1/2/3 for export, Ctrl+Shift+1/2/3 for copy.
+  - ✅ **Keyboard shortcuts**: **IMPLEMENTED** - Shortcuts for opening the command palette, file dialog, image modal, toggling explanations, selecting/deselecting metadata, and exporting/copying metadata.
 
 Technical notes:
 - Focus on features that can be implemented without Web Workers initially
