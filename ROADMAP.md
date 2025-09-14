@@ -53,7 +53,7 @@ User‑facing features:
   - 🔄 **Duplicate detection**: Identify identical files in batch uploads by hash
 - **UX improvements**:
   - 🔄 **Command palette**: Keyboard-driven interface (Ctrl+K/Cmd+K) for power users
-  - 🔄 **Persistent preferences**: Remember theme, export settings, and field selections
+  - ✅ **Persistent preferences**: **IMPLEMENTED** - Remember theme, export settings, and field selections
   - 🔄 **Keyboard shortcuts**: Space for image modal, Enter for export, etc.
 
 Technical notes:
