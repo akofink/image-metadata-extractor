@@ -248,7 +248,7 @@ pub fn app() -> Html {
     let link_style = format!("color: {}; text-decoration: none;", colors.primary);
 
     let theme_button_style = format!(
-        "padding: 8px; border-radius: 50%; cursor: pointer; border: 1px solid {}; background-color: {}; color: {}; font-size: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;",
+        "padding: 8px; border-radius: 4px; cursor: pointer; border: 1px solid {}; background-color: {}; color: {}; font-size: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;",
         colors.border, colors.background, colors.text
     );
 
