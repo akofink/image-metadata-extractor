@@ -178,18 +178,63 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
 
             {
                 if let Some((lat, lon)) = data.gps_coords {
+                    let google_url = format!("https://maps.google.com/maps?q={},{}", lat, lon);
+                    let apple_url = format!("https://maps.apple.com/?ll={},{}", lat, lon);
+                    let osm_url = format!("https://www.openstreetmap.org/?mlat={}&mlon={}", lat, lon);
+
+                    let copy_google = {
+                        let url = google_url.clone();
+                        Callback::from(move |_| copy_to_clipboard(&url))
+                    };
+                    let copy_apple = {
+                        let url = apple_url.clone();
+                        Callback::from(move |_| copy_to_clipboard(&url))
+                    };
+                    let copy_osm = {
+                        let url = osm_url.clone();
+                        Callback::from(move |_| copy_to_clipboard(&url))
+                    };
+
                     html! {
                         <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid {}; color: {};", colors.gps_bg, colors.border, colors.text)}>
                             <h3>{"GPS Location"}</h3>
                             <p><strong>{"Latitude: "}</strong>{lat}</p>
                             <p><strong>{"Longitude: "}</strong>{lon}</p>
-                            <p>
-                                <a href={format!("https://maps.google.com/maps?q={},{}", lat, lon)} target="_blank">{"Google Maps"}</a>
-                                {" | "}
-                                <a href={format!("https://maps.apple.com/?ll={},{}", lat, lon)} target="_blank">{"Apple Maps"}</a>
-                                {" | "}
-                                <a href={format!("https://www.openstreetmap.org/?mlat={}&mlon={}", lat, lon)} target="_blank">{"OpenStreetMap"}</a>
-                            </p>
+                            <div style="margin-top: 12px;">
+                                <p style="margin-bottom: 8px; font-weight: bold;">{"Map Links:"}</p>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <a href={google_url.clone()} target="_blank" style={format!("color: {}; text-decoration: none;", colors.text)}>{"🌍 Google Maps"}</a>
+                                        <button
+                                            onclick={copy_google}
+                                            style={format!("background: {}; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;", colors.primary)}
+                                            title="Copy Google Maps link"
+                                        >
+                                            {"📋 Copy"}
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <a href={apple_url.clone()} target="_blank" style={format!("color: {}; text-decoration: none;", colors.text)}>{"🍎 Apple Maps"}</a>
+                                        <button
+                                            onclick={copy_apple}
+                                            style={format!("background: {}; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;", colors.primary)}
+                                            title="Copy Apple Maps link"
+                                        >
+                                            {"📋 Copy"}
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <a href={osm_url.clone()} target="_blank" style={format!("color: {}; text-decoration: none;", colors.text)}>{"🗺️ OpenStreetMap"}</a>
+                                        <button
+                                            onclick={copy_osm}
+                                            style={format!("background: {}; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;", colors.primary)}
+                                            title="Copy OpenStreetMap link"
+                                        >
+                                            {"📋 Copy"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     }
                 } else {

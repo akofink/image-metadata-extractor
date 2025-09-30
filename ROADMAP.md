@@ -46,7 +46,7 @@ User‑facing features:
 - **GPS privacy & security**:
   - 🔄 **GPS precision degradation**: Fuzz coordinates to configurable precision levels (street, city, region)
   - 🔄 **Privacy risk scoring**: Automatic warnings for sensitive location data
-  - 🔄 **Map link generation**: One-click copy of Google/Apple/OSM map links (no external requests)
+  - ✅ **Map link generation**: **IMPLEMENTED** - One-click copy of Google/Apple/OSM map links (no external requests)
 - **File integrity & forensics**:
   - ✅ **SHA-256 file hashing**: **IMPLEMENTED** - Generate checksums for provenance and deduplication
   - 🔄 **Metadata consistency checks**: Flag inconsistent timestamp/GPS combinations

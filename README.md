@@ -9,6 +9,7 @@ This application allows users to upload images and extract comprehensive metadat
 ### 📋 **Metadata Extraction**
 - **EXIF data**: Camera settings, timestamps, camera model, lens info, etc.
 - **GPS coordinates**: Location data with Google Maps, Apple Maps, and OpenStreetMap links
+- **One-click map links**: Copy map URLs to clipboard without opening tabs
 - **Image dimensions**: Width, height, and technical specifications
 - **File information**: Size, format, and basic properties
 - **Categorized display**: Organized by Camera Settings, GPS, Technical, etc.
