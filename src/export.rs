@@ -2,6 +2,7 @@
 
 use crate::types::ImageData;
 use crate::utils::format_file_size;
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 fn xml_escape(s: &str) -> String {
@@ -222,5 +223,96 @@ pub fn generate_xml(data: &ImageData) -> String {
         out.push_str("  </exif>\n");
     }
     out.push_str("</metadata>\n");
+    out
+}
+
+/// Generate a combined JSON export of multiple images as a single JSON array.
+pub fn generate_json_batch(items: &[ImageData]) -> String {
+    serde_json::to_string_pretty(items).unwrap_or_else(|_| "[]".to_string())
+}
+
+/// Generate a combined CSV table for multiple images.
+/// Columns: Filename, File Size (human), Width, Height, GPS Latitude, GPS Longitude, then sorted EXIF keys (union across items).
+pub fn generate_csv_batch(items: &[ImageData]) -> String {
+    // Collect union of EXIF keys for stable header ordering
+    let mut exif_keys: BTreeSet<String> = BTreeSet::new();
+    for item in items {
+        for k in item.exif_data.keys() {
+            exif_keys.insert(k.clone());
+        }
+    }
+
+    // Build header
+    let mut out = String::new();
+    let mut header: Vec<String> = vec![
+        "Filename".into(),
+        "File Size".into(),
+        "Width".into(),
+        "Height".into(),
+        "GPS Latitude".into(),
+        "GPS Longitude".into(),
+    ];
+    header.extend(exif_keys.iter().cloned());
+
+    // Write header row with CSV quoting
+    for (i, col) in header.iter().enumerate() {
+        if i > 0 {
+            out.push(',');
+        }
+        out.push('"');
+        out.push_str(&col.replace('"', "\"\""));
+        out.push('"');
+    }
+    out.push('\n');
+
+    // Write each item row
+    for item in items {
+        // Basic columns
+        let cols: Vec<Option<String>> = vec![
+            Some(item.name.clone()),
+            Some(format_file_size(item.size)),
+            item.width.map(|w| w.to_string()),
+            item.height.map(|h| h.to_string()),
+            item.gps_coords.map(|(lat, _)| lat.to_string()),
+            item.gps_coords.map(|(_, lon)| lon.to_string()),
+        ];
+
+        // Emit basic cols
+        for (i, cell) in cols.iter().enumerate() {
+            if i > 0 {
+                out.push(',');
+            }
+            let val = cell.clone().unwrap_or_default();
+            out.push('"');
+            out.push_str(&val.replace('"', "\"\""));
+            out.push('"');
+        }
+
+        // Emit EXIF cells in header order
+        for key in &exif_keys {
+            out.push(',');
+            let val = item.exif_data.get(key).cloned().unwrap_or_default();
+            out.push('"');
+            out.push_str(&val.replace('"', "\"\""));
+            out.push('"');
+        }
+        out.push('\n');
+    }
+
+    out
+}
+
+/// Generate a combined TXT report for multiple images by concatenating individual reports.
+pub fn generate_txt_batch(items: &[ImageData]) -> String {
+    let mut out = String::new();
+    out.push_str("BATCH FILE METADATA REPORT\n");
+    out.push_str("===========================\n\n");
+    for (idx, item) in items.iter().enumerate() {
+        if idx > 0 {
+            out.push_str("\n----------------------------------------\n\n");
+        }
+        let _ = writeln!(out, "# {}", item.name);
+        out.push_str(&generate_txt(item));
+    }
     out
 }

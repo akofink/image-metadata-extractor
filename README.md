@@ -35,6 +35,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Copy to clipboard**: Instant copy for all formats without downloading files
 - **File info options**: Toggle filename, size, and dimensions
 - **Smart filtering**: Visual checkboxes for granular control
+- **Batch combined export**: Export all loaded files in a single JSON array, CSV table, or concatenated TXT report
 - **Auto-generated filenames**: Convenient downloads with descriptive names
 - **Select/deselect all**: Quickly toggle entire metadata sets
 - **Disabled export when empty**: Buttons stay inactive until something is selected

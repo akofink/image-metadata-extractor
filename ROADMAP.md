@@ -39,7 +39,7 @@ Objectives: Implement high-value features that differentiate us from competitors
 
 User‑facing features:
 - **Export enhancements** (PRIORITY):
-  - 🔄 **Batch export combined metadata**: Single JSON/CSV/TXT containing all processed files
+  - ✅ **Batch export combined metadata**: **IMPLEMENTED** - Single JSON/CSV/TXT containing all processed files
   - ✅ **Copy to clipboard**: **IMPLEMENTED** - Direct copy for JSON/CSV/TXT/MD/YAML/XML metadata without downloads  
   - 🔄 **Export profiles**: Save/load selection patterns for different use cases (journalism, real estate, forensics)
   - ✅ **YAML and XML export**: **IMPLEMENTED** - Additional structured formats for professional workflows
@@ -78,7 +78,7 @@ User‑facing features:
 - ✅ **Batch support (multi file)**: **IMPLEMENTED**
   - ✅ Drag‑and‑drop multiple images; process sequentially with progress reporting.
   - ✅ Previous/Next navigation buttons for switching between processed files.
-  - 🔄 Export combined metadata (single JSON/CSV/TXT) and per‑file outputs.
+  - ✅ Export combined metadata (single JSON/CSV/TXT) and per‑file outputs — basic combined export IMPLEMENTED (JSON array, CSV table, TXT concat).
   - 🔄 Batch cleaning; optional ZIP download of cleaned files.
 - Archive input:
   - Import ZIP/TAR (and explore 7z feasibility) directly; list, filter, and process selected files.

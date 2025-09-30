@@ -632,6 +632,7 @@ pub fn app() -> Html {
                                        theme={*theme}
                                        preferences={(*preferences).clone()}
                                        on_preferences_change={on_preferences_change}
+                                       batch_items={if batch_items.is_empty() { None } else { Some((*batch_items).clone()) }}
                                    />
                                 </div>
                             }

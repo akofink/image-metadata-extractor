@@ -1,6 +1,9 @@
 //! Allows users to download selected metadata in various formats.
 
-use crate::export::{generate_csv, generate_md, generate_txt, generate_xml, generate_yaml};
+use crate::export::{
+    generate_csv, generate_csv_batch, generate_json_batch, generate_md, generate_txt,
+    generate_txt_batch, generate_xml, generate_yaml,
+};
 use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, download_file};
@@ -39,6 +42,8 @@ pub struct MetadataExportProps {
     pub theme: Theme,
     pub preferences: UserPreferences,
     pub on_preferences_change: Callback<UserPreferences>,
+    #[prop_or_default]
+    pub batch_items: Option<Vec<ImageData>>, // When provided, enable combined batch export
 }
 
 /// Controls for exporting chosen metadata fields to JSON, CSV or text.
@@ -292,6 +297,51 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
             <p style={format!("margin-bottom: 15px; color: {};", colors.text)}>
                 {"Download selected metadata in your preferred format:"}
             </p>
+            {
+                if let Some(items) = &props.batch_items {
+                    if items.len() > 1 {
+                        let items = items.clone();
+                        let on_download_json = {
+                            let items = items.clone();
+                            Callback::from(move |_| {
+                                let json = generate_json_batch(&items);
+                                let name = if items.len() == 1 { items[0].name.clone() } else { format!("{}-items", items.len()) };
+                                download_file(&json, &format!("batch_{}_metadata.json", name), "application/json");
+                            })
+                        };
+                        let on_download_csv = {
+                            let items = items.clone();
+                            Callback::from(move |_| {
+                                let csv = generate_csv_batch(&items);
+                                let name = if items.len() == 1 { items[0].name.clone() } else { format!("{}-items", items.len()) };
+                                download_file(&csv, &format!("batch_{}_metadata.csv", name), "text/csv");
+                            })
+                        };
+                        let on_download_txt = {
+                            let items = items.clone();
+                            Callback::from(move |_| {
+                                let txt = generate_txt_batch(&items);
+                                let name = if items.len() == 1 { items[0].name.clone() } else { format!("{}-items", items.len()) };
+                                download_file(&txt, &format!("batch_{}_metadata.txt", name), "text/plain");
+                            })
+                        };
+                        html! {
+                            <div style={format!("margin-bottom: 12px; padding: 10px; border: 1px dashed {}; border-radius: 4px;", colors.border)}>
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                                    <div style={format!("font-size: 13px; color: {};", colors.text)}>
+                                        {format!("Batch items loaded: {} • Combined export:", items.len())}
+                                    </div>
+                                    <div style="display:flex; gap: 8px; flex-wrap: wrap;">
+                                        <button style="border:none; padding:6px 10px; border-radius:4px; background:#0d6efd; color:white; cursor:pointer; font-size:12px;" onclick={on_download_json}>{"⬇ JSON (combined)"}</button>
+                                        <button style="border:none; padding:6px 10px; border-radius:4px; background:#28a745; color:white; cursor:pointer; font-size:12px;" onclick={on_download_csv}>{"⬇ CSV (table)"}</button>
+                                        <button style="border:none; padding:6px 10px; border-radius:4px; background:#6c757d; color:white; cursor:pointer; font-size:12px;" onclick={on_download_txt}>{"⬇ TXT (concat)"}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    } else { html!{} }
+                } else { html!{} }
+            }
 
             <div style={format!("margin-bottom: 15px; padding: 10px; background: {}; border-radius: 4px;", colors.checkbox_bg)}>
                 <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"Include in Export:"}</h4>
