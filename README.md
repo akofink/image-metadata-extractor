@@ -68,7 +68,8 @@ This application allows users to upload images and extract comprehensive metadat
 ### 🔍 **Forensic & Security Features**
 - **SHA-256 file hashing**: Cryptographic fingerprints for file integrity verification
 - **Provenance tracking**: Unique file identifiers for chain of custody
-- **Deduplication support**: Identify identical files in batch uploads
+- **Duplicate detection**: Automatic identification of identical files in batch uploads
+- **Visual duplicate warnings**: Clear UI alerts showing duplicate file groups
 - **Privacy-first forensics**: All analysis performed locally in the browser
 - **Export integrity**: Hash values included in metadata exports for verification
 

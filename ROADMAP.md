@@ -50,7 +50,7 @@ User‑facing features:
 - **File integrity & forensics**:
   - ✅ **SHA-256 file hashing**: **IMPLEMENTED** - Generate checksums for provenance and deduplication
   - 🔄 **Metadata consistency checks**: Flag inconsistent timestamp/GPS combinations
-  - 🔄 **Duplicate detection**: Identify identical files in batch uploads by hash
+  - ✅ **Duplicate detection**: **IMPLEMENTED** - Identify identical files in batch uploads by hash with visual warnings
 - **UX improvements**:
   - ✅ **Command palette**: **IMPLEMENTED** - Keyboard-driven interface (Ctrl+K/Cmd+K) for power users with commands for theme, export, copy, and metadata selection.
   - ✅ **Persistent preferences**: **IMPLEMENTED** - Remember theme, export settings, and field selections

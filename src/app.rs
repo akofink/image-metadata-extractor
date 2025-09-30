@@ -6,6 +6,7 @@
 use crate::components::{
     batch_manager::BatchManager,
     command_palette::{CommandAction, CommandPalette},
+    duplicate_detector::DuplicateDetector,
     file_upload::FileUpload,
     image_cleaner::ImageCleaner,
     image_display::ImageDisplay,
@@ -605,6 +606,20 @@ pub fn app() -> Html {
                                                </div>
                                            }
                                        } else { html!{} }
+                                   }
+
+                                   {
+                                       // Show duplicate detector if we have multiple batch items
+                                       if batch_items.len() > 1 {
+                                           html! {
+                                               <DuplicateDetector
+                                                   batch_items={(*batch_items).clone()}
+                                                   theme={*theme}
+                                               />
+                                           }
+                                       } else {
+                                           html! {}
+                                       }
                                    }
 
                                     <ImageDisplay
