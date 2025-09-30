@@ -11,6 +11,7 @@ pub mod exif;
 pub mod exif_core;
 pub mod exif_wasm;
 pub mod export;
+pub mod gps_privacy;
 pub mod metadata_info;
 pub mod preferences;
 pub mod types;

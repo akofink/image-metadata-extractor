@@ -44,7 +44,7 @@ User‑facing features:
   - 🔄 **Export profiles**: Save/load selection patterns for different use cases (journalism, real estate, forensics)
   - ✅ **YAML and XML export**: **IMPLEMENTED** - Additional structured formats for professional workflows
 - **GPS privacy & security**:
-  - 🔄 **GPS precision degradation**: Fuzz coordinates to configurable precision levels (street, city, region)
+  - ✅ **GPS precision degradation**: **IMPLEMENTED** - Fuzz coordinates to configurable precision levels (exact, street, neighborhood, city, region)
   - 🔄 **Privacy risk scoring**: Automatic warnings for sensitive location data
   - ✅ **Map link generation**: **IMPLEMENTED** - One-click copy of Google/Apple/OSM map links (no external requests)
 - **File integrity & forensics**:

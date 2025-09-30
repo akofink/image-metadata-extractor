@@ -1,5 +1,6 @@
 //! Renders the uploaded image and basic information.
 
+use crate::gps_privacy::{GpsPrecisionLevel, fuzz_coordinates};
 use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, format_file_size};
 use yew::prelude::*;
@@ -50,6 +51,9 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
     let data = &props.image_data;
     let is_expanded = props.is_expanded;
     let on_image_click = props.on_image_click.clone();
+
+    // GPS privacy precision state
+    let gps_precision = use_state(|| GpsPrecisionLevel::Exact);
 
     let colors = match props.theme {
         Theme::Light => LIGHT_IMAGE_COLORS,
@@ -178,9 +182,11 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
 
             {
                 if let Some((lat, lon)) = data.gps_coords {
-                    let google_url = format!("https://maps.google.com/maps?q={},{}", lat, lon);
-                    let apple_url = format!("https://maps.apple.com/?ll={},{}", lat, lon);
-                    let osm_url = format!("https://www.openstreetmap.org/?mlat={}&mlon={}", lat, lon);
+                    let (display_lat, display_lon) = fuzz_coordinates(lat, lon, *gps_precision);
+
+                    let google_url = format!("https://maps.google.com/maps?q={},{}", display_lat, display_lon);
+                    let apple_url = format!("https://maps.apple.com/?ll={},{}", display_lat, display_lon);
+                    let osm_url = format!("https://www.openstreetmap.org/?mlat={}&mlon={}", display_lat, display_lon);
 
                     let copy_google = {
                         let url = google_url.clone();
@@ -195,11 +201,59 @@ pub fn image_display(props: &ImageDisplayProps) -> Html {
                         Callback::from(move |_| copy_to_clipboard(&url))
                     };
 
+                    let on_precision_change = {
+                        let gps_precision = gps_precision.clone();
+                        Callback::from(move |e: Event| {
+                            let target = e.target_dyn_into::<web_sys::HtmlSelectElement>();
+                            if let Some(select) = target {
+                                let new_level = match select.value().as_str() {
+                                    "street" => GpsPrecisionLevel::Street,
+                                    "neighborhood" => GpsPrecisionLevel::Neighborhood,
+                                    "city" => GpsPrecisionLevel::City,
+                                    "region" => GpsPrecisionLevel::Region,
+                                    _ => GpsPrecisionLevel::Exact,
+                                };
+                                gps_precision.set(new_level);
+                            }
+                        })
+                    };
+
                     html! {
                         <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid {}; color: {};", colors.gps_bg, colors.border, colors.text)}>
                             <h3>{"GPS Location"}</h3>
-                            <p><strong>{"Latitude: "}</strong>{lat}</p>
-                            <p><strong>{"Longitude: "}</strong>{lon}</p>
+
+                            <div style="margin: 12px 0; padding: 10px; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 3px;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong>{"🔒 Privacy Control:"}</strong>
+                                </div>
+                                <select
+                                    onchange={on_precision_change}
+                                    style={format!("width: 100%; padding: 6px; border: 1px solid {}; border-radius: 3px; background: {}; color: {};", colors.border, colors.background, colors.text)}
+                                >
+                                    <option value="exact" selected={*gps_precision == GpsPrecisionLevel::Exact}>{"Exact location (~1 meter)"}</option>
+                                    <option value="street" selected={*gps_precision == GpsPrecisionLevel::Street}>{"Street level (~100 meters)"}</option>
+                                    <option value="neighborhood" selected={*gps_precision == GpsPrecisionLevel::Neighborhood}>{"Neighborhood (~1 km)"}</option>
+                                    <option value="city" selected={*gps_precision == GpsPrecisionLevel::City}>{"City level (~10 km)"}</option>
+                                    <option value="region" selected={*gps_precision == GpsPrecisionLevel::Region}>{"Region level (~100 km)"}</option>
+                                </select>
+                                <p style="font-size: 11px; margin: 6px 0 0 0; color: #856404;">
+                                    {"Adjust precision to protect your privacy when sharing location data."}
+                                </p>
+                            </div>
+
+                            <p><strong>{"Latitude: "}</strong>{display_lat}</p>
+                            <p><strong>{"Longitude: "}</strong>{display_lon}</p>
+                            {
+                                if *gps_precision != GpsPrecisionLevel::Exact {
+                                    html! {
+                                        <p style="font-size: 11px; font-style: italic; color: #888;">
+                                            {format!("Original: {:.6}, {:.6}", lat, lon)}
+                                        </p>
+                                    }
+                                } else {
+                                    html! {}
+                                }
+                            }
                             <div style="margin-top: 12px;">
                                 <p style="margin-bottom: 8px; font-weight: bold;">{"Map Links:"}</p>
                                 <div style="display: flex; flex-direction: column; gap: 6px;">
