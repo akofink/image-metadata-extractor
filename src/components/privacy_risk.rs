@@ -146,7 +146,7 @@ pub fn privacy_risk_warning(props: &PrivacyRiskWarningProps) -> Html {
             {
                 if !risk.warnings.is_empty() {
                     html! {
-                        <div>
+                        <div style="margin-bottom: 15px;">
                             <h4 style="margin: 0 0 8px 0; font-size: 13px;">{"Privacy Warnings:"}</h4>
                             <ul style="margin: 0; padding-left: 20px;">
                                 {
@@ -157,6 +157,30 @@ pub fn privacy_risk_warning(props: &PrivacyRiskWarningProps) -> Html {
                                     }).collect::<Html>()
                                 }
                             </ul>
+                        </div>
+                    }
+                } else {
+                    html! {}
+                }
+            }
+
+            {
+                if !risk.consistency_issues.is_empty() {
+                    html! {
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 193, 7, 0.15); border-left: 3px solid #ffc107; border-radius: 4px;">
+                            <h4 style="margin: 0 0 8px 0; font-size: 13px;">{"⚙️ Metadata Consistency Issues:"}</h4>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                {
+                                    risk.consistency_issues.iter().map(|issue| {
+                                        html! {
+                                            <li style="margin-bottom: 4px; font-size: 13px;">{issue}</li>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            </ul>
+                            <p style="margin: 8px 0 0 0; font-size: 12px; font-style: italic;">
+                                {"Note: Consistency issues may indicate image modification or incomplete metadata."}
+                            </p>
                         </div>
                     }
                 } else {

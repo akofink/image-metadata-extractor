@@ -83,6 +83,12 @@ This application allows users to upload images and extract comprehensive metadat
 - **Privacy risk scoring**: Automatic privacy assessment with risk levels (Low, Medium, High, Critical)
 - **Sensitive field detection**: Identifies GPS coordinates, camera serial numbers, owner names, and timestamps
 - **Privacy warnings**: Detailed explanations of privacy risks for each sensitive metadata field
+- **Metadata consistency checks**: Automatic validation of metadata integrity
+  - Timestamp inconsistencies (DateTime vs DateTimeOriginal)
+  - GPS reference field validation (N/S/E/W indicators)
+  - Dimension field mismatches (detects resizing)
+  - Incomplete metadata patterns
+  - Visual warnings for detected anomalies
 - **Risk-based recommendations**: Actionable guidance for protecting privacy before sharing
 - **Privacy-first forensics**: All analysis performed locally in the browser
 - **Export integrity**: Hash values included in metadata exports for verification

@@ -49,7 +49,7 @@ User‑facing features:
   - ✅ **Map link generation**: **IMPLEMENTED** - One-click copy of Google/Apple/OSM map links (no external requests)
 - **File integrity & forensics**:
   - ✅ **SHA-256 file hashing**: **IMPLEMENTED** - Generate checksums for provenance and deduplication
-  - 🔄 **Metadata consistency checks**: Flag inconsistent timestamp/GPS combinations
+  - ✅ **Metadata consistency checks**: **IMPLEMENTED** - Automatic validation of timestamp inconsistencies, GPS reference fields, dimension mismatches, and incomplete metadata patterns with visual warnings
   - ✅ **Duplicate detection**: **IMPLEMENTED** - Identify identical files in batch uploads by hash with visual warnings
 - **UX improvements**:
   - ✅ **Command palette**: **IMPLEMENTED** - Keyboard-driven interface (Ctrl+K/Cmd+K) for power users with commands for theme, export, copy, and metadata selection.

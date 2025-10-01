@@ -25,6 +25,7 @@ pub struct PrivacyRisk {
     pub score: u32,
     pub warnings: Vec<String>,
     pub sensitive_fields: Vec<String>,
+    pub consistency_issues: Vec<String>,
 }
 
 /// Metadata extracted from an uploaded file.
@@ -165,6 +166,96 @@ impl ImageData {
             sensitive_fields.push("Lens Information".to_string());
         }
 
+        // Metadata consistency checks
+        let mut consistency_issues = Vec::new();
+
+        // Check for GPS without GPSRef fields
+        if self.gps_coords.is_some() {
+            let has_lat_ref = self
+                .exif_data
+                .contains_key("GPSLatitudeRef")
+                .then_some(())
+                .or_else(|| {
+                    self.exif_data
+                        .keys()
+                        .find(|k| k.contains("GPSLatitudeRef"))
+                        .map(|_| ())
+                });
+            let has_lon_ref = self
+                .exif_data
+                .contains_key("GPSLongitudeRef")
+                .then_some(())
+                .or_else(|| {
+                    self.exif_data
+                        .keys()
+                        .find(|k| k.contains("GPSLongitudeRef"))
+                        .map(|_| ())
+                });
+
+            if has_lat_ref.is_none() || has_lon_ref.is_none() {
+                consistency_issues.push(
+                    "GPS coordinates present but reference fields (N/S/E/W) may be missing or incomplete"
+                        .to_string(),
+                );
+            }
+        }
+
+        // Check for timestamp inconsistencies
+        if let (Some(datetime), Some(datetime_original)) = (
+            self.exif_data.get("DateTime"),
+            self.exif_data.get("DateTimeOriginal"),
+        ) && datetime != datetime_original
+        {
+            consistency_issues.push(
+                "DateTime and DateTimeOriginal differ - image may have been modified after capture"
+                    .to_string(),
+            );
+        }
+
+        // Check for Orientation without corresponding dimension data
+        if self.exif_data.contains_key("Orientation")
+            && (self.width.is_none() || self.height.is_none())
+        {
+            consistency_issues
+                .push("Orientation metadata present but image dimensions missing".to_string());
+        }
+
+        // Check for camera info without matching lens info (might indicate cropping/editing)
+        if (self.exif_data.contains_key("Make") || self.exif_data.contains_key("Model"))
+            && self.exif_data.contains_key("LensModel")
+        {
+            // Check if dimensions are present in both raw and processed forms
+            let has_pixel_x = self.exif_data.contains_key("PixelXDimension");
+            let has_pixel_y = self.exif_data.contains_key("PixelYDimension");
+            let has_exif_width = self.exif_data.contains_key("ExifImageWidth");
+            let has_exif_height = self.exif_data.contains_key("ExifImageHeight");
+
+            if (has_pixel_x || has_pixel_y) && (has_exif_width || has_exif_height) {
+                // If we have both sets of dimensions, check if they match
+                if let (Some(pixel_x), Some(exif_width)) = (
+                    self.exif_data.get("PixelXDimension"),
+                    self.exif_data.get("ExifImageWidth"),
+                ) && pixel_x != exif_width
+                {
+                    consistency_issues.push(
+                        "Multiple dimension fields present with different values - image may have been resized"
+                            .to_string(),
+                    );
+                }
+            }
+        }
+
+        // Check for Software tag without DateTime (unusual)
+        if self.exif_data.contains_key("Software")
+            && !self.exif_data.contains_key("DateTime")
+            && !self.exif_data.contains_key("DateTimeOriginal")
+        {
+            consistency_issues.push(
+                "Software information present but timestamps missing - metadata may be incomplete"
+                    .to_string(),
+            );
+        }
+
         // Determine risk level based on score
         let level = if score >= 60 {
             PrivacyRiskLevel::Critical
@@ -181,6 +272,7 @@ impl ImageData {
             score,
             warnings,
             sensitive_fields,
+            consistency_issues,
         }
     }
 }
