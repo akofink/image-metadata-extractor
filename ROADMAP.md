@@ -45,7 +45,7 @@ User‑facing features:
   - ✅ **YAML and XML export**: **IMPLEMENTED** - Additional structured formats for professional workflows
 - **GPS privacy & security**:
   - ✅ **GPS precision degradation**: **IMPLEMENTED** - Fuzz coordinates to configurable precision levels (exact, street, neighborhood, city, region)
-  - 🔄 **Privacy risk scoring**: Automatic warnings for sensitive location data
+  - ✅ **Privacy risk scoring**: **IMPLEMENTED** - Automatic risk assessment with 4 levels (Low/Medium/High/Critical), detects sensitive fields (GPS, serial numbers, owner names, timestamps), and provides actionable privacy warnings
   - ✅ **Map link generation**: **IMPLEMENTED** - One-click copy of Google/Apple/OSM map links (no external requests)
 - **File integrity & forensics**:
   - ✅ **SHA-256 file hashing**: **IMPLEMENTED** - Generate checksums for provenance and deduplication

@@ -12,6 +12,7 @@ use crate::components::{
     image_display::ImageDisplay,
     metadata_display::MetadataDisplay,
     metadata_export::MetadataExport,
+    privacy_risk::PrivacyRiskWarning,
 };
 use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
@@ -627,6 +628,11 @@ pub fn app() -> Html {
                                         is_expanded={*is_expanded}
                                         on_image_click={on_image_click}
                                         on_upload_new={Some(on_upload_new)}
+                                        theme={*theme}
+                                    />
+
+                                    <PrivacyRiskWarning
+                                        image_data={data.clone()}
                                         theme={*theme}
                                     />
 

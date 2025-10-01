@@ -80,6 +80,10 @@ This application allows users to upload images and extract comprehensive metadat
 - **Provenance tracking**: Unique file identifiers for chain of custody
 - **Duplicate detection**: Automatic identification of identical files in batch uploads
 - **Visual duplicate warnings**: Clear UI alerts showing duplicate file groups
+- **Privacy risk scoring**: Automatic privacy assessment with risk levels (Low, Medium, High, Critical)
+- **Sensitive field detection**: Identifies GPS coordinates, camera serial numbers, owner names, and timestamps
+- **Privacy warnings**: Detailed explanations of privacy risks for each sensitive metadata field
+- **Risk-based recommendations**: Actionable guidance for protecting privacy before sharing
 - **Privacy-first forensics**: All analysis performed locally in the browser
 - **Export integrity**: Hash values included in metadata exports for verification
 
