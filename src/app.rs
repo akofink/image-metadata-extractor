@@ -634,7 +634,7 @@ pub fn app() -> Html {
                                         image_data={data.clone()}
                                         selected_metadata={(*selected_metadata).clone()}
                                         show_explanations={preferences.show_explanations}
-                                        on_metadata_selection_change={on_metadata_selection_change}
+                                        on_metadata_selection_change={on_metadata_selection_change.clone()}
                                         on_toggle_explanations={on_toggle_explanations}
                                         theme={*theme}
                                     />
@@ -647,6 +647,7 @@ pub fn app() -> Html {
                                        theme={*theme}
                                        preferences={(*preferences).clone()}
                                        on_preferences_change={on_preferences_change}
+                                       on_metadata_selection_change={on_metadata_selection_change.clone()}
                                        batch_items={if batch_items.is_empty() { None } else { Some((*batch_items).clone()) }}
                                    />
                                 </div>

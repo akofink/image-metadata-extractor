@@ -40,8 +40,8 @@ Objectives: Implement high-value features that differentiate us from competitors
 User‑facing features:
 - **Export enhancements** (PRIORITY):
   - ✅ **Batch export combined metadata**: **IMPLEMENTED** - Single JSON/CSV/TXT containing all processed files
-  - ✅ **Copy to clipboard**: **IMPLEMENTED** - Direct copy for JSON/CSV/TXT/MD/YAML/XML metadata without downloads  
-  - 🔄 **Export profiles**: Save/load selection patterns for different use cases (journalism, real estate, forensics)
+  - ✅ **Copy to clipboard**: **IMPLEMENTED** - Direct copy for JSON/CSV/TXT/MD/YAML/XML metadata without downloads
+  - ✅ **Export profiles**: **IMPLEMENTED** - Save/load selection patterns with 5 preset profiles (journalism, real estate, forensics, privacy-safe, research/technical) and custom profile management
   - ✅ **YAML and XML export**: **IMPLEMENTED** - Additional structured formats for professional workflows
 - **GPS privacy & security**:
   - ✅ **GPS precision degradation**: **IMPLEMENTED** - Fuzz coordinates to configurable precision levels (exact, street, neighborhood, city, region)

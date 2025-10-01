@@ -35,6 +35,15 @@ This application allows users to upload images and extract comprehensive metadat
 - **Selective export**: Choose exactly which metadata fields to include
 - **Multiple formats**: JSON, CSV, Text, Markdown, YAML, and XML
 - **Copy to clipboard**: Instant copy for all formats without downloading files
+- **Export profiles**: Save and load custom metadata selection patterns
+- **Quick profiles**: Pre-configured presets for common use cases:
+  - **Journalism**: Essential metadata for news and photojournalism
+  - **Real Estate**: Basic info without sensitive location data
+  - **Forensics**: Complete metadata for analysis and verification
+  - **Privacy-Safe**: Only basic file info without identifying metadata
+  - **Research/Technical**: Camera settings and technical specifications
+- **Custom profiles**: Save your own selection patterns with descriptions
+- **Profile management**: Load, save, and delete custom export profiles
 - **File info options**: Toggle filename, size, and dimensions
 - **Smart filtering**: Visual checkboxes for granular control
 - **Batch combined export**: Export all loaded files in a single JSON array, CSV table, or concatenated TXT report
@@ -280,6 +289,10 @@ In CI, the Quality Gate workflow repeats these checks for pull requests, ensurin
 - **Granular selection**: Choose individual metadata fields with checkboxes
 - **Smart filtering**: Include/exclude file info and GPS data separately
 - **Multiple formats**: JSON for developers, CSV for analysis, TXT for reports
+- **Export profiles**: Save and load custom metadata selection patterns for repeatable workflows
+- **Quick profiles**: Instantly apply pre-configured selections for common use cases (journalism, real estate, forensics, privacy-safe, research)
+- **Custom profiles**: Create and save your own selection patterns with descriptive names
+- **Profile persistence**: All profiles stored locally in browser for instant access
 - **Real-time preview**: See field count and selection status
 - **Auto-generated filenames**: Descriptive names based on original filename
 - **Select/deselect all**: Toggle all fields globally or by category

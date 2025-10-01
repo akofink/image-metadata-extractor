@@ -4,7 +4,7 @@ use crate::export::{
     generate_csv, generate_csv_batch, generate_json_batch, generate_md, generate_txt,
     generate_txt_batch, generate_xml, generate_yaml,
 };
-use crate::preferences::UserPreferences;
+use crate::preferences::{ExportProfile, UserPreferences};
 use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, download_file};
 use std::collections::HashSet;
@@ -42,6 +42,7 @@ pub struct MetadataExportProps {
     pub theme: Theme,
     pub preferences: UserPreferences,
     pub on_preferences_change: Callback<UserPreferences>,
+    pub on_metadata_selection_change: Callback<HashSet<String>>,
     #[prop_or_default]
     pub batch_items: Option<Vec<ImageData>>, // When provided, enable combined batch export
 }
@@ -291,12 +292,238 @@ pub fn metadata_export(props: &MetadataExportProps) -> Html {
     let has_gps = preferences.include_gps && data.gps_coords.is_some();
     let has_anything_to_export = has_metadata || has_file_info || has_gps;
 
+    // Profile management state
+    let profiles = use_state(ExportProfile::load_all);
+    let show_profile_save = use_state(|| false);
+    let profile_name_input = use_state(String::new);
+    let profile_desc_input = use_state(String::new);
+    let profile_error = use_state(|| None::<String>);
+
+    // Load a profile
+    let on_load_profile = {
+        let on_metadata_selection_change = props.on_metadata_selection_change.clone();
+        let on_preferences_change = props.on_preferences_change.clone();
+        let preferences = preferences.clone();
+        let data = data.clone();
+        Callback::from(move |profile: ExportProfile| {
+            // Update metadata selection
+            // For "Forensics" profile with empty fields, select all
+            let new_selection = if profile.selected_fields.is_empty() {
+                data.exif_data.keys().cloned().collect()
+            } else {
+                // Only select fields that exist in current image
+                profile
+                    .selected_fields
+                    .iter()
+                    .filter(|f| data.exif_data.contains_key(*f))
+                    .cloned()
+                    .collect()
+            };
+            on_metadata_selection_change.emit(new_selection);
+
+            // Update preferences
+            let mut new_prefs = preferences.clone();
+            new_prefs.include_basic_info = profile.include_basic_info;
+            new_prefs.include_gps = profile.include_gps;
+            new_prefs.save();
+            on_preferences_change.emit(new_prefs);
+        })
+    };
+
+    // Save current selection as a new profile
+    let on_save_profile_click = {
+        let show_profile_save = show_profile_save.clone();
+        Callback::from(move |_| {
+            show_profile_save.set(!*show_profile_save);
+        })
+    };
+
+    let on_profile_name_input = {
+        let profile_name_input = profile_name_input.clone();
+        Callback::from(move |e: InputEvent| {
+            let input = e.target_dyn_into::<web_sys::HtmlInputElement>();
+            if let Some(input) = input {
+                profile_name_input.set(input.value());
+            }
+        })
+    };
+
+    let on_profile_desc_input = {
+        let profile_desc_input = profile_desc_input.clone();
+        Callback::from(move |e: InputEvent| {
+            let input = e.target_dyn_into::<web_sys::HtmlInputElement>();
+            if let Some(input) = input {
+                profile_desc_input.set(input.value());
+            }
+        })
+    };
+
+    let on_save_profile_submit = {
+        let profile_name_input = profile_name_input.clone();
+        let profile_desc_input = profile_desc_input.clone();
+        let selected_metadata = selected_metadata.clone();
+        let preferences = preferences.clone();
+        let profiles = profiles.clone();
+        let show_profile_save = show_profile_save.clone();
+        let profile_error = profile_error.clone();
+        Callback::from(move |_| {
+            let name = (*profile_name_input).trim().to_string();
+            if name.is_empty() {
+                profile_error.set(Some("Profile name is required".to_string()));
+                return;
+            }
+
+            let profile = ExportProfile::new(
+                name,
+                (*profile_desc_input).clone(),
+                selected_metadata.clone(),
+                preferences.include_basic_info,
+                preferences.include_gps,
+            );
+
+            match ExportProfile::save(&profile) {
+                Ok(()) => {
+                    profiles.set(ExportProfile::load_all());
+                    profile_name_input.set(String::new());
+                    profile_desc_input.set(String::new());
+                    profile_error.set(None);
+                    show_profile_save.set(false);
+                }
+                Err(e) => {
+                    profile_error.set(Some(e));
+                }
+            }
+        })
+    };
+
+    let on_delete_profile = {
+        let profiles = profiles.clone();
+        Callback::from(move |profile_name: String| {
+            let _ = ExportProfile::delete(&profile_name);
+            profiles.set(ExportProfile::load_all());
+        })
+    };
+
     html! {
         <div style={format!("background: {}; padding: 15px; border-radius: 4px; margin-top: 20px; border: 1px solid {}; color: {};", colors.background, colors.border, colors.text)}>
             <h3>{"📊 Export Metadata"}</h3>
             <p style={format!("margin-bottom: 15px; color: {};", colors.text)}>
                 {"Download selected metadata in your preferred format:"}
             </p>
+
+            // Profile management section
+            <div style={format!("margin-bottom: 15px; padding: 10px; background: {}; border-radius: 4px;", colors.checkbox_bg)}>
+                <h4 style="margin: 0 0 10px 0; font-size: 14px;">{"⚡ Quick Profiles:"}</h4>
+
+                // Preset profiles
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+                    {
+                        ExportProfile::get_presets().into_iter().map(|profile| {
+                            let on_load = on_load_profile.clone();
+                            let profile_clone = profile.clone();
+                            html! {
+                                <button
+                                    title={profile.description.clone()}
+                                    onclick={Callback::from(move |_| on_load.emit(profile_clone.clone()))}
+                                    style="border: none; padding: 5px 10px; border-radius: 4px; background: #6c757d; color: white; cursor: pointer; font-size: 12px;"
+                                >
+                                    {&profile.name}
+                                </button>
+                            }
+                        }).collect::<Html>()
+                    }
+                </div>
+
+                // Saved custom profiles
+                {
+                    if !profiles.is_empty() {
+                        html! {
+                            <>
+                                <h4 style="margin: 10px 0 8px 0; font-size: 13px;">{"💾 Saved Profiles:"}</h4>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+                                    {
+                                        profiles.iter().map(|(name, profile)| {
+                                            let on_load = on_load_profile.clone();
+                                            let on_delete = on_delete_profile.clone();
+                                            let profile_clone = profile.clone();
+                                            let name_clone = name.clone();
+                                            html! {
+                                                <div style="display: flex; gap: 2px;">
+                                                    <button
+                                                        title={profile.description.clone()}
+                                                        onclick={Callback::from(move |_| on_load.emit(profile_clone.clone()))}
+                                                        style="border: none; padding: 5px 10px; border-radius: 4px 0 0 4px; background: #0d6efd; color: white; cursor: pointer; font-size: 12px;"
+                                                    >
+                                                        {name}
+                                                    </button>
+                                                    <button
+                                                        title="Delete profile"
+                                                        onclick={Callback::from(move |_| on_delete.emit(name_clone.clone()))}
+                                                        style="border: none; padding: 5px 8px; border-radius: 0 4px 4px 0; background: #dc3545; color: white; cursor: pointer; font-size: 12px;"
+                                                    >
+                                                        {"×"}
+                                                    </button>
+                                                </div>
+                                            }
+                                        }).collect::<Html>()
+                                    }
+                                </div>
+                            </>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+
+                // Save profile button and form
+                <div>
+                    <button
+                        onclick={on_save_profile_click}
+                        style="border: none; padding: 5px 10px; border-radius: 4px; background: #28a745; color: white; cursor: pointer; font-size: 12px;"
+                    >
+                        {if *show_profile_save { "✕ Cancel" } else { "💾 Save Current Selection" }}
+                    </button>
+
+                    {
+                        if *show_profile_save {
+                            html! {
+                                <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                                    <input
+                                        type="text"
+                                        placeholder="Profile name (e.g., 'My Custom Profile')"
+                                        value={(*profile_name_input).clone()}
+                                        oninput={on_profile_name_input}
+                                        style="width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Description (optional)"
+                                        value={(*profile_desc_input).clone()}
+                                        oninput={on_profile_desc_input}
+                                        style="width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                                    />
+                                    {
+                                        if let Some(error) = &*profile_error {
+                                            html! { <p style="color: #dc3545; font-size: 12px; margin-bottom: 8px;">{error}</p> }
+                                        } else {
+                                            html! {}
+                                        }
+                                    }
+                                    <button
+                                        onclick={on_save_profile_submit}
+                                        style="border: none; padding: 6px 12px; border-radius: 4px; background: #28a745; color: white; cursor: pointer; font-size: 12px;"
+                                    >
+                                        {"💾 Save Profile"}
+                                    </button>
+                                </div>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
+                </div>
+            </div>
+
             {
                 if let Some(items) = &props.batch_items {
                     if items.len() > 1 {
