@@ -30,6 +30,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Quality control**: Adjustable JPEG compression (30%-100%)
 - **Binary metadata removal**: Lossless cleaning for JPEG, PNG, WebP, GIF and more
 - **One-click download**: Privacy-safe images with zero metadata
+- **Batch ZIP download**: Clean multiple images and download as a single ZIP archive
 
 ### 📊 **Advanced Export Capabilities**
 - **Selective export**: Choose exactly which metadata fields to include
@@ -294,6 +295,7 @@ In CI, the Quality Gate workflow repeats these checks for pull requests, ensurin
 - **Quality control**: Adjustable JPEG compression for size vs. quality balance
 - **Binary metadata removal**: Lossless cleaning for JPEG, PNG, WebP, GIF and more
 - **One-click downloads**: Browser-native downloads with cleaned filenames
+- **Batch cleaning**: Download all uploaded images as a ZIP archive with metadata removed
 
 ### Advanced Export System
 - **Granular selection**: Choose individual metadata fields with checkboxes

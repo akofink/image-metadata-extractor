@@ -4,6 +4,7 @@
 //! application.
 
 use crate::components::{
+    batch_cleaner::BatchCleaner,
     batch_manager::BatchManager,
     command_palette::{CommandAction, CommandPalette},
     duplicate_detector::DuplicateDetector,
@@ -646,6 +647,20 @@ pub fn app() -> Html {
                                     />
 
                                     <ImageCleaner image_data={data.clone()} theme={*theme} />
+
+                                    // Show batch cleaner if we have multiple files
+                                    {
+                                        if batch_items.len() > 1 {
+                                            html! {
+                                                <BatchCleaner
+                                                    batch_items={(*batch_items).clone()}
+                                                    theme={*theme}
+                                                />
+                                            }
+                                        } else {
+                                            html! {}
+                                        }
+                                    }
 
                                    <MetadataExport
                                        image_data={data.clone()}
