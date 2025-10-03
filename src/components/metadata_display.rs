@@ -64,19 +64,26 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
         };
     }
 
-    // Group metadata by category
-    let mut categorized: HashMap<&str, Vec<(&String, &String)>> = HashMap::new();
-    for (key, value) in &data.exif_data {
-        let category = get_metadata_category(key);
-        categorized.entry(category).or_default().push((key, value));
-    }
+    // Memoize the expensive categorization and sorting
+    let sorted_categories = use_memo(data.exif_data.clone(), |exif_data| {
+        // Group metadata by category
+        let mut categorized: HashMap<&str, Vec<(String, String)>> = HashMap::new();
+        for (key, value) in exif_data {
+            let category = get_metadata_category(key);
+            categorized
+                .entry(category)
+                .or_default()
+                .push((key.clone(), value.clone()));
+        }
 
-    // Sort categories alphabetically and items within each category
-    let mut sorted_categories: Vec<_> = categorized.into_iter().collect();
-    sorted_categories.sort_by_key(|(category, _)| *category);
-    for (_, items) in &mut sorted_categories {
-        items.sort_by_key(|(key, _)| key.as_str());
-    }
+        // Sort categories alphabetically and items within each category
+        let mut sorted: Vec<_> = categorized.into_iter().collect();
+        sorted.sort_by_key(|(category, _)| *category);
+        for (_, items) in &mut sorted {
+            items.sort_by(|(a, _), (b, _)| a.cmp(b));
+        }
+        sorted
+    });
 
     // Calculate global select/deselect state
     let all_keys: HashSet<String> = data.exif_data.keys().cloned().collect();
@@ -125,7 +132,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                 {
                     sorted_categories.iter().map(|(category, items)| {
                         // Calculate per-category select/deselect state
-                        let category_keys: HashSet<String> = items.iter().map(|(key, _)| (*key).clone()).collect();
+                        let category_keys: HashSet<String> = items.iter().map(|(key, _)| key.clone()).collect();
                         let category_selected_count = category_keys.iter().filter(|key| selected_metadata.contains(*key)).count();
                         let _all_category_selected = category_selected_count == category_keys.len();
 
@@ -174,32 +181,38 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                 </div>
                                 {
                                     items.iter().map(|(key, value)| {
-                                        let is_selected = selected_metadata.contains(*key);
-                                        let key_clone = (*key).clone();
-                                        let selected_metadata_clone = selected_metadata.clone();
-                                        let on_change = props.on_metadata_selection_change.clone();
+                                        let is_selected = selected_metadata.contains(key);
+                                        let key_str = key.clone();
+
+                                        let on_checkbox_change = {
+                                            let on_change = props.on_metadata_selection_change.clone();
+                                            let selected_metadata = selected_metadata.clone();
+                                            let key = key_str.clone();
+
+                                            Callback::from(move |_| {
+                                                let mut current = selected_metadata.clone();
+                                                if current.contains(&key) {
+                                                    current.remove(&key);
+                                                } else {
+                                                    current.insert(key.clone());
+                                                }
+                                                on_change.emit(current);
+                                            })
+                                        };
 
                                         html! {
-                                            <div key={(*key).clone()} style={format!("margin-bottom: 12px; padding: 8px; border-radius: 4px; background: {}; border: 1px solid {};", colors.section_bg, colors.border)}>
+                                            <div key={key_str.clone()} style={format!("margin-bottom: 12px; padding: 8px; border-radius: 4px; background: {}; border: 1px solid {};", colors.section_bg, colors.border)}>
                                                 <div style="display: flex; align-items: flex-start; gap: 12px;">
                                                     <input
                                                         type="checkbox"
                                                         checked={is_selected}
-                                                        onchange={Callback::from(move |_| {
-                                                            let mut current = selected_metadata_clone.clone();
-                                                            if current.contains(&key_clone) {
-                                                                current.remove(&key_clone);
-                                                            } else {
-                                                                current.insert(key_clone.clone());
-                                                            }
-                                                            on_change.emit(current);
-                                                        })}
+                                                        onchange={on_checkbox_change}
                                                         style="margin-top: 2px;"
                                                     />
                                                     <div style="flex: 1;">
                                                         <div style={format!("margin-bottom: 2px; color: {};", colors.text)}>
                                                             <strong>{format!("{}: ", key)}</strong>
-                                                            <span style="word-break: break-all; overflow-wrap: break-word;">{*value}</span>
+                                                            <span style="word-break: break-all; overflow-wrap: break-word;">{value}</span>
                                                         </div>
                                                         {
                                                             if show_explanations {
