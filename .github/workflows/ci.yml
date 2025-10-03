@@ -12,10 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
           components: rustfmt
       - name: Format
         run: |
@@ -34,10 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
           components: clippy
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -50,10 +46,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust and LLVM tools
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
           components: llvm-tools-preview
 
       - name: Cache dependencies and tools
