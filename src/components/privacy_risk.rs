@@ -103,7 +103,7 @@ pub fn privacy_risk_warning(props: &PrivacyRiskWarningProps) -> Html {
 
     html! {
         <div style={format!(
-            "background: {}; padding: 15px; border-radius: 4px; margin-top: 20px; border: 2px solid {}; color: {};",
+            "background: {}; padding: 15px; border-radius: 4px; margin: 20px 0; border: 2px solid {}; color: {};",
             colors.background, colors.border, colors.text
         )}>
             <h3 style="margin: 0 0 10px 0;">
