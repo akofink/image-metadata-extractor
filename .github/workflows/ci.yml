@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# Restrict permissions to minimum required (security best practice)
+permissions:
+  contents: read
+
 jobs:
   # Independent, fast checks that can run in parallel
   format:
