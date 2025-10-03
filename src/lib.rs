@@ -5,6 +5,7 @@
 //! exporting or cleaning the underlying file.
 
 pub mod app;
+pub mod archive;
 pub mod binary_cleaner;
 pub mod components;
 pub mod exif;

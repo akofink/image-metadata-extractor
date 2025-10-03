@@ -4,6 +4,7 @@
 use crate::exif_core;
 use crate::types::ImageData;
 use crate::utils_hash::calculate_sha256_hash;
+use gloo_file::Blob;
 use image::GenericImageView;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
@@ -54,6 +55,41 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
 
     let bytes = file_bytes(&file).await?;
     let mime_type = exif_core::determine_mime_type(&name, &file.type_(), &bytes);
+    if !exif_core::is_supported_mime_type(&mime_type) {
+        return Err(JsValue::from_str("Unsupported file type"));
+    }
+
+    let data_url = create_data_url(&mime_type, &bytes);
+    let (width, height) = get_dimensions(&mime_type, &bytes);
+    let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
+
+    // Calculate SHA-256 hash for forensics and deduplication
+    let sha256_hash = calculate_sha256_hash(&bytes).await.ok();
+
+    Ok(ImageData {
+        name,
+        size,
+        mime_type,
+        data_url,
+        width,
+        height,
+        exif_data,
+        gps_coords,
+        sha256_hash,
+    })
+}
+
+/// Convert a [`Blob`] (from archive extraction) into [`ImageData`].
+pub async fn process_blob(blob: Blob, name: String) -> Result<ImageData, JsValue> {
+    // Read blob as bytes
+    let bytes = gloo_file::futures::read_as_bytes(&blob)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Failed to read blob: {:?}", e)))?;
+
+    let size = bytes.len() as u64;
+    let blob_type = blob.raw_mime_type();
+    let mime_type = exif_core::determine_mime_type(&name, &blob_type, &bytes);
+
     if !exif_core::is_supported_mime_type(&mime_type) {
         return Err(JsValue::from_str("Unsupported file type"));
     }

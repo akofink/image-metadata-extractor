@@ -18,6 +18,7 @@ This application allows users to upload images and extract comprehensive metadat
 - **Smart explanations**: Toggle-able descriptions for each metadata field
 - **Auto-select on upload**: All metadata fields are selected by default
 - **Batch processing**: Upload multiple files with progress tracking and navigation
+- **ZIP archive support**: Extract and process entire archives of images in one upload
 
 ### 🖼️ **Image Display**
 - **Smart thumbnails**: Compact 300x200px display for better page layout
@@ -264,6 +265,11 @@ In CI, the Quality Gate workflow repeats these checks for pull requests, ensurin
 - **PNG**: Basic metadata and dimensions
 - **GIF**: Dimensions and file information
 - **WebP**: Modern format with metadata support
+
+### Archive Formats
+- **ZIP**: Extract and process all images from ZIP archives
+- **Batch extraction**: Automatically detects and processes all image files within archives
+- **Progress tracking**: Real-time progress updates during archive extraction
 
 ### Export Formats
 - **JSON**: Structured data with nested objects for complex metadata

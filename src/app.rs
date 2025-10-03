@@ -4,6 +4,7 @@
 //! application.
 
 use crate::components::{
+    archive_import::ArchiveImport,
     batch_cleaner::BatchCleaner,
     batch_manager::BatchManager,
     command_palette::{CommandAction, CommandPalette},
@@ -59,6 +60,7 @@ pub fn app() -> Html {
     let selected_metadata = use_state(HashSet::<String>::new);
     let preferences = use_state(UserPreferences::load);
     let file_input_trigger = use_state(|| None::<Callback<()>>);
+    let archive_input_trigger = use_state(|| None::<Callback<()>>);
     let error_message = use_state(|| None::<String>);
     let theme = use_state(|| Theme::Light);
     let command_palette_visible = use_state(|| false);
@@ -261,6 +263,13 @@ pub fn app() -> Html {
         })
     };
 
+    let on_trigger_archive_input = {
+        let archive_input_trigger = archive_input_trigger.clone();
+        Callback::from(move |trigger: Callback<()>| {
+            archive_input_trigger.set(Some(trigger));
+        })
+    };
+
     // Batch progress handlers
     let on_batch_progress = {
         let batch_in_progress = batch_in_progress.clone();
@@ -314,6 +323,15 @@ pub fn app() -> Html {
         let file_input_trigger = file_input_trigger.clone();
         Callback::from(move |_: web_sys::MouseEvent| {
             if let Some(ref trigger) = *file_input_trigger {
+                trigger.emit(());
+            }
+        })
+    };
+
+    let on_upload_archive = {
+        let archive_input_trigger = archive_input_trigger.clone();
+        Callback::from(move |_: web_sys::MouseEvent| {
+            if let Some(ref trigger) = *archive_input_trigger {
                 trigger.emit(());
             }
         })
@@ -525,11 +543,18 @@ pub fn app() -> Html {
                 }
 
                 <FileUpload
-                    on_file_loaded={on_file_loaded}
+                    on_file_loaded={on_file_loaded.clone()}
                     trigger_file_input={on_trigger_file_input}
-                    on_error={on_file_error}
-                    on_files_loaded={Some(on_files_loaded)}
-                    on_progress={Some(on_batch_progress)}
+                    on_error={on_file_error.clone()}
+                    on_files_loaded={Some(on_files_loaded.clone())}
+                    on_progress={Some(on_batch_progress.clone())}
+                />
+
+                <ArchiveImport
+                    on_files_loaded={on_files_loaded.clone()}
+                    on_error={on_file_error.clone()}
+                    on_progress={Some(on_batch_progress.clone())}
+                    trigger_archive_input={on_trigger_archive_input}
                 />
 
                 <BatchManager
@@ -675,19 +700,54 @@ pub fn app() -> Html {
                             }
                         } else {
                             let placeholder_style = format!(
-                                "text-align: center; padding: 40px 20px; color: {}; background: {}; border-radius: 8px; border: 2px dashed {}; cursor: pointer; transition: all 0.2s ease;",
+                                "text-align: center; padding: 40px 20px; color: {}; background: {}; border-radius: 8px; border: 2px dashed {};",
                                 colors.text,
                                 colors.placeholder_bg,
                                 colors.placeholder_border
                             );
+                            let button_style = format!(
+                                "padding: 12px 24px; margin: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 500; background: {}; color: white; transition: opacity 0.2s ease;",
+                                colors.primary
+                            );
                             html! {
-                                <div
-                                    onclick={on_placeholder_click}
-                                    style={placeholder_style}
-                                >
+                                <div style={placeholder_style}>
                                     <div style="font-size: 48px; margin-bottom: 16px;">{"📁"}</div>
-                                    <p style="font-size: 18px; margin-bottom: 8px; font-weight: 500;">{"Click here to select a file"}</p>
-                                    <p style="font-size: 14px; margin: 0;">{"Upload images, PDFs, SVGs, and more to extract metadata"}</p>
+                                    <p style="font-size: 18px; margin-bottom: 16px; font-weight: 500;">{"Select files to extract metadata"}</p>
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                        <button
+                                            onclick={on_placeholder_click}
+                                            style={button_style.clone()}
+                                            onmouseenter={Callback::from(|e: MouseEvent| {
+                                                if let Some(target) = e.target_dyn_into::<web_sys::HtmlElement>() {
+                                                    let _ = target.style().set_property("opacity", "0.9");
+                                                }
+                                            })}
+                                            onmouseleave={Callback::from(|e: MouseEvent| {
+                                                if let Some(target) = e.target_dyn_into::<web_sys::HtmlElement>() {
+                                                    let _ = target.style().set_property("opacity", "1");
+                                                }
+                                            })}
+                                        >
+                                            {"📷 Upload Images"}
+                                        </button>
+                                        <button
+                                            onclick={on_upload_archive}
+                                            style={button_style}
+                                            onmouseenter={Callback::from(|e: MouseEvent| {
+                                                if let Some(target) = e.target_dyn_into::<web_sys::HtmlElement>() {
+                                                    let _ = target.style().set_property("opacity", "0.9");
+                                                }
+                                            })}
+                                            onmouseleave={Callback::from(|e: MouseEvent| {
+                                                if let Some(target) = e.target_dyn_into::<web_sys::HtmlElement>() {
+                                                    let _ = target.style().set_property("opacity", "1");
+                                                }
+                                            })}
+                                        >
+                                            {"🗜️ Upload ZIP Archive"}
+                                        </button>
+                                    </div>
+                                    <p style="font-size: 14px; margin-top: 16px; margin-bottom: 0;">{"Supports images, PDFs, SVGs, and ZIP archives"}</p>
                                 </div>
                             }
                         }

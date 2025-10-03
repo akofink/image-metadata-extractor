@@ -80,9 +80,11 @@ User‑facing features:
   - ✅ Previous/Next navigation buttons for switching between processed files.
   - ✅ Export combined metadata (single JSON/CSV/TXT) and per‑file outputs — basic combined export IMPLEMENTED (JSON array, CSV table, TXT concat).
   - ✅ Batch cleaning with ZIP download of cleaned files — IMPLEMENTED using zip crate with deflate compression.
-- Archive input:
-  - Import ZIP/TAR (and explore 7z feasibility) directly; list, filter, and process selected files.
-  - Streamed extraction in WASM to avoid large memory spikes.
+- ✅ **Archive input**: **IMPLEMENTED**
+  - ✅ Import ZIP archives directly with automatic image file detection and extraction.
+  - ✅ Progress tracking during archive extraction and processing.
+  - ✅ Streamed extraction in WASM with client-side processing (no server uploads).
+  - 🔄 TAR format support (pending).
 - Export enhancements:
   - Additional formats: YAML, XML, and Markdown report.
   - Templated reports: user‑defined templates for Markdown/HTML/TXT with local persistence.
@@ -286,8 +288,8 @@ Developer experience:
   **Done when**: Clipboard export works, GPS fuzzing implemented, SHA-256 hashing active, keyboard shortcuts functional.
 
 - **M1 (Phase 1)**: Archive import, templated reports, advanced export formats, full i18n support, integrity checks.
-  **Status**: Batch ZIP cleaning ✅ complete. Remaining: Archive input, templated reports, i18n.
-  **Done when**: ZIP/TAR import stable, templated reports functional, multilingual UI ships.
+  **Status**: Batch ZIP cleaning ✅ complete. ZIP archive import ✅ complete. Remaining: Templated reports, i18n, TAR support.
+  **Done when**: Templated reports functional, multilingual UI ships, TAR import added.
 
 - **M2 (Phase 2)**: PWA installation, IndexedDB persistence, directory import, advanced cleaning controls, diff views.  
   **Done when**: Offline-capable installable app, session resume works, granular redaction rules tested.

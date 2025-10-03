@@ -9,4 +9,6 @@ pub use crate::exif_core::{
 };
 
 // Re-export WASM-specific functionality
-pub use crate::exif_wasm::{create_data_url, file_bytes, get_dimensions, process_file};
+pub use crate::exif_wasm::{
+    create_data_url, file_bytes, get_dimensions, process_blob, process_file,
+};
