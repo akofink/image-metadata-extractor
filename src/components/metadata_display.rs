@@ -33,7 +33,7 @@ const DARK_METADATA_COLORS: MetadataColors = MetadataColors {
 };
 
 /// Properties for [`MetadataDisplay`].
-#[derive(Properties, PartialEq)]
+#[derive(Properties)]
 pub struct MetadataDisplayProps {
     pub image_data: ImageData,
     pub selected_metadata: HashSet<String>,
@@ -41,6 +41,15 @@ pub struct MetadataDisplayProps {
     pub on_metadata_selection_change: Callback<HashSet<String>>,
     pub on_toggle_explanations: Callback<web_sys::MouseEvent>,
     pub theme: Theme,
+}
+
+impl PartialEq for MetadataDisplayProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.image_data == other.image_data
+            && self.selected_metadata == other.selected_metadata
+            && self.show_explanations == other.show_explanations
+            && self.theme == other.theme
+    }
 }
 
 /// Shows metadata grouped by category with checkboxes and explanations.
@@ -146,14 +155,15 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                         <button
                                             onclick={{
                                                 let on_change = props.on_metadata_selection_change.clone();
-                                                let selected_metadata = selected_metadata.clone();
+                                                let selected_metadata = props.selected_metadata.clone();
                                                 let category_keys = category_keys.clone();
                                                 Callback::from(move |_| {
-                                                    let mut current = selected_metadata.clone();
+                                                    // Add all category keys to current selection
+                                                    let mut new_selection = selected_metadata.clone();
                                                     for key in &category_keys {
-                                                        current.insert(key.clone());
+                                                        new_selection.insert(key.clone());
                                                     }
-                                                    on_change.emit(current);
+                                                    on_change.emit(new_selection);
                                                 })
                                             }}
                                             style={format!("background: {}; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;", colors.secondary)}
@@ -163,14 +173,15 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                                         <button
                                             onclick={{
                                                 let on_change = props.on_metadata_selection_change.clone();
-                                                let selected_metadata = selected_metadata.clone();
+                                                let selected_metadata = props.selected_metadata.clone();
                                                 let category_keys = category_keys.clone();
                                                 Callback::from(move |_| {
-                                                    let mut current = selected_metadata.clone();
+                                                    // Remove all category keys from current selection
+                                                    let mut new_selection = selected_metadata.clone();
                                                     for key in &category_keys {
-                                                        current.remove(key);
+                                                        new_selection.remove(key);
                                                     }
-                                                    on_change.emit(current);
+                                                    on_change.emit(new_selection);
                                                 })
                                             }}
                                             style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; cursor: pointer; font-size: 10px;"
@@ -186,7 +197,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
 
                                         let on_checkbox_change = {
                                             let on_change = props.on_metadata_selection_change.clone();
-                                            let selected_metadata = selected_metadata.clone();
+                                            let selected_metadata = props.selected_metadata.clone();
                                             let key = key_str.clone();
 
                                             Callback::from(move |_| {
