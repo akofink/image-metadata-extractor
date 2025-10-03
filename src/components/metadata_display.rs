@@ -130,7 +130,7 @@ pub fn metadata_display(props: &MetadataDisplayProps) -> Html {
                     </div>
                     <button
                         onclick={props.on_toggle_explanations.clone()}
-                        title={if show_explanations { "Hide explanations for metadata fields" } else { "Show helpful explanations for each metadata field" }}
+                        title={if show_explanations { "Hide explanations for common metadata fields" } else { "Show helpful explanations for common metadata fields" }}
                         style={format!("background: {}; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;", colors.primary)}
                     >
                         {if show_explanations { "Hide Info" } else { "Show Info" }}
