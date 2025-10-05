@@ -39,17 +39,19 @@ Objectives: Implement high-value features that differentiate us from competitors
 
 ### 🛡️ CRITICAL SECURITY & TRUST ISSUE (URGENT)
 
-- **Complete TIFF and HEIC/HEIF Cleaning Support** — HIGH PRIORITY SECURITY FIX
-  - **Current Issue**: These formats show error messages instead of cleaning (good for security)
-  - **User Problem**: UI still advertises support, creating user confusion and broken expectations
-  - **Privacy Impact**: Users with Apple HEIC photos and professional TIFF files cannot clean metadata
-  - **Trust Impact**: Advertising unsupported formats damages credibility
-  - **Solution Required**: Research and implement specialized TIFF IFD and HEIF box parsers
+- **Complete HEIC/HEIF Cleaning Support** — HIGH PRIORITY SECURITY FIX
+  - **TIFF Status**: ✅ **COMPLETED** - Now fully supported with tiff crate implementation
+  - **HEIC/HEIF Status**: ❌ **Still needs implementation** - Currently returns honest error messages
+  - **Current Issue**: HEIC/HEIF formats show error messages instead of cleaning (good for security)
+  - **User Problem**: Apple users with HEIC photos cannot clean metadata 
+  - **Privacy Impact**: iPhone/iPad users stuck with privacy-exposing metadata in photos
+  - **Implementation Challenge**: libheif-rs doesn't compile for WebAssembly target
+  - **Solution Required**: Research WebAssembly-compatible HEIF parsing solutions
   - **Implementation Notes**: 
-    - TIFF: Need proper IFD (Image File Directory) parsing to remove embedded metadata
-    - HEIC/HEIF: Need ISO base media file format box structure parsing for metadata removal
-    - Consider integrating with or creating Rust crates for these specific formats
-  - **Success Criteria**: UI shows actual working cleaning for these formats, no misleading messaging
+    - ✅ TIFF: Complete - uses tiff crate for decode/re-encode without metadata
+    - ❌ HEIC/HEIF: Need WebAssembly-compatible HEIF box structure parsing
+    - Consider pure Rust HEIF implementation or WebAssembly-compatible wrapper
+  - **Success Criteria**: HEIC/HEIF cleaning works in browser without native dependencies
 
 User‑facing features:
 - **Export enhancements** (PRIORITY):

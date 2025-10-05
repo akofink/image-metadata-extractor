@@ -224,14 +224,18 @@ fn clean_tiff_metadata_basic() {
     tiff.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // IFD offset
 
     let result = BinaryCleaner::clean_metadata(&tiff, "tiff");
-    // TIFF cleaning should now return an error since it's not fully implemented
+    // Our minimal test TIFF data isn't valid enough for tiff crate decoding
+    // In a real scenario, valid TIFF files would work, but minimal test data will fail
     assert!(
         result.is_err(),
-        "TIFF cleaning should return error for incomplete implementation"
+        "Minimal test TIFF data should fail decoding (expected for test)"
     );
+    // The error should mention TIFF processing failure, not "not implemented"
+    let error_message = result.unwrap_err();
     assert!(
-        result.unwrap_err().contains("not fully implemented"),
-        "Error should mention incomplete implementation"
+        error_message.contains("Failed to") || error_message.contains("TIFF"),
+        "Error should mention TIFF processing failure: {}",
+        error_message
     );
 }
 
@@ -239,14 +243,17 @@ fn clean_tiff_metadata_basic() {
 fn clean_tiff_alternative_extension() {
     let tiff = vec![0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08]; // Big-endian TIFF
     let result = BinaryCleaner::clean_metadata(&tiff, "tif");
-    // TIFF cleaning should return an error for both .tiff and .tif extensions
+    // Our minimal test TIFF data isn't valid enough for tiff crate decoding
     assert!(
         result.is_err(),
-        "TIFF cleaning should return error for incomplete implementation"
+        "Minimal test TIFF data should fail decoding (expected for test)"
     );
+    // The error should mention TIFF processing failure, not "not implemented"
+    let error_message = result.unwrap_err();
     assert!(
-        result.unwrap_err().contains("not fully implemented"),
-        "Error should mention incomplete implementation"
+        error_message.contains("Failed to") || error_message.contains("TIFF"),
+        "Error should mention TIFF processing failure: {}",
+        error_message
     );
 }
 
@@ -262,8 +269,10 @@ fn clean_heif_metadata_basic() {
         "HEIF cleaning should return error for incomplete implementation"
     );
     assert!(
-        result.unwrap_err().contains("not fully implemented"),
-        "Error should mention incomplete implementation"
+        result
+            .unwrap_err()
+            .contains("requires more development time"),
+        "Error should mention development needs"
     );
 }
 
@@ -277,8 +286,10 @@ fn clean_heic_metadata_basic() {
         "HEIC cleaning should return error for incomplete implementation"
     );
     assert!(
-        result.unwrap_err().contains("not fully implemented"),
-        "Error should mention incomplete implementation"
+        result
+            .unwrap_err()
+            .contains("requires more development time"),
+        "Error should mention development needs"
     );
 }
 

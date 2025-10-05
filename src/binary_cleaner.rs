@@ -6,6 +6,11 @@
 
 use little_exif::filetype::FileExtension;
 use little_exif::metadata::Metadata;
+use std::io::Cursor;
+use tiff::decoder::{Decoder, DecodingResult};
+use tiff::encoder::{TiffEncoder, colortype};
+// use libheif_rs::{HeifContext, ItemId}; // TODO: Uncomment when HEIF implementation is complete
+use half::f16;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -369,39 +374,165 @@ impl BinaryCleaner {
         Ok(cleaned)
     }
 
-    /// Clean TIFF metadata using little_exif library
+    /// Clean TIFF metadata using the tiff crate for proper IFD handling
     // little_exif expects a mutable Vec reference
     #[allow(clippy::ptr_arg)]
-    fn clean_tiff_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
-        // TIFF cleaning with little_exif is limited - APP12/APP13 clearing doesn't work for TIFF
-        // little_exif's clear_app12_segment and clear_app13_segment are JPEG-specific
+    fn clean_tiff_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        console_log!("Starting proper TIFF metadata cleaning using tiff crate");
 
-        // TIFF metadata is complex and requires specialized parsing
-        // Most metadata is in IFD (Image File Directory) structures
-        console_log!("TIFF metadata cleaning attempted but not fully supported");
+        // Use the tiff crate to decode the image
+        let cursor = Cursor::new(&**data);
+        let mut decoder =
+            Decoder::new(cursor).map_err(|e| format!("Failed to create TIFF decoder: {}", e))?;
 
-        // Fallback: Basic TIFF IFD removal (very simplified)
-        // A proper TIFF metadata cleaner would need comprehensive TIFF parsing
-        console_log!("Using basic TIFF metadata removal fallback");
+        // Read the image data without metadata
+        let (width, height) = decoder
+            .dimensions()
+            .map_err(|e| format!("Failed to get TIFF dimensions: {}", e))?;
 
-        // For now, return an error to be honest about limited TIFF support
-        // rather than returning the original file unchanged
-        Err("TIFF metadata cleaning is not fully implemented yet. Use a specialized TIFF tool for complete metadata removal.".to_string())
+        let colortype = decoder
+            .colortype()
+            .map_err(|e| format!("Failed to get TIFF color type: {}", e))?;
+
+        console_log!(
+            "TIFF image info: {}x{}, colortype: {:?}",
+            width,
+            height,
+            colortype
+        );
+
+        // Decode the image
+        let image_data = match decoder
+            .read_image()
+            .map_err(|e| format!("Failed to decode TIFF image: {}", e))?
+        {
+            DecodingResult::U8(data) => data,
+            DecodingResult::U16(data) => {
+                // Convert U16 to U8 for simplicity (this loses precision but removes metadata)
+                data.into_iter().map(|x| (x >> 8) as u8).collect()
+            }
+            DecodingResult::U32(data) => {
+                // Convert U32 to U8 for simplicity
+                data.into_iter().map(|x| (x >> 24) as u8).collect()
+            }
+            DecodingResult::U64(data) => {
+                // Convert U64 to U8
+                data.into_iter().map(|x| (x >> 56) as u8).collect()
+            }
+            DecodingResult::I8(data) => {
+                // Convert I8 to U8
+                data.into_iter().map(|x| x.max(0) as u8).collect()
+            }
+            DecodingResult::I16(data) => {
+                // Convert I16 to U8
+                data.into_iter().map(|x| (x.max(0) >> 8) as u8).collect()
+            }
+            DecodingResult::I32(data) => {
+                // Convert I32 to U8
+                data.into_iter().map(|x| (x.max(0) >> 24) as u8).collect()
+            }
+            DecodingResult::I64(data) => {
+                // Convert I64 to U8
+                data.into_iter().map(|x| (x.max(0) >> 56) as u8).collect()
+            }
+            DecodingResult::F16(data) => {
+                // Convert F16 to U8 (F16 is held in u16)
+                data.into_iter()
+                    .map(|x| {
+                        let f_val = f16::from_bits(x.to_bits()).to_f32();
+                        (f_val.clamp(0.0, 1.0) * 255.0) as u8
+                    })
+                    .collect()
+            }
+            DecodingResult::F32(data) => {
+                // Convert F32 to U8
+                data.into_iter()
+                    .map(|x| (x.clamp(0.0, 1.0) * 255.0) as u8)
+                    .collect()
+            }
+            DecodingResult::F64(data) => {
+                // Convert F64 to U8
+                data.into_iter()
+                    .map(|x| (x.clamp(0.0, 1.0) * 255.0) as u8)
+                    .collect()
+            }
+        };
+
+        console_log!(
+            "Decoded TIFF image: {} bytes of pixel data",
+            image_data.len()
+        );
+
+        // Create a new TIFF file without metadata
+        let mut cleaned_data = Vec::new();
+        {
+            let mut cursor = Cursor::new(&mut cleaned_data);
+            let mut encoder = TiffEncoder::new(&mut cursor)
+                .map_err(|e| format!("Failed to create TIFF encoder: {}", e))?;
+
+            // Write the image without any metadata - use the most compatible format
+            match colortype {
+                tiff::ColorType::Gray(8) => {
+                    encoder
+                        .write_image::<colortype::Gray8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write Gray8 TIFF: {}", e))?;
+                }
+                tiff::ColorType::Gray(16) => {
+                    // Convert to 8-bit for metadata-free output
+                    encoder
+                        .write_image::<colortype::Gray8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write Gray8 TIFF from 16-bit: {}", e))?;
+                }
+                tiff::ColorType::RGB(8) => {
+                    encoder
+                        .write_image::<colortype::RGB8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write RGB8 TIFF: {}", e))?;
+                }
+                tiff::ColorType::RGB(16) => {
+                    // Convert to 8-bit RGB
+                    encoder
+                        .write_image::<colortype::RGB8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write RGB8 TIFF from 16-bit: {}", e))?;
+                }
+                tiff::ColorType::RGBA(8) => {
+                    encoder
+                        .write_image::<colortype::RGBA8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write RGBA8 TIFF: {}", e))?;
+                }
+                _ => {
+                    // Fallback to RGB8 for unsupported formats
+                    console_log!("Converting unsupported TIFF color type to RGB8");
+                    encoder
+                        .write_image::<colortype::RGB8>(width, height, &image_data)
+                        .map_err(|e| format!("Failed to write fallback RGB8 TIFF: {}", e))?;
+                }
+            };
+        }
+
+        console_log!(
+            "✅ Successfully cleaned TIFF metadata. Original: {} bytes, Cleaned: {} bytes",
+            data.len(),
+            cleaned_data.len()
+        );
+
+        Ok(cleaned_data)
     }
 
-    /// Clean HEIF/HEIC metadata using little_exif library
+    /// Clean HEIF/HEIC metadata using libheif-rs library
+    // TODO: Complete HEIF implementation - libheif-rs API needs more research
     // little_exif expects a mutable Vec reference
     #[allow(clippy::ptr_arg)]
     fn clean_heif_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
-        // HEIF/HEIC cleaning with little_exif is limited - APP12/APP13 clearing is JPEG-specific
+        console_log!("HEIF/HEIC metadata cleaning with libheif-rs");
 
-        // HEIF/HEIC metadata is in complex ISO base media file format boxes
-        // Requires specialized HEIF parser for proper metadata removal
-        console_log!("HEIF/HEIC metadata cleaning attempted but not fully supported");
+        // The libheif-rs API is complex and requires more research for proper implementation
+        // Current challenges:
+        // 1. Correct API usage for reading/writing HEIF files
+        // 2. Proper handling of different color spaces and chroma subsampling
+        // 3. Quality preservation during re-encoding
+        // 4. Support for multi-image HEIF files
 
-        // Fallback: Return error to be honest about limited HEIF support
-        // HEIF/HEIC files have complex metadata structures that need specialized handling
-        Err("HEIC/HEIF metadata cleaning is not fully implemented yet. These Apple formats require specialized tools for complete metadata removal.".to_string())
+        Err("HEIF/HEIC metadata cleaning requires more development time. The libheif-rs API is complex and needs proper implementation for decode/encode cycles. For now, use specialized HEIF tools or convert to JPEG for cleaning.".to_string())
     }
 
     /// Clean AVIF metadata (basic implementation)
