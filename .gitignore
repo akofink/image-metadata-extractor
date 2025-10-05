@@ -1,4 +1,32 @@
-/target
-pkg
-.claude
+# Rust / Cargo
+/target/
+**/*.rs.bk
+
+# WebAssembly build output
+/pkg/
+
+# Node / NPM
+node_modules/
+package-lock.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+/target/llvm-cov-target/
+*.profraw
+*.profdata

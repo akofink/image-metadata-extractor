@@ -330,6 +330,52 @@ In CI, the Quality Gate workflow repeats these checks for pull requests, ensurin
 - **Instant Results**: Real-time metadata extraction and processing
 - **Canvas optimization**: Efficient image processing for metadata removal
 
+## End-to-End Testing
+
+The project uses [Playwright](https://playwright.dev/) for cross-browser end-to-end testing.
+
+### Running E2E Tests
+
+**Prerequisites**:
+```bash
+# Install dependencies (first time only)
+npm install
+
+# Install Playwright browsers (first time only)
+npx playwright install
+```
+
+**Run tests**:
+```bash
+# Run all tests (headless)
+npm run test:e2e
+
+# Run with UI mode (recommended for development)
+npm run test:e2e:ui
+
+# Run in headed mode (see the browser)
+npm run test:e2e:headed
+
+# Debug a specific test
+npm run test:e2e:debug
+
+# Run tests for a specific browser
+npm run test:e2e:chromium
+npm run test:e2e:firefox
+npm run test:e2e:webkit
+```
+
+**Test Structure**:
+- `tests/e2e/` - E2E test files
+- `tests/e2e/fixtures/` - Test image files
+- `playwright.config.ts` - Playwright configuration
+
+**Best Practices**:
+- Tests run in parallel across browsers (Chrome, Firefox, Safari, Mobile)
+- Screenshots and videos captured on failure for debugging
+- Web server automatically started before tests
+- See [Playwright Best Practices](https://playwright.dev/docs/best-practices) for more
+
 ## Contributing
 
 ### Code Quality Standards
@@ -338,11 +384,14 @@ In CI, the Quality Gate workflow repeats these checks for pull requests, ensurin
 - Use the Makefile commands for consistent development workflows
 - CI publishes an HTML coverage report for each pull request
 - Follow the modular component architecture established in `src/components/`
+- E2E tests must pass for all supported browsers
 
 ### Development Workflow
 1. Install pre-commit hooks: `make setup-hooks`
-2. Use `make dev` for the full development workflow
-3. Use `make prod` before submitting pull requests
-4. All changes are automatically formatted and linted on commit
+2. Install E2E test dependencies: `npm install`
+3. Use `make dev` for the full development workflow
+4. Run E2E tests: `npm run test:e2e:ui` (recommended during development)
+5. Use `make prod` before submitting pull requests
+6. All changes are automatically formatted and linted on commit
 
-The project maintains high code quality standards through automated tooling and comprehensive pre-commit checks.
+The project maintains high code quality standards through automated tooling, comprehensive pre-commit checks, and end-to-end testing.
