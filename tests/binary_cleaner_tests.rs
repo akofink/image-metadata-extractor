@@ -223,16 +223,31 @@ fn clean_tiff_metadata_basic() {
     let mut tiff = vec![0x49, 0x49, 0x2A, 0x00]; // Little-endian TIFF header
     tiff.extend_from_slice(&[0x08, 0x00, 0x00, 0x00]); // IFD offset
 
-    let cleaned = BinaryCleaner::clean_metadata(&tiff, "tiff").unwrap();
-    // Should return the data (little_exif clears metadata)
-    assert_eq!(cleaned.len(), tiff.len());
+    let result = BinaryCleaner::clean_metadata(&tiff, "tiff");
+    // TIFF cleaning should now return an error since it's not fully implemented
+    assert!(
+        result.is_err(),
+        "TIFF cleaning should return error for incomplete implementation"
+    );
+    assert!(
+        result.unwrap_err().contains("not fully implemented"),
+        "Error should mention incomplete implementation"
+    );
 }
 
 #[test]
 fn clean_tiff_alternative_extension() {
     let tiff = vec![0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08]; // Big-endian TIFF
-    let cleaned = BinaryCleaner::clean_metadata(&tiff, "tif").unwrap();
-    assert_eq!(cleaned.len(), tiff.len());
+    let result = BinaryCleaner::clean_metadata(&tiff, "tif");
+    // TIFF cleaning should return an error for both .tiff and .tif extensions
+    assert!(
+        result.is_err(),
+        "TIFF cleaning should return error for incomplete implementation"
+    );
+    assert!(
+        result.unwrap_err().contains("not fully implemented"),
+        "Error should mention incomplete implementation"
+    );
 }
 
 // HEIF Tests
@@ -240,15 +255,31 @@ fn clean_tiff_alternative_extension() {
 fn clean_heif_metadata_basic() {
     // Create minimal HEIF data
     let heif = vec![0x00, 0x00, 0x00, 0x20, b'f', b't', b'y', b'p']; // HEIF box header
-    let cleaned = BinaryCleaner::clean_metadata(&heif, "heif").unwrap();
-    assert_eq!(cleaned.len(), heif.len());
+    let result = BinaryCleaner::clean_metadata(&heif, "heif");
+    // HEIF cleaning should return an error since it's not fully implemented
+    assert!(
+        result.is_err(),
+        "HEIF cleaning should return error for incomplete implementation"
+    );
+    assert!(
+        result.unwrap_err().contains("not fully implemented"),
+        "Error should mention incomplete implementation"
+    );
 }
 
 #[test]
 fn clean_heic_metadata_basic() {
     let heic = vec![0x00, 0x00, 0x00, 0x20, b'f', b't', b'y', b'p'];
-    let cleaned = BinaryCleaner::clean_metadata(&heic, "heic").unwrap();
-    assert_eq!(cleaned.len(), heic.len());
+    let result = BinaryCleaner::clean_metadata(&heic, "heic");
+    // HEIC cleaning should return an error since it's not fully implemented
+    assert!(
+        result.is_err(),
+        "HEIC cleaning should return error for incomplete implementation"
+    );
+    assert!(
+        result.unwrap_err().contains("not fully implemented"),
+        "Error should mention incomplete implementation"
+    );
 }
 
 // SVG Tests

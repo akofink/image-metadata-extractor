@@ -103,6 +103,53 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
 
                     match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
                         Ok(cleaned_bytes) => {
+                            // Verify that cleaning actually occurred by comparing file sizes
+                            // If cleaned file is identical in size, cleaning likely failed
+                            if cleaned_bytes.len() == file_bytes.len()
+                                && cleaned_bytes == file_bytes
+                            {
+                                web_sys::console::error_1(
+                                    &format!(
+                                        "CRITICAL: Cleaning failed - file unchanged for {}",
+                                        filename
+                                    )
+                                    .into(),
+                                );
+                                // Show user-visible error
+                                if let Some(window) = web_sys::window() {
+                                    let _ = window.alert_with_message(&format!(
+                                        "Error: Could not clean metadata from {}.\n\n\
+                                        The file format may not be fully supported for cleaning.\n\
+                                        Your original file was NOT downloaded.\n\n\
+                                        Supported formats with reliable cleaning: JPEG, PNG, WebP, GIF",
+                                        filename
+                                    ));
+                                }
+                                return;
+                            }
+
+                            // Additional safety check: verify significant size reduction or content change
+                            let size_reduction =
+                                file_bytes.len() as f64 - cleaned_bytes.len() as f64;
+                            let size_reduction_percent =
+                                (size_reduction / file_bytes.len() as f64) * 100.0;
+
+                            web_sys::console::log_1(
+                                &format!("Cleaning stats: Original: {} bytes, Cleaned: {} bytes, Reduction: {:.1}%", 
+                                    file_bytes.len(), cleaned_bytes.len(), size_reduction_percent).into(),
+                            );
+
+                            // For formats that should show significant reduction (like JPEG with EXIF), warn if too small
+                            if (file_extension.to_lowercase() == "jpg"
+                                || file_extension.to_lowercase() == "jpeg")
+                                && size_reduction_percent < 1.0
+                                && file_bytes.len() > 10000
+                            {
+                                web_sys::console::warn_1(
+                                    &"Warning: JPEG cleaning showed minimal size reduction - metadata may not have been removed".into(),
+                                );
+                            }
+
                             // Create cleaned filename
                             let cleaned_filename = filename
                                 .strip_suffix(&format!(".{}", file_extension))
@@ -114,11 +161,32 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                             // Download cleaned file
                             let mime_type = format!("image/{}", file_extension);
                             download_binary_file(&cleaned_bytes, &cleaned_filename, &mime_type);
+
+                            // Show success message
+                            web_sys::console::log_1(
+                                &format!(
+                                    "✅ Successfully cleaned and downloaded: {}",
+                                    cleaned_filename
+                                )
+                                .into(),
+                            );
                         }
                         Err(e) => {
-                            web_sys::console::log_1(
-                                &format!("Binary cleaning failed: {}", e).into(),
+                            web_sys::console::error_1(
+                                &format!("CRITICAL: Cleaning failed for {}: {}", filename, e)
+                                    .into(),
                             );
+
+                            // Show user-visible error - DO NOT download original file
+                            if let Some(window) = web_sys::window() {
+                                let _ = window.alert_with_message(&format!(
+                                    "Error: Could not clean metadata from {}.\n\n\
+                                    Error: {}\n\n\
+                                    Your original file was NOT downloaded to protect your privacy.\n\n\
+                                    This file format may not be fully supported for cleaning.",
+                                    filename, e
+                                ));
+                            }
                         }
                     }
                 }

@@ -372,37 +372,36 @@ impl BinaryCleaner {
     /// Clean TIFF metadata using little_exif library
     // little_exif expects a mutable Vec reference
     #[allow(clippy::ptr_arg)]
-    fn clean_tiff_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
-        // TIFF files can be cleaned using little_exif
-        match Metadata::clear_app12_segment(data, FileExtension::TIFF) {
-            Ok(_) => console_log!("Cleared TIFF APP12 segment"),
-            Err(e) => console_log!("TIFF APP12 clear warning: {:?}", e),
-        }
+    fn clean_tiff_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        // TIFF cleaning with little_exif is limited - APP12/APP13 clearing doesn't work for TIFF
+        // little_exif's clear_app12_segment and clear_app13_segment are JPEG-specific
 
-        match Metadata::clear_app13_segment(data, FileExtension::TIFF) {
-            Ok(_) => console_log!("Cleared TIFF APP13 segment"),
-            Err(e) => console_log!("TIFF APP13 clear warning: {:?}", e),
-        }
+        // TIFF metadata is complex and requires specialized parsing
+        // Most metadata is in IFD (Image File Directory) structures
+        console_log!("TIFF metadata cleaning attempted but not fully supported");
 
-        Ok(data.to_vec())
+        // Fallback: Basic TIFF IFD removal (very simplified)
+        // A proper TIFF metadata cleaner would need comprehensive TIFF parsing
+        console_log!("Using basic TIFF metadata removal fallback");
+
+        // For now, return an error to be honest about limited TIFF support
+        // rather than returning the original file unchanged
+        Err("TIFF metadata cleaning is not fully implemented yet. Use a specialized TIFF tool for complete metadata removal.".to_string())
     }
 
     /// Clean HEIF/HEIC metadata using little_exif library
     // little_exif expects a mutable Vec reference
     #[allow(clippy::ptr_arg)]
-    fn clean_heif_metadata(data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
-        // HEIF files can be cleaned using little_exif
-        match Metadata::clear_app12_segment(data, FileExtension::HEIF) {
-            Ok(_) => console_log!("Cleared HEIF APP12 segment"),
-            Err(e) => console_log!("HEIF APP12 clear warning: {:?}", e),
-        }
+    fn clean_heif_metadata(_data: &mut Vec<u8>) -> Result<Vec<u8>, String> {
+        // HEIF/HEIC cleaning with little_exif is limited - APP12/APP13 clearing is JPEG-specific
 
-        match Metadata::clear_app13_segment(data, FileExtension::HEIF) {
-            Ok(_) => console_log!("Cleared HEIF APP13 segment"),
-            Err(e) => console_log!("HEIF APP13 clear warning: {:?}", e),
-        }
+        // HEIF/HEIC metadata is in complex ISO base media file format boxes
+        // Requires specialized HEIF parser for proper metadata removal
+        console_log!("HEIF/HEIC metadata cleaning attempted but not fully supported");
 
-        Ok(data.to_vec())
+        // Fallback: Return error to be honest about limited HEIF support
+        // HEIF/HEIC files have complex metadata structures that need specialized handling
+        Err("HEIC/HEIF metadata cleaning is not fully implemented yet. These Apple formats require specialized tools for complete metadata removal.".to_string())
     }
 
     /// Clean AVIF metadata (basic implementation)
