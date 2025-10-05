@@ -89,8 +89,8 @@ test.describe('Image Cleaning', () => {
     const download = await downloadPromise;
     const filename = download.suggestedFilename();
     
-    // Original is .jpg, cleaned should also be .jpg
-    expect(filename).toMatch(/\.jpg$/i);
+    // Original is .jpg, cleaned should be .jpg or .jpeg
+    expect(filename).toMatch(/\.(jpg|jpeg)$/i);
   });
 
   test('should show cleaning information and features', async ({ page }) => {
