@@ -37,6 +37,20 @@ Unique differentiators (all client‑side):
 
 Objectives: Implement high-value features that differentiate us from competitors immediately, focusing on export flexibility and privacy features.
 
+### 🛡️ CRITICAL SECURITY & TRUST ISSUE (URGENT)
+
+- **Complete TIFF and HEIC/HEIF Cleaning Support** — HIGH PRIORITY SECURITY FIX
+  - **Current Issue**: These formats show error messages instead of cleaning (good for security)
+  - **User Problem**: UI still advertises support, creating user confusion and broken expectations
+  - **Privacy Impact**: Users with Apple HEIC photos and professional TIFF files cannot clean metadata
+  - **Trust Impact**: Advertising unsupported formats damages credibility
+  - **Solution Required**: Research and implement specialized TIFF IFD and HEIF box parsers
+  - **Implementation Notes**: 
+    - TIFF: Need proper IFD (Image File Directory) parsing to remove embedded metadata
+    - HEIC/HEIF: Need ISO base media file format box structure parsing for metadata removal
+    - Consider integrating with or creating Rust crates for these specific formats
+  - **Success Criteria**: UI shows actual working cleaning for these formats, no misleading messaging
+
 User‑facing features:
 - **Export enhancements** (PRIORITY):
   - ✅ **Batch export combined metadata**: **IMPLEMENTED** - Single JSON/CSV/TXT containing all processed files

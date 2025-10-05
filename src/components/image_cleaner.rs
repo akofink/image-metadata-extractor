@@ -206,7 +206,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                     {"High-performance binary metadata removal preserves original file quality"}
                 </div>
                 <div style={format!("font-size: 12px; color: {};", colors.info_text)}>
-                    {"Supports JPEG, PNG, WebP, GIF, TIFF, HEIF, PDF, SVG and more"}
+                    {"Fully supports JPEG, PNG, WebP, GIF, PDF, SVG. TIFF and HEIC/HEIF support coming soon."}
                 </div>
             </div>
 
