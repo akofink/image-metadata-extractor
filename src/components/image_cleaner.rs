@@ -3,8 +3,20 @@
 use crate::binary_cleaner::BinaryCleaner;
 use crate::types::{ImageData, Theme};
 use crate::utils::download_binary_file;
-use base64::{Engine as _, engine::general_purpose};
+use base64::Engine as _;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::JsFuture;
 use yew::prelude::*;
+
+/// Fetch bytes from a blob URL
+async fn fetch_blob_bytes(blob_url: &str) -> Result<Vec<u8>, JsValue> {
+    let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window"))?;
+    let response = JsFuture::from(window.fetch_with_str(blob_url)).await?;
+    let response: web_sys::Response = response.dyn_into()?;
+    let array_buffer = JsFuture::from(response.array_buffer()?).await?;
+    let uint8_array = js_sys::Uint8Array::new(&array_buffer);
+    Ok(uint8_array.to_vec())
+}
 
 struct CleanerColors {
     background: &'static str,
@@ -56,12 +68,39 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
             let filename = data.name.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
-                if let Some(file_extension) = filename.split('.').next_back()
-                    && let Some(base64_data) = data_url.strip_prefix("data:image/")
-                    && let Some(comma_pos) = base64_data.find(',')
-                    && let Ok(file_bytes) =
-                        general_purpose::STANDARD.decode(&base64_data[comma_pos + 1..])
-                {
+                if let Some(file_extension) = filename.split('.').next_back() {
+                    // Fetch the blob data from the object URL
+                    let file_bytes = if data_url.starts_with("blob:") {
+                        // Fetch blob content
+                        match fetch_blob_bytes(&data_url).await {
+                            Ok(bytes) => bytes,
+                            Err(e) => {
+                                web_sys::console::log_1(
+                                    &format!("Failed to fetch blob data: {:?}", e).into(),
+                                );
+                                return;
+                            }
+                        }
+                    } else if let Some(base64_data) = data_url.strip_prefix("data:image/")
+                        && let Some(comma_pos) = base64_data.find(',')
+                    {
+                        // Legacy base64 data URL support
+                        match base64::engine::general_purpose::STANDARD
+                            .decode(&base64_data[comma_pos + 1..])
+                        {
+                            Ok(bytes) => bytes,
+                            Err(e) => {
+                                web_sys::console::log_1(
+                                    &format!("Failed to decode base64 data: {}", e).into(),
+                                );
+                                return;
+                            }
+                        }
+                    } else {
+                        web_sys::console::log_1(&"Unsupported data URL format".into());
+                        return;
+                    };
+
                     match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
                         Ok(cleaned_bytes) => {
                             // Create cleaned filename
@@ -75,18 +114,14 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
                             // Download cleaned file
                             let mime_type = format!("image/{}", file_extension);
                             download_binary_file(&cleaned_bytes, &cleaned_filename, &mime_type);
-                            return;
                         }
                         Err(e) => {
                             web_sys::console::log_1(
                                 &format!("Binary cleaning failed: {}", e).into(),
                             );
-                            return;
                         }
                     }
                 }
-
-                web_sys::console::log_1(&"Failed to process file for binary cleaning".into());
             });
         })
     };

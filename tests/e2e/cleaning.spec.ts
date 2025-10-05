@@ -35,66 +35,32 @@ test.describe('Image Cleaning', () => {
   test('should trigger cleaned image download', async ({ page }) => {
     const cleanButton = page.getByTestId('clean-button');
     
-    // Listen for console messages to understand what happens
-    const consoleMessages: string[] = [];
-    page.on('console', msg => {
-      if (msg.type() === 'log' && (msg.text().includes('cleaning') || msg.text().includes('download'))) {
-        consoleMessages.push(msg.text());
-      }
-    });
-    
-    // Try to set up download promise, but don't fail if no download happens
-    let downloadSucceeded = false;
-    const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).then((download) => {
-      downloadSucceeded = true;
-      return download;
-    }).catch(() => null);
+    // Set up download promise - expect successful download
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
     
     await cleanButton.click();
     
-    // Wait for either download or processing to complete
+    // Wait for download to start
     const download = await downloadPromise;
     
-    if (download) {
-      // If download happened, verify filename
-      const filename = download.suggestedFilename();
-      expect(filename).toContain('cleaned');
-      expect(filename).toContain('with-metadata');
-      expect(filename).toMatch(/\.(jpg|jpeg)$/i);
-    } else {
-      // If no download, check if there was a processing error
-      await page.waitForTimeout(1000); // Give time for console messages
-      const hasError = consoleMessages.some(msg => 
-        msg.includes('Failed to process') || msg.includes('cleaning failed')
-      );
-      
-      if (hasError) {
-        console.log('Cleaning failed as expected for this test fixture:', consoleMessages);
-        // This is acceptable - the UI correctly shows the button but the processing may fail
-        // for certain image formats or data URL structures
-      } else {
-        throw new Error('Expected either successful download or error message');
-      }
-    }
+    // Verify download filename
+    const filename = download.suggestedFilename();
+    expect(filename).toContain('cleaned');
+    expect(filename).toContain('with-metadata');
+    expect(filename).toMatch(/\.(jpg|jpeg)$/i);
   });
 
   test('should preserve original file format', async ({ page }) => {
     const cleanButton = page.getByTestId('clean-button');
     
-    // Similar logic to handle potential processing failures
-    const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
     await cleanButton.click();
     
     const download = await downloadPromise;
+    const filename = download.suggestedFilename();
     
-    if (download) {
-      const filename = download.suggestedFilename();
-      // Original is .jpg, cleaned should also be .jpg  
-      expect(filename).toMatch(/\.jpg$/i);
-    } else {
-      // If cleaning fails, that's acceptable for this test fixture
-      console.log('Cleaning process may have failed - this is acceptable for test purposes');
-    }
+    // Original is .jpg, cleaned should also be .jpg
+    expect(filename).toMatch(/\.jpg$/i);
   });
 
   test('should show cleaning information and features', async ({ page }) => {
@@ -138,16 +104,11 @@ test.describe('Image Cleaning', () => {
     
     // If we had a PNG fixture, we could test that too
     // For now, verify the button works with our JPEG
-    const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
     await cleanButton.click();
     
     const download = await downloadPromise;
-    if (download) {
-      expect(download.suggestedFilename()).toBeTruthy();
-    } else {
-      // Button was clickable and processing attempted - acceptable
-      console.log('Clean button works, processing may fail for test fixture');
-    }
+    expect(download.suggestedFilename()).toBeTruthy();
   });
 
   test('should show quality preservation messaging', async ({ page }) => {
