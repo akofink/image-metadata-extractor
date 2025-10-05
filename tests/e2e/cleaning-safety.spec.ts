@@ -10,107 +10,87 @@ import path from 'path';
  */
 
 test.describe('Image Cleaning Safety', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByTestId('app-title')).toBeVisible();
-  });
-
   test('should prevent download when cleaning fails with error', async ({ page }) => {
-    // Monitor console errors and alerts
-    const consoleErrors: string[] = [];
-    
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
-        console.log('CONSOLE ERROR:', msg.text());
-      }
-    });
-
-    // Mock window.alert to capture error messages
+    // Mock window.alert to capture error messages. Must be done before goto.
     await page.addInitScript(() => {
       window.alert = (message: string) => {
         (window as any).__lastAlert = message;
         console.log('ALERT:', message);
-        return undefined;
       };
     });
 
-    // Upload an image that will trigger cleaning failure
+    await page.goto('/');
+    await expect(page.getByTestId('app-title')).toBeVisible();
+
+    // Upload a corrupted image that will cause a cleaning failure
     const fileInput = page.locator('input[type="file"][accept*="image"]');
-    const filePath = path.join(__dirname, 'fixtures', 'with-metadata.jpg');
+    const filePath = path.join(__dirname, 'fixtures', 'corrupted.jpg');
     await fileInput.setInputFiles(filePath);
     
-    await expect(page.locator('text=with-metadata.jpg')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=corrupted.jpg')).toBeVisible({ timeout: 5000 });
 
-    // Click clean button but don't expect a download
-    const cleanButton = page.getByTestId('clean-button');
-    await expect(cleanButton).toBeVisible();
-
-    // Set up to catch any downloads (should not happen on failure)
+    // Set up a listener to fail the test if a download occurs
     let downloadOccurred = false;
     page.on('download', () => {
       downloadOccurred = true;
-      console.log('❌ CRITICAL: Download occurred despite cleaning failure!');
     });
 
-    // For this test, we'll simulate cleaning failure by checking error conditions
-    // In a real failure scenario, clicking the button should show an error
+    // Click the clean button
+    const cleanButton = page.getByTestId('clean-button');
+    await expect(cleanButton).toBeVisible();
     await cleanButton.click();
 
-    // Wait a moment for any processing
-    await page.waitForTimeout(2000);
+    // Wait for the alert to be shown
+    await page.waitForFunction(() => (window as any).__lastAlert);
 
-    // Check if an alert was shown (would happen on cleaning failure)
+    // Check that an error alert was shown
     const alertMessage = await page.evaluate(() => (window as any).__lastAlert);
-    
-    if (alertMessage) {
-      console.log('✅ Error alert properly shown:', alertMessage);
-      expect(alertMessage).toContain('Error: Could not clean metadata');
-      expect(alertMessage).toContain('NOT downloaded');
-    }
+    expect(alertMessage).toContain('Error: Could not clean metadata from corrupted.jpg');
 
-    // Verify no download occurred if there was an error
-    if (consoleErrors.some(error => error.includes('CRITICAL'))) {
-      expect(downloadOccurred).toBe(false);
-      console.log('✅ Download properly prevented on cleaning failure');
-    }
+    // Verify that no download was initiated
+    expect(downloadOccurred).toBe(false);
+    console.log('✅ Download properly prevented on cleaning failure');
   });
 
   test('should show clear error for unsupported formats', async ({ page }) => {
-    // Monitor alerts
+    // Monitor alerts. Must be done before goto.
     await page.addInitScript(() => {
       window.alert = (message: string) => {
         (window as any).__lastAlert = message;
         console.log('ALERT:', message);
-        return undefined;
       };
     });
 
-    // For this test, we'll upload a supported format but simulate the error conditions
+    await page.goto('/');
+    await expect(page.getByTestId('app-title')).toBeVisible();
+
+    // Upload an unsupported file type
     const fileInput = page.locator('input[type="file"][accept*="image"]');
-    const filePath = path.join(__dirname, 'fixtures', 'with-metadata.jpg');
-    await fileInput.setInputFiles(filePath);
+    await fileInput.setInputFiles({
+      name: 'document.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4\n')
+    });
     
-    await expect(page.locator('text=with-metadata.jpg')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=document.pdf')).toBeVisible({ timeout: 5000 });
 
     const cleanButton = page.getByTestId('clean-button');
     await cleanButton.click();
 
-    // Wait for processing
-    await page.waitForTimeout(2000);
+    // Wait for the alert to be shown
+    await page.waitForFunction(() => (window as any).__lastAlert);
 
-    // If this were an unsupported format, we should see appropriate messaging
-    // For JPEG, this should work fine, but we're testing the error flow structure
+    // Check that an error alert was shown
     const alertMessage = await page.evaluate(() => (window as any).__lastAlert);
-    
-    if (alertMessage) {
-      // Error messages should be clear and informative
-      expect(alertMessage).toMatch(/Error: Could not clean metadata|not fully supported|NOT downloaded/);
-      console.log('Error message format is appropriate:', alertMessage);
-    }
+    expect(alertMessage).toContain('Error: Could not clean metadata from document.pdf');
+    expect(alertMessage).toContain('The file format may not be fully supported for cleaning.');
+    console.log('✅ Clear error shown for unsupported format');
   });
 
   test('should log cleaning statistics for successful operations', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('app-title')).toBeVisible();
+
     const consoleLogs: string[] = [];
     
     page.on('console', msg => {
@@ -158,6 +138,9 @@ test.describe('Image Cleaning Safety', () => {
   });
 
   test('should warn about minimal size reduction for suspicious cleaning', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('app-title')).toBeVisible();
+
     const consoleWarnings: string[] = [];
     
     page.on('console', msg => {
