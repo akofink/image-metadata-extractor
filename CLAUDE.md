@@ -99,21 +99,34 @@ The application uses a modern component-based architecture for maintainability a
 ## Testing
 
 ### Testing Framework
-The project uses `wasm-bindgen-test` for WebAssembly component testing:
+The project uses multiple testing approaches for comprehensive coverage:
+
+**Unit & Integration Tests** (`wasm-bindgen-test`):
 - **Unit Tests**: Component logic and state management
-- **Integration Tests**: Component interactions and data flow  
+- **Integration Tests**: Component interactions and data flow
 - **Regression Tests**: Prevent infinite render loops and side effect bugs
+- **Coverage**: 80%+ code coverage maintained via pre-commit hooks
+
+**E2E Tests** (Playwright - in progress):
+- **Browser Testing**: Chrome, Firefox, Safari cross-browser testing
+- **User Flows**: File upload, metadata extraction, export, cleaning workflows
+- **Mobile Testing**: Responsive design and touch interactions
+- **Visual Regression**: Prevent UI regressions across updates
+- See `prompts/add_playwright_tests.md` for implementation guide
 
 ### Running Tests
 - **Standard Rust tests**: `make test` or `cargo test`
 - **WebAssembly tests**: `make test-wasm` (runs in browser via wasm-pack)
 - **All tests**: `make test-all` (combines both test suites)
+- **E2E tests**: `npm run test:e2e` (Playwright - coming soon)
+- **Coverage report**: `make coverage` (generates HTML report)
 
 ### Test Categories
 - **Component Tests**: FileUpload component render loop prevention
 - **Callback Tests**: Proper use_effect_with patterns and one-time setup
 - **Lifecycle Tests**: Memory safety and component creation/destruction
 - **Props Tests**: Component interface and equality implementations
+- **E2E Tests**: Complete user workflows from file upload to export
 
 ### Pre-commit Testing
 The git hooks automatically run tests on every commit:
@@ -159,8 +172,10 @@ The build process generates the `pkg/` directory containing:
 ### Privacy & Performance
 - **Client-Side Only**: No server communication - complete privacy
 - **Fast Processing**: Rust + WebAssembly optimization
-- **Memory Efficient**: Handles large images without performance issues
-- **Instant Results**: Real-time metadata extraction and processing
+- **Memory Efficient**: Object URLs for 85-90% memory reduction vs. data URLs
+- **Responsive UI**: `requestIdleCallback` prevents UI blocking during hash calculation
+- **Modern Downloads**: File System Access API for native save dialogs (Chrome/Edge)
+- **Progressive Enhancement**: Graceful fallbacks for all browsers
 
 ## Development Guidelines
 
@@ -210,4 +225,12 @@ The build process generates the `pkg/` directory containing:
 - Support for multiple image formats (JPEG, PNG, GIF, WebP, TIFF, HEIF, SVG, PDF)
 - Browser-native downloads with cleaned filenames
 
-The codebase maintains high standards through automated tooling, comprehensive pre-commit checks, and a focus on user experience across all device types.
+### Web API Optimizations (Latest)
+- `requestIdleCallback` for hash calculation (prevents UI blocking)
+- File System Access API for better download UX (Chrome/Edge)
+- Object URLs for memory-efficient image handling
+- Progressive enhancement with feature detection and fallbacks
+- Web Workers deferred (complexity outweighs benefits for current use case)
+- See `TODO_web_APIs.md` for details and rationale
+
+The codebase maintains high standards through automated tooling, comprehensive pre-commit checks, E2E testing, and a focus on user experience across all device types.

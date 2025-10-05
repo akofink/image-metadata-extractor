@@ -106,11 +106,11 @@ User‑facing features:
   - Quick consistency checks (e.g., GPSRef vs. sign, DateTime vs. SubSec, Orientation presence).
 
 Technical notes:
-- Use Web Workers to keep UI responsive for long‑running parsing/exports.
-- Consider OffscreenCanvas for image cleaning in workers where supported.
-- Client‑side ZIP creation for batch export/clean using a WASM‑friendly crate.
-- Archive readers (ZIP/TAR) compiled to WASM; stream via Blob.slice and async iterators.
-- Avoid large in‑memory spikes by streaming reads and chunked processing.
+- Use `requestIdleCallback` for deferred computation to keep UI responsive
+- Client‑side ZIP creation for batch export/clean using a WASM‑friendly crate (already implemented)
+- Archive readers (ZIP/TAR) compiled to WASM; stream via Blob.slice and async iterators
+- Avoid large in‑memory spikes by streaming reads and chunked processing
+- Web Workers deferred: complexity outweighs benefits for current use cases (see TODO_web_APIs.md)
 
 Testing & acceptance:
 - wasm‑bindgen‑test coverage for batch flows, archive import, templates, and new export formats.
@@ -140,10 +140,10 @@ User‑facing features:
   - Lightweight, internal SVG world map with projected coordinate dot for basic visualization (no external tiles).
 
 Technical notes:
-- Cross‑origin isolation (COOP/COEP) + threads for WASM SIMD/parallelism where possible.
-- IndexedDB abstraction for safe, bounded storage (eviction strategy, quotas).
-- Rule engine for cleaning: compile a set of predicates to include/exclude/transform keys.
-- Minimal EXIF write path for limited, safe tag updates; robust validation to avoid corrupting files.
+- IndexedDB abstraction for safe, bounded storage (eviction strategy, quotas)
+- Rule engine for cleaning: compile a set of predicates to include/exclude/transform keys
+- Minimal EXIF write path for limited, safe tag updates; robust validation to avoid corrupting files
+- WASM threads (via SharedArrayBuffer) may be considered in future if clear performance bottlenecks emerge
 
 Testing & acceptance:
 - Offline functionality verification (no network required for core use).
@@ -264,10 +264,12 @@ Security & privacy:
 - Local privacy: keep all caches opt‑in with clear controls to purge.
 
 Performance:
-- Web Workers by default for heavy tasks; OffscreenCanvas when available.
-- Consider Rayon‑like threading in WASM (when cross‑origin isolation is enabled).
-- SIMD for hot paths if it materially improves performance.
-- Deterministic outputs and stable sort orders for reproducible exports.
+- `requestIdleCallback` for deferred computation to prevent UI blocking (already implemented)
+- Object URLs for memory-efficient image handling (already implemented)
+- Progressive enhancement with modern Web APIs (File System Access API for downloads)
+- SIMD for hot paths if it materially improves performance
+- Deterministic outputs and stable sort orders for reproducible exports
+- WASM threads deferred until clear performance bottlenecks identified
 
 Internationalization:
 - Localized UI and field explanations.
@@ -275,10 +277,11 @@ Internationalization:
 - Right‑to‑left layout support where applicable.
 
 Developer experience:
-- Expand wasm‑bindgen tests covering UI logic in components.
-- Add property‑based tests for parsing edge cases.
-- Tooling tasks: bundle size check, flamegraph‑like profiling notes for WASM.
-- JSON schema definitions for exports with versioning and compatibility tests.
+- ✅ **E2E testing with Playwright**: **HIGH PRIORITY** - Prevent feature regressions with comprehensive browser tests
+- Expand wasm‑bindgen tests covering UI logic in components
+- Add property‑based tests for parsing edge cases
+- Tooling tasks: bundle size check, flamegraph‑like profiling notes for WASM
+- JSON schema definitions for exports with versioning and compatibility tests
 
 ---
 
@@ -314,7 +317,7 @@ Developer experience:
   - `exif_core.rs` and `metadata_info.rs`: extend to include IPTC/XMP, rules engine, integrity checks, and suggestions/privacy score.
   - `binary_cleaner.rs`: support selective redaction, timestamp shift, and limited safe write‑back.
   - `export.rs`: templating engine, JSON‑LD/context, and schema stability.
-  - `utils_wasm.rs`: web workers, OffscreenCanvas, clipboard, file streams, hashing.
+  - `utils_wasm.rs`: File System Access API, clipboard, file streams, hashing, `requestIdleCallback`.
   - New modules: `archive.rs` (ZIP/TAR), `video_meta.rs` (MP4/MOV container only), `i18n.rs` (local bundles), `map.rs` (SVG map projection/markers).
 - Storage:
   - `utils_wasm.rs` + new `storage.rs` for localStorage/IndexedDB abstractions.
