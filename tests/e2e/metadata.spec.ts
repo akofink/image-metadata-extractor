@@ -97,12 +97,11 @@ test.describe('Metadata Display', () => {
     await expect(page.locator('text=/\\d+\\s*(B|KB|MB)/')).toBeVisible();
 
     // Check if dimensions are shown (may not be available for all images)
-    const dimensionsRegex = /\d+\s*[×x]\s*\d+/;
-    const dimensionsElement = page.locator(`text=${dimensionsRegex}`);
+    const dimensionsElement = page.locator('text=/Dimensions.*\\d+\\s*[×x]\\s*\\d+/');
     
     // Soft assertion - dimensions might not always be available
-    if (await dimensionsElement.isVisible()) {
-      await expect(dimensionsElement).toBeVisible();
+    if (await dimensionsElement.first().isVisible()) {
+      await expect(dimensionsElement.first()).toBeVisible();
     }
   });
 
@@ -128,7 +127,7 @@ test.describe('Metadata Display', () => {
     await expect(page.locator('text=with-metadata.jpg')).toBeVisible({ timeout: 5000 });
 
     // Verify cleaning section is present
-    await expect(page.locator('text=/clean|remove metadata/i')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /download.*cleaned.*file/i })).toBeVisible();
     await expect(page.getByTestId('clean-button')).toBeVisible();
   });
 
