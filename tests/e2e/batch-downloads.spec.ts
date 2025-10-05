@@ -137,7 +137,7 @@ test.describe('Batch Downloads', () => {
     await expect(page.locator('text=with-metadata.jpg').first()).toBeVisible({ timeout: 15000 });
     
     // Look for batch progress indicators
-    const progressElements = page.locator('[data-testid="batch-progress"], text=/processing|cleaning|progress/i');
+    const progressElements = page.locator('[data-testid="batch-progress"]').or(page.locator('text=/processing|cleaning|progress/i'));
     
     if (await progressElements.first().isVisible()) {
       await expect(progressElements.first()).toBeVisible();
@@ -243,7 +243,7 @@ test.describe('Batch Downloads', () => {
     await expect(page.locator('text=with-metadata.jpg').first()).toBeVisible({ timeout: 15000 });
     
     // Look for batch functionality
-    const batchElements = page.locator('button, text=/5.*files|batch.*5|processing.*5/i');
+    const batchElements = page.locator('button').or(page.locator('text=/5.*files|batch.*5|processing.*5/i'));
     
     if (await batchElements.first().isVisible()) {
       console.log('✅ Batch UI appears for 5 files');
