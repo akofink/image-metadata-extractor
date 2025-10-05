@@ -4,20 +4,6 @@
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlAnchorElement, Url};
 
-/// Convert a byte slice into a base64 encoded string using the browser API.
-pub fn base64_encode(bytes: &[u8]) -> String {
-    let window = web_sys::window().unwrap();
-    let btoa = js_sys::Reflect::get(&window, &JsValue::from_str("btoa")).unwrap();
-    let btoa_fn: js_sys::Function = btoa.unchecked_into();
-
-    // Convert bytes to string for btoa
-    let binary_string = bytes.iter().map(|b| *b as char).collect::<String>();
-    let result = btoa_fn
-        .call1(&window, &JsValue::from_str(&binary_string))
-        .unwrap();
-    result.as_string().unwrap()
-}
-
 /// Trigger a text file download in the browser.
 pub fn download_file(content: &str, filename: &str, mime_type: &str) {
     let window = web_sys::window().unwrap();

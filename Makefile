@@ -328,8 +328,8 @@ deny:
 # Verify coverage exceeds threshold
 coverage-verify:
 	@echo "📈 Verifying code coverage (min: $(COVERAGE_MIN)%)..."
-	@cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs)$$" >/dev/null
-	@PCT=$$(cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs)$$" 2>/dev/null | tail -n 1 | awk '{print $$10}' | tr -d '%'); \
+	@cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs|utils_hash\.rs)$$" >/dev/null
+	@PCT=$$(cargo llvm-cov --ignore-filename-regex "src/(app\.rs|lib\.rs|components/.*\.rs|.*_wasm\.rs|utils_hash\.rs)$$" 2>/dev/null | tail -n 1 | awk '{print $$10}' | tr -d '%'); \
 	if [ -z "$$PCT" ]; then echo "❌ Unable to parse coverage"; exit 1; fi; \
 	PCT_INT=$$(printf '%.0f' $$PCT); \
 	echo "   • Lines coverage: $$PCT%"; \

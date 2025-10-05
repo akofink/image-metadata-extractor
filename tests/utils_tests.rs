@@ -1,8 +1,5 @@
 use image_metadata_extractor::utils::format_file_size;
 
-#[cfg(target_arch = "wasm32")]
-use image_metadata_extractor::utils::{base64_encode, download_binary_file, download_file};
-
 #[test]
 fn test_format_file_size_bytes() {
     assert_eq!(format_file_size(0), "0.0 B");

@@ -3,7 +3,7 @@
 
 use crate::exif_core;
 use crate::types::ImageData;
-use crate::utils_hash::calculate_sha256_hash;
+use crate::utils_hash::calculate_sha256_hash_idle;
 use gloo_file::Blob;
 use image::GenericImageView;
 use js_sys::Uint8Array;
@@ -72,8 +72,8 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
     let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
 
-    // Calculate SHA-256 hash for forensics and deduplication
-    let sha256_hash = calculate_sha256_hash(&bytes).await.ok();
+    // Calculate SHA-256 hash during browser idle time for better perceived performance
+    let sha256_hash = calculate_sha256_hash_idle(&bytes).await.ok();
 
     Ok(ImageData {
         name,
@@ -107,8 +107,8 @@ pub async fn process_blob(blob: Blob, name: String) -> Result<ImageData, JsValue
     let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
 
-    // Calculate SHA-256 hash for forensics and deduplication
-    let sha256_hash = calculate_sha256_hash(&bytes).await.ok();
+    // Calculate SHA-256 hash during browser idle time for better perceived performance
+    let sha256_hash = calculate_sha256_hash_idle(&bytes).await.ok();
 
     Ok(ImageData {
         name,
