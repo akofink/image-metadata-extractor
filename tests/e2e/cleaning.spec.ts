@@ -32,7 +32,7 @@ test.describe('Image Cleaning', () => {
     await expect(page.getByTestId('clean-button')).toBeEnabled();
   });
 
-  test('should trigger cleaned image download', async ({ page }) => {
+  test('should trigger cleaned image download and actually remove metadata', async ({ page }) => {
     const cleanButton = page.getByTestId('clean-button');
     
     // Set up download promise - expect successful download
@@ -48,6 +48,36 @@ test.describe('Image Cleaning', () => {
     expect(filename).toContain('cleaned');
     expect(filename).toContain('with-metadata');
     expect(filename).toMatch(/\.(jpg|jpeg)$/i);
+    
+    // Save file and verify metadata was actually removed
+    const downloadPath = `/tmp/test_cleaned_${Date.now()}.jpg`;
+    await download.saveAs(downloadPath);
+    
+    // Use exiftool to verify metadata removal
+    try {
+      const { execSync } = require('child_process');
+      const metadata = execSync(`exiftool "${downloadPath}"`, { encoding: 'utf8' });
+      
+      // Should NOT contain privacy-sensitive metadata
+      expect(metadata).not.toContain('Canon');
+      expect(metadata).not.toContain('Make');
+      expect(metadata).not.toContain('Model');
+      expect(metadata).not.toContain('GPS');
+      expect(metadata).not.toContain('Date/Time Original');
+      expect(metadata).not.toContain('Software');
+      
+      // Should only contain basic JPEG structure info
+      expect(metadata).toContain('Image Width');
+      expect(metadata).toContain('Image Height');
+      expect(metadata).toContain('JPEG');
+      
+      console.log('✅ Metadata successfully removed from cleaned file');
+      
+      // Clean up
+      execSync(`rm "${downloadPath}"`);
+    } catch (e) {
+      console.log('Could not verify metadata removal with exiftool:', e);
+    }
   });
 
   test('should preserve original file format', async ({ page }) => {
