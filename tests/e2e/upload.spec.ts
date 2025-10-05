@@ -29,22 +29,23 @@ test.describe('File Upload', () => {
 
   test('should display the upload interface on load', async ({ page }) => {
     // Verify the main heading is present
-    await expect(page.locator('h1')).toContainText('Image Metadata Extractor');
+    await expect(page.locator('h1')).toContainText('File Metadata Extractor');
 
     // Verify the upload images button is visible
     const uploadButton = page.locator('button:has-text("Upload images")');
     await expect(uploadButton).toBeVisible();
     await expect(uploadButton).toBeEnabled();
 
-    // Verify the file input exists (hidden but present in DOM)
-    const fileInput = page.locator('input[type="file"]');
-    await expect(fileInput).toHaveCount(1);
-    await expect(fileInput).toHaveAttribute('accept', /image/);
+    // Verify the image file input exists (hidden but present in DOM)
+    // Note: There are 2 file inputs - one for images, one for ZIP archives
+    const imageFileInput = page.locator('input[type="file"][accept*="image"]');
+    await expect(imageFileInput).toHaveCount(1);
+    await expect(imageFileInput).toHaveAttribute('accept', /image/);
   });
 
   test('should upload and display image information', async ({ page }) => {
-    // Locate the file input
-    const fileInput = page.locator('input[type="file"]');
+    // Locate the image file input (not the ZIP archive input)
+    const fileInput = page.locator('input[type="file"][accept*="image"]');
 
     // Upload a test image
     const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
@@ -68,7 +69,7 @@ test.describe('File Upload', () => {
   });
 
   test('should display image preview', async ({ page }) => {
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = page.locator('input[type="file"][accept*="image"]');
     const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
 
     await fileInput.setInputFiles(filePath);
@@ -89,24 +90,24 @@ test.describe('File Upload', () => {
   });
 
   test('should handle multiple file selection', async ({ page }) => {
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = page.locator('input[type="file"][accept*="image"]');
 
     // Verify the input allows multiple files
-    await expect(fileInput).toHaveAttribute('multiple', '');
+    await expect(fileInput).toHaveAttribute('multiple', 'multiple');
 
     // Upload the same file twice (simulating multiple selection)
     const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
     await fileInput.setInputFiles([filePath, filePath]);
 
     // The application should show batch processing
-    // Look for progress indicator or batch UI
-    const batchIndicator = page.locator('text=/Batch|Processing|\\d+\\s*of\\s*\\d+/i');
-    if (await batchIndicator.isVisible({ timeout: 2000 })) {
+    // Look for progress indicator or batch UI (use .first() since multiple elements match)
+    const batchIndicator = page.locator('text=/Batch|Processing|\\d+\\s*of\\s*\\d+/i').first();
+    if (await batchIndicator.isVisible({ timeout: 2000 }).catch(() => false)) {
       await expect(batchIndicator).toBeVisible();
     }
 
-    // Eventually the file should be processed
-    await expect(page.locator('text=simple.jpg')).toBeVisible({ timeout: 10000 });
+    // Eventually the file should be processed (use .first() since duplicates create multiple matches)
+    await expect(page.locator('text=simple.jpg').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show Upload images button when no file is uploaded', async ({ page }) => {
