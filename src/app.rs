@@ -19,6 +19,7 @@ use crate::components::{
 use crate::preferences::UserPreferences;
 use crate::types::{ImageData, Theme};
 use std::collections::HashSet;
+use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use web_sys::window;
 use yew::prelude::*;
@@ -199,8 +200,8 @@ pub fn app() -> Html {
         });
     }
 
-    // Batch browsing state
-    let batch_items = use_state(Vec::<ImageData>::new);
+    // Batch browsing state (using Rc to avoid expensive clones)
+    let batch_items = use_state(Vec::<Rc<ImageData>>::new);
     let batch_index = use_state(|| 0usize);
 
     let on_file_loaded = {
@@ -297,14 +298,16 @@ pub fn app() -> Html {
             if *batch_total > 0 {
                 batch_processed.set(*batch_total);
             }
+            // Wrap in Rc to avoid expensive clones
+            let rc_datas: Vec<Rc<ImageData>> = datas.into_iter().map(Rc::new).collect();
             // Save items and reset index
-            batch_items.set(datas.clone());
+            batch_items.set(rc_datas.clone());
             batch_index.set(0);
             // Ensure first item is visible (already emitted earlier, but keep consistent)
-            if let Some(first) = datas.first() {
+            if let Some(first) = rc_datas.first() {
                 let all_keys: HashSet<String> = first.exif_data.keys().cloned().collect();
                 selected_metadata.set(all_keys);
-                image_data.set(Some(first.clone()));
+                image_data.set(Some((**first).clone()));
                 is_expanded.set(false);
             }
         })
@@ -586,7 +589,7 @@ pub fn app() -> Html {
                                                        if let Some(item) = batch_items.get(new_idx) {
                                                            let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
                                                            selected_metadata.set(keys);
-                                                           image_state.set(Some(item.clone()));
+                                                           image_state.set(Some((**item).clone()));
                                                        }
                                                    }
                                                })
@@ -604,7 +607,7 @@ pub fn app() -> Html {
                                                        if let Some(item) = batch_items.get(new_idx) {
                                                            let keys: HashSet<String> = item.exif_data.keys().cloned().collect();
                                                            selected_metadata.set(keys);
-                                                           image_state.set(Some(item.clone()));
+                                                           image_state.set(Some((**item).clone()));
                                                        }
                                                    }
                                                })

@@ -2,6 +2,7 @@
 
 use crate::types::{ImageData, Theme};
 use std::collections::HashMap;
+use std::rc::Rc;
 use yew::prelude::*;
 
 struct DuplicateColors {
@@ -27,7 +28,7 @@ const DARK_DUPLICATE_COLORS: DuplicateColors = DuplicateColors {
 
 #[derive(Properties, PartialEq)]
 pub struct DuplicateDetectorProps {
-    pub batch_items: Vec<ImageData>,
+    pub batch_items: Vec<Rc<ImageData>>,
     pub theme: Theme,
 }
 

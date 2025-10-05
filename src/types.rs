@@ -56,6 +56,15 @@ fn is_zero(value: &u64) -> bool {
 }
 
 impl ImageData {
+    /// Revoke the object URL to free memory.
+    /// Call this when the ImageData is no longer needed.
+    #[cfg(target_arch = "wasm32")]
+    pub fn cleanup(&self) {
+        if self.data_url.starts_with("blob:") {
+            let _ = web_sys::Url::revoke_object_url(&self.data_url);
+        }
+    }
+
     /// Return a new `ImageData` containing only the selected metadata fields.
     pub fn filter_metadata(
         &self,

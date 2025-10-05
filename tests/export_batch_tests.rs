@@ -3,6 +3,7 @@ use image_metadata_extractor::export::{
 };
 use image_metadata_extractor::types::ImageData;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 fn sample(
     name: &str,
@@ -31,23 +32,23 @@ fn sample(
 
 #[test]
 fn test_generate_json_batch_array() {
-    let items = vec![
-        sample(
+    let items: Vec<Rc<ImageData>> = vec![
+        Rc::new(sample(
             "a.jpg",
             1000,
             Some(10),
             Some(20),
             None,
             &[("Make", "Canon")],
-        ),
-        sample(
+        )),
+        Rc::new(sample(
             "b.jpg",
             2000,
             None,
             None,
             Some((1.1, 2.2)),
             &[("Model", "X")],
-        ),
+        )),
     ];
     let json = generate_json_batch(&items);
     assert!(json.starts_with("["));
@@ -57,23 +58,23 @@ fn test_generate_json_batch_array() {
 
 #[test]
 fn test_generate_csv_batch_header_and_rows() {
-    let items = vec![
-        sample(
+    let items: Vec<Rc<ImageData>> = vec![
+        Rc::new(sample(
             "one.jpg",
             1024,
             Some(100),
             Some(200),
             Some((10.0, 20.0)),
             &[("ISO", "100"), ("Make", "A")],
-        ),
-        sample(
+        )),
+        Rc::new(sample(
             "two.jpg",
             2048,
             None,
             None,
             None,
             &[("Model", "B"), ("ISO", "200")],
-        ),
+        )),
     ];
     let csv = generate_csv_batch(&items);
     // Header must include union of EXIF keys in sorted order
@@ -88,9 +89,9 @@ fn test_generate_csv_batch_header_and_rows() {
 
 #[test]
 fn test_generate_txt_batch_contains_each_report() {
-    let items = vec![
-        sample("x.png", 500, Some(1), Some(2), None, &[]),
-        sample("y.png", 1500, None, None, Some((0.0, 0.0)), &[]),
+    let items: Vec<Rc<ImageData>> = vec![
+        Rc::new(sample("x.png", 500, Some(1), Some(2), None, &[])),
+        Rc::new(sample("y.png", 1500, None, None, Some((0.0, 0.0)), &[])),
     ];
     let txt = generate_txt_batch(&items);
     assert!(txt.contains("BATCH FILE METADATA REPORT"));

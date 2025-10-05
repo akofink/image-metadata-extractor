@@ -5,6 +5,7 @@ use crate::types::{ImageData, Theme};
 use crate::utils::download_binary_file;
 use base64::{Engine as _, engine::general_purpose};
 use std::io::{Cursor, Write as _};
+use std::rc::Rc;
 use yew::prelude::*;
 use zip::ZipWriter;
 use zip::write::FileOptions;
@@ -39,7 +40,7 @@ const DARK_BATCH_CLEANER_COLORS: BatchCleanerColors = BatchCleanerColors {
 /// Properties for [`BatchCleaner`].
 #[derive(Properties, PartialEq)]
 pub struct BatchCleanerProps {
-    pub batch_items: Vec<ImageData>,
+    pub batch_items: Vec<Rc<ImageData>>,
     pub theme: Theme,
 }
 

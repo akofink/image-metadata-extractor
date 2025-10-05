@@ -18,10 +18,19 @@ pub async fn file_bytes(file: &File) -> Result<Vec<u8>, JsValue> {
     Ok(uint8_array.to_vec())
 }
 
-/// Create a data URL from raw bytes for preview in the browser.
-pub fn create_data_url(mime: &str, bytes: &[u8]) -> String {
-    use crate::utils_wasm::base64_encode;
-    format!("data:{};base64,{}", mime, base64_encode(bytes))
+/// Create an object URL from raw bytes for preview in the browser.
+/// Object URLs are more memory-efficient than base64 data URLs.
+pub fn create_object_url(mime: &str, bytes: &[u8]) -> Result<String, JsValue> {
+    let array = js_sys::Uint8Array::from(bytes);
+    let blob_parts = js_sys::Array::new();
+    blob_parts.push(&array);
+
+    let blob_options = web_sys::BlobPropertyBag::new();
+    blob_options.set_type(mime);
+
+    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options)?;
+
+    web_sys::Url::create_object_url_with_blob(&blob)
 }
 
 /// Attempt to read image width and height from the byte stream.
@@ -59,7 +68,7 @@ pub async fn process_file(file: File) -> Result<ImageData, JsValue> {
         return Err(JsValue::from_str("Unsupported file type"));
     }
 
-    let data_url = create_data_url(&mime_type, &bytes);
+    let data_url = create_object_url(&mime_type, &bytes)?;
     let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
 
@@ -94,7 +103,7 @@ pub async fn process_blob(blob: Blob, name: String) -> Result<ImageData, JsValue
         return Err(JsValue::from_str("Unsupported file type"));
     }
 
-    let data_url = create_data_url(&mime_type, &bytes);
+    let data_url = create_object_url(&mime_type, &bytes)?;
     let (width, height) = get_dimensions(&mime_type, &bytes);
     let (exif_data, gps_coords) = exif_core::extract_exif_data(&bytes);
 

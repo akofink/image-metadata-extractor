@@ -227,16 +227,17 @@ pub fn generate_xml(data: &ImageData) -> String {
 }
 
 /// Generate a combined JSON export of multiple images as a single JSON array.
-pub fn generate_json_batch(items: &[ImageData]) -> String {
-    serde_json::to_string_pretty(items).unwrap_or_else(|_| "[]".to_string())
+pub fn generate_json_batch(items: &[std::rc::Rc<ImageData>]) -> String {
+    let items_refs: Vec<&ImageData> = items.iter().map(|rc| &**rc).collect();
+    serde_json::to_string_pretty(&items_refs).unwrap_or_else(|_| "[]".to_string())
 }
 
 /// Generate a combined CSV table for multiple images.
 /// Columns: Filename, File Size (human), Width, Height, GPS Latitude, GPS Longitude, then sorted EXIF keys (union across items).
-pub fn generate_csv_batch(items: &[ImageData]) -> String {
+pub fn generate_csv_batch(items: &[std::rc::Rc<ImageData>]) -> String {
     // Collect union of EXIF keys for stable header ordering
     let mut exif_keys: BTreeSet<String> = BTreeSet::new();
-    for item in items {
+    for item in items.iter() {
         for k in item.exif_data.keys() {
             exif_keys.insert(k.clone());
         }
@@ -303,7 +304,7 @@ pub fn generate_csv_batch(items: &[ImageData]) -> String {
 }
 
 /// Generate a combined TXT report for multiple images by concatenating individual reports.
-pub fn generate_txt_batch(items: &[ImageData]) -> String {
+pub fn generate_txt_batch(items: &[std::rc::Rc<ImageData>]) -> String {
     let mut out = String::new();
     out.push_str("BATCH FILE METADATA REPORT\n");
     out.push_str("===========================\n\n");

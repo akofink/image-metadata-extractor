@@ -8,6 +8,7 @@ use crate::preferences::{ExportProfile, UserPreferences};
 use crate::types::{ImageData, Theme};
 use crate::utils::{copy_to_clipboard, download_file};
 use std::collections::HashSet;
+use std::rc::Rc;
 use yew::prelude::*;
 
 struct ExportColors {
@@ -44,7 +45,7 @@ pub struct MetadataExportProps {
     pub on_preferences_change: Callback<UserPreferences>,
     pub on_metadata_selection_change: Callback<HashSet<String>>,
     #[prop_or_default]
-    pub batch_items: Option<Vec<ImageData>>, // When provided, enable combined batch export
+    pub batch_items: Option<Vec<Rc<ImageData>>>, // When provided, enable combined batch export
 }
 
 /// Controls for exporting chosen metadata fields to JSON, CSV or text.
