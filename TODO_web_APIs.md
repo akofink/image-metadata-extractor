@@ -107,9 +107,9 @@ window.request_idle_callback(idle_callback.as_ref().unchecked_ref());
 
 ---
 
-## 4. Use `showSaveFilePicker()` for Better Download UX 📊
+## 4. Use `showSaveFilePicker()` for Better Download UX ✅
 
-**Status**: Not started
+**Status**: Completed
 **Files**:
 - `src/utils_wasm.rs:22-53` (text downloads)
 - `src/utils_wasm.rs:68-103` (binary downloads)
@@ -274,11 +274,16 @@ async fn get_image_dimensions_native(blob: &web_sys::Blob) -> Result<(u32, u32),
 - UI stays responsive during hash calculation
 - Graceful fallback for browsers without `requestIdleCallback`
 
-### Phase 2: UX Improvements (Medium Complexity)
-3. 📊 Add `showSaveFilePicker()` with fallback for downloads
+### Phase 2: UX Improvements (Medium Complexity) ✅ COMPLETED
+3. ✅ Add `showSaveFilePicker()` with fallback for downloads
 
-**Estimated Time**: 3-4 hours
-**Estimated Impact**: Much better download UX where supported
+**Actual Time**: ~1 hour
+**Impact Delivered**:
+- Native file picker on Chrome/Edge (70% of desktop users)
+- Choose exact download location and filename
+- File overwrite support without duplicate naming
+- Graceful fallback on Firefox/Safari/mobile
+- Zero breaking changes - all existing code works
 
 ### Phase 3: Performance Overhaul (High Complexity)
 4. 🚀 Implement Web Workers for batch processing
