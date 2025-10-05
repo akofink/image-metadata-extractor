@@ -29,11 +29,11 @@ pub fn batch_manager(props: &BatchManagerProps) -> Html {
     };
 
     html! {
-        <div style="background:#eef5ff;border:1px solid #cfe2ff;border-radius:6px;padding:12px;margin:16px 0;">
+        <div style="background:#eef5ff;border:1px solid #cfe2ff;border-radius:6px;padding:12px;margin:16px 0;" data-testid="batch-progress">
             <div style="font-weight:bold;color:#084298;">{"Batch Processing"}</div>
-            <div style="margin:8px 0;color:#084298;">{ format!("Processed {} of {} ({}%)", props.processed, props.total, pct) }</div>
+            <div style="margin:8px 0;color:#084298;" data-testid="batch-status">{ format!("Processed {} of {} ({}%)", props.processed, props.total, pct) }</div>
             <div style="height:8px;background:#dbeafe;border-radius:4px;overflow:hidden;">
-                <div style={format!("height:8px;background:#0d6efd;width:{}%", pct)}></div>
+                <div style={format!("height:8px;background:#0d6efd;width:{}%", pct)} data-testid="batch-progress-bar"></div>
             </div>
         </div>
     }

@@ -47,13 +47,13 @@ test.describe('File Upload', () => {
     // Locate the image file input (not the ZIP archive input)
     const fileInput = page.locator('input[type="file"][accept*="image"]');
 
-    // Upload a test image
-    const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
+    // Upload a test image with metadata
+    const filePath = path.join(__dirname, 'fixtures', 'with-metadata.jpg');
     await fileInput.setInputFiles(filePath);
 
     // Wait for the image to be processed
     // The application should display the filename
-    await expect(page.locator('text=simple.jpg')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('div').filter({has: page.getByRole('heading', { name: 'File Information' })}).locator("text=with-metadata.jpg")).toBeVisible({ timeout: 5000 });
 
     // Verify file size is displayed
     // The exact format is "315 B" or similar
@@ -61,21 +61,21 @@ test.describe('File Upload', () => {
 
     // Verify image dimensions are displayed if applicable
     // Format: "50 × 50" or "50x50" or dimensions shown somewhere
-    // This is a soft check as the simple.jpg might not have dimensions
-    const dimensionsText = page.locator('text=/\\d+\\s*[×x]\\s*\\d+/');
-    if (await dimensionsText.isVisible()) {
-      await expect(dimensionsText).toBeVisible();
+    // This is a soft check as the with-metadata.jpg might not have dimensions
+    const dimensionsText = page.locator('text=/Dimensions.*\\d+\\s*[×x]\\s*\\d+/');
+    if (await dimensionsText.first().isVisible()) {
+      await expect(dimensionsText.first()).toBeVisible();
     }
   });
 
   test('should display image preview', async ({ page }) => {
     const fileInput = page.locator('input[type="file"][accept*="image"]');
-    const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
+    const filePath = path.join(__dirname, 'fixtures', 'with-metadata.jpg');
 
     await fileInput.setInputFiles(filePath);
 
     // Wait for filename to appear (indicates processing complete)
-    await expect(page.locator('text=simple.jpg')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=with-metadata.jpg')).toBeVisible({ timeout: 5000 });
 
     // Check that an image element with the uploaded data is visible
     // The app uses object URLs for image preview
@@ -96,7 +96,7 @@ test.describe('File Upload', () => {
     await expect(fileInput).toHaveAttribute('multiple', 'multiple');
 
     // Upload the same file twice (simulating multiple selection)
-    const filePath = path.join(__dirname, 'fixtures', 'simple.jpg');
+    const filePath = path.join(__dirname, 'fixtures', 'with-metadata.jpg');
     await fileInput.setInputFiles([filePath, filePath]);
 
     // The application should show batch processing
@@ -107,7 +107,7 @@ test.describe('File Upload', () => {
     }
 
     // Eventually the file should be processed (use .first() since duplicates create multiple matches)
-    await expect(page.locator('text=simple.jpg').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=with-metadata.jpg').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show Upload images button when no file is uploaded', async ({ page }) => {
@@ -116,7 +116,7 @@ test.describe('File Upload', () => {
     await expect(uploadButton).toBeVisible();
 
     // No file information should be displayed yet
-    const fileInfoSection = page.locator('text=simple.jpg');
+    const fileInfoSection = page.locator('text=with-metadata.jpg');
     await expect(fileInfoSection).not.toBeVisible();
   });
 });

@@ -529,7 +529,7 @@ pub fn app() -> Html {
         <div style={main_div_style}>
             <div style="max-width: 800px; margin: 0 auto; padding: 16px; flex: 1;">
                 <div style="position: relative; margin-bottom: 20px;">
-                    <h1 style="text-align: center; margin: 0; padding-right: 50px;">{"File Metadata Extractor"}</h1>
+                    <h1 style="text-align: center; margin: 0; padding-right: 50px;" data-testid="app-title">{"File Metadata Extractor"}</h1>
                     <button
                         onclick={on_theme_toggle}
                         style={format!("{} position: absolute; top: 50%; right: 0; transform: translateY(-50%);", theme_button_style)}
@@ -730,6 +730,7 @@ pub fn app() -> Html {
                                                     let _ = target.style().set_property("opacity", "1");
                                                 }
                                             })}
+                                            data-testid="upload-images-button"
                                         >
                                             {"📷 Upload Images"}
                                         </button>
@@ -746,6 +747,7 @@ pub fn app() -> Html {
                                                     let _ = target.style().set_property("opacity", "1");
                                                 }
                                             })}
+                                            data-testid="upload-archive-button"
                                         >
                                             {"🗜️ Upload ZIP Archive"}
                                         </button>

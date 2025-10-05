@@ -110,6 +110,7 @@ pub fn image_cleaner(props: &ImageCleanerProps) -> Html {
             <button
                 onclick={download_cleaned_image_cb}
                 style={format!("background: {}; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;", colors.button_bg)}
+                data-testid="clean-button"
             >
                 {"🧹 Download Privacy-Safe File"}
             </button>
