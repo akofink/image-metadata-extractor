@@ -16,7 +16,7 @@ async fn test_app_renders_heading_and_placeholder() {
 
     let html = div.inner_html();
     assert!(html.contains("File Metadata Extractor"));
-    assert!(html.contains("Click here to select a file"));
+    assert!(html.contains("Upload Images"));
 }
 
 #[wasm_bindgen_test]

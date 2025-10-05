@@ -15,6 +15,8 @@ fn test_file_upload_component_renders() {
         on_file_loaded,
         trigger_file_input,
         on_error: Callback::noop(),
+        on_files_loaded: None,
+        on_progress: None,
     };
 
     let _rendered = html! {
@@ -34,12 +36,16 @@ fn test_file_upload_props_equality() {
         on_file_loaded: on_file_loaded.clone(),
         trigger_file_input: trigger_file_input.clone(),
         on_error: Callback::noop(),
+        on_files_loaded: None,
+        on_progress: None,
     };
 
     let _props2 = FileUploadProps {
         on_file_loaded: on_file_loaded.clone(),
         trigger_file_input: trigger_file_input.clone(),
         on_error: Callback::noop(),
+        on_files_loaded: None,
+        on_progress: None,
     };
 
     // Test that props can be created without panicking
@@ -59,6 +65,8 @@ fn test_trigger_callback_setup_only_once() {
         on_file_loaded,
         trigger_file_input,
         on_error: Callback::noop(),
+        on_files_loaded: None,
+        on_progress: None,
     };
 
     // The component should render successfully without infinite loops

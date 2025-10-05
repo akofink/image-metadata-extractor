@@ -3,7 +3,7 @@ use base64::engine::general_purpose;
 use exif::Rational;
 use exif::{Field, In, Tag, Value};
 #[cfg(target_arch = "wasm32")]
-use image_metadata_extractor::exif::create_data_url;
+use image_metadata_extractor::exif::create_object_url;
 use image_metadata_extractor::exif::{
     determine_mime_type, extract_exif_data, get_dimensions, is_supported_mime_type,
     parse_gps_coordinate,
@@ -105,14 +105,13 @@ fn test_extract_exif_data_gps() {
     assert!(gps2.is_none());
 }
 
-// create_data_url uses web APIs - test in WASM environment only
+// create_object_url uses web APIs - test in WASM environment only
 #[cfg(target_arch = "wasm32")]
 #[test]
-fn test_create_data_url() {
+fn test_create_object_url() {
     let data = b"hello world";
-    let url = create_data_url("text/plain", data);
-    assert!(url.starts_with("data:text/plain;base64,"));
-    assert!(url.contains("aGVsbG8gd29ybGQ=")); // base64 of "hello world"
+    let url = create_object_url("text/plain", data).expect("Should create object URL");
+    assert!(url.starts_with("blob:"));
 }
 
 #[test]
