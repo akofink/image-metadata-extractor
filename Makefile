@@ -304,7 +304,7 @@ dev: check format lint pkg
 prod: check test-all lint format pkg-release
 
 # Configuration: minimum coverage percentage
-COVERAGE_MIN ?= 74
+COVERAGE_MIN ?= 78
 
 # Ensure required tools are installed
 ensure-tools:
