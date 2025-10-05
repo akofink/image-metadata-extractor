@@ -23,18 +23,18 @@ test.describe('File Upload', () => {
     await page.goto('/');
 
     // Wait for the app to be fully loaded
-    // The "Choose Image" button should be visible
-    await expect(page.locator('text=Choose Image')).toBeVisible();
+    // The "Upload images" button should be visible
+    await expect(page.locator('text=Upload images')).toBeVisible();
   });
 
   test('should display the upload interface on load', async ({ page }) => {
     // Verify the main heading is present
     await expect(page.locator('h1')).toContainText('Image Metadata Extractor');
 
-    // Verify the choose image button is visible
-    const chooseButton = page.locator('button:has-text("Choose Image")');
-    await expect(chooseButton).toBeVisible();
-    await expect(chooseButton).toBeEnabled();
+    // Verify the upload images button is visible
+    const uploadButton = page.locator('button:has-text("Upload images")');
+    await expect(uploadButton).toBeVisible();
+    await expect(uploadButton).toBeEnabled();
 
     // Verify the file input exists (hidden but present in DOM)
     const fileInput = page.locator('input[type="file"]');
@@ -109,10 +109,10 @@ test.describe('File Upload', () => {
     await expect(page.locator('text=simple.jpg')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should show Choose Image button when no file is uploaded', async ({ page }) => {
-    // On initial load, only the Choose Image button should be visible
-    const chooseButton = page.locator('button:has-text("Choose Image")');
-    await expect(chooseButton).toBeVisible();
+  test('should show Upload images button when no file is uploaded', async ({ page }) => {
+    // On initial load, only the Upload images button should be visible
+    const uploadButton = page.locator('button:has-text("Upload images")');
+    await expect(uploadButton).toBeVisible();
 
     // No file information should be displayed yet
     const fileInfoSection = page.locator('text=simple.jpg');
