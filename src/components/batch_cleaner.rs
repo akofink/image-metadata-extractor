@@ -6,9 +6,21 @@ use crate::utils::download_binary_file;
 use base64::{Engine as _, engine::general_purpose};
 use std::io::{Cursor, Write as _};
 use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::JsFuture;
 use yew::prelude::*;
 use zip::ZipWriter;
 use zip::write::FileOptions;
+
+/// Fetch bytes from a blob URL (same helper as in image_cleaner.rs)
+async fn fetch_blob_bytes(blob_url: &str) -> Result<Vec<u8>, JsValue> {
+    let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window"))?;
+    let response = JsFuture::from(window.fetch_with_str(blob_url)).await?;
+    let response: web_sys::Response = response.dyn_into()?;
+    let array_buffer = JsFuture::from(response.array_buffer()?).await?;
+    let uint8_array = js_sys::Uint8Array::new(&array_buffer);
+    Ok(uint8_array.to_vec())
+}
 
 struct BatchCleanerColors {
     background: &'static str,
@@ -79,13 +91,50 @@ pub fn batch_cleaner(props: &BatchCleanerProps) -> Html {
                     let data_url = &image_data.data_url;
                     let filename = &image_data.name;
 
-                    // Extract file extension
-                    if let Some(file_extension) = filename.split('.').next_back()
-                        && let Some(base64_data) = data_url.strip_prefix("data:image/")
-                        && let Some(comma_pos) = base64_data.find(',')
-                        && let Ok(file_bytes) =
-                            general_purpose::STANDARD.decode(&base64_data[comma_pos + 1..])
-                    {
+                    // Extract file extension and fetch file bytes
+                    if let Some(file_extension) = filename.split('.').next_back() {
+                        // Fetch the blob data from the object URL (same fix as individual cleaner)
+                        let file_bytes = if data_url.starts_with("blob:") {
+                            // Fetch blob content
+                            match fetch_blob_bytes(data_url).await {
+                                Ok(bytes) => bytes,
+                                Err(e) => {
+                                    error_count += 1;
+                                    web_sys::console::log_1(
+                                        &format!(
+                                            "Failed to fetch blob data for {}: {:?}",
+                                            filename, e
+                                        )
+                                        .into(),
+                                    );
+                                    continue;
+                                }
+                            }
+                        } else if let Some(base64_data) = data_url.strip_prefix("data:image/")
+                            && let Some(comma_pos) = base64_data.find(',')
+                        {
+                            // Legacy base64 data URL support
+                            match general_purpose::STANDARD.decode(&base64_data[comma_pos + 1..]) {
+                                Ok(bytes) => bytes,
+                                Err(e) => {
+                                    error_count += 1;
+                                    web_sys::console::log_1(
+                                        &format!(
+                                            "Failed to decode base64 data for {}: {}",
+                                            filename, e
+                                        )
+                                        .into(),
+                                    );
+                                    continue;
+                                }
+                            }
+                        } else {
+                            error_count += 1;
+                            web_sys::console::log_1(
+                                &format!("Unsupported data URL format for {}", filename).into(),
+                            );
+                            continue;
+                        };
                         match BinaryCleaner::clean_metadata(&file_bytes, file_extension) {
                             Ok(cleaned_bytes) => {
                                 // Create cleaned filename
@@ -120,11 +169,6 @@ pub fn batch_cleaner(props: &BatchCleanerProps) -> Html {
                                 );
                             }
                         }
-                    } else {
-                        error_count += 1;
-                        web_sys::console::log_1(
-                            &format!("Failed to process {} for cleaning", filename).into(),
-                        );
                     }
                 }
 
