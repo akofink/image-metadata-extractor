@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-31CDX4RE6K"></script>
+    <!-- Google tag (gtag.js) - Only load in production (not localhost) -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      // Only load analytics and ads when NOT on localhost/development
+      if (!window.location.hostname.match(/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/)) {
+        // Load Google Analytics
+        var gaScript = document.createElement('script');
+        gaScript.async = true;
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-31CDX4RE6K';
+        document.head.appendChild(gaScript);
 
-      gtag('config', 'G-31CDX4RE6K');
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-31CDX4RE6K');
+
+        // Load Google AdSense
+        var adsScript = document.createElement('script');
+        adsScript.async = true;
+        adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6514611104319297';
+        adsScript.crossOrigin = 'anonymous';
+        document.head.appendChild(adsScript);
+      }
     </script>
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6514611104319297"
-         crossorigin="anonymous"></script>
     
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
