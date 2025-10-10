@@ -110,7 +110,7 @@ jobs:
           test -f tests/e2e/fixtures/with-metadata.jpg
 
       - name: Run Mobile E2E tests
-        run: npx playwright test tests/e2e/mobile.spec.ts
+        run: npx playwright test tests/e2e/mobile.spec.ts --project="Mobile Chrome" --project="Mobile Safari"
         env:
           CI: true
 
