@@ -1,4 +1,5 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, expect } from './fixtures/block-analytics';
+import { devices } from '@playwright/test';
 import path from 'path';
 
 /**
