@@ -15,7 +15,7 @@ authors = ["Image Metadata Extractor Contributors"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-yew = { version = "0.21", features = ["csr"] }
+yew = { version = ">=0.23, <0.24", features = ["csr"] }
 web-sys = { version = "0.3", features = [
     "HtmlAnchorElement", "HtmlElement", "Element", "CssStyleDeclaration",
     "Blob", "BlobPropertyBag", "Url", "Document", "Window", "Storage",
@@ -34,14 +34,14 @@ base64 = "0.21"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 gloo-file = { version = "0.3", features = ["futures"] }
-gloo = { version = "0.10", features = ["events"] }
+gloo = { version = ">=0.12, <0.13", default-features = false, features = ["events"] }
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 tiff = "0.10"
 half = "2.4"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
-gloo = { version = "0.10", features = ["futures", "utils", "timers"] }
+gloo = { version = ">=0.12, <0.13", default-features = false, features = ["futures", "utils", "timers"] }
 
 # Test configurations
 [[test]]
