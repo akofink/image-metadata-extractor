@@ -17,4 +17,8 @@ if ! command -v wasm-pack >/dev/null 2>&1; then
   fi
 fi
 
+if command -v rustup >/dev/null 2>&1; then
+  rustup target add wasm32-unknown-unknown
+fi
+
 exec wasm-pack build --target web --release
