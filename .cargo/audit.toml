@@ -1,0 +1,21 @@
+[advisories]
+# Ignore RUSTSEC advisories for quick-xml until a safe upgrade path exists.
+# - RUSTSEC-2026-0194: quadratic runtime on duplicate attr names
+# - RUSTSEC-2026-0195: unbounded namespace allocation (memory exhaustion)
+#
+# Affected:
+#   little_exif = "0.6"  -> quick-xml 0.37.5   (direct dependency)
+#   cargo-llvm-cov (dev) -> lcov2cobertura     -> quick-xml 0.39.x
+#
+# Rationale:
+# - No newer little_exif release uses quick-xml >= 0.41.0 (as of 2026-07).
+# - This is a fully client-side WASM application. These vulns require a
+#   maliciously crafted image file supplied by the user. Impact is limited
+#   to the browser tab running the WASM (no server, no network exfil).
+# - cargo-llvm-cov path is dev-dependency only (coverage tooling).
+# - Existing unmaintained advisories for transitive deps (bincode, paste, etc.)
+#   are already ignored via deny.toml for the same reason: upstream not yet updated.
+ignore = [
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+]

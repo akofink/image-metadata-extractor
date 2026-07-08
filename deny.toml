@@ -4,10 +4,12 @@ version = 2
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/RustSec/advisory-db"]
 yanked = "deny"
-ignore = [
+  ignore = [
     "RUSTSEC-2025-0141", # bincode is unmaintained, but still required by current yew/gloo-worker releases
     "RUSTSEC-2024-0370", # proc-macro-error is unmaintained, but a dependency of yew
     "RUSTSEC-2024-0436", # paste is unmaintained, but a dependency of little_exif
+    "RUSTSEC-2026-0194", # quick-xml quadratic runtime; no safe upgrade for little_exif 0.6 or cargo-llvm-cov 0.6 dev-dep
+    "RUSTSEC-2026-0195", # quick-xml unbounded ns alloc; no safe upgrade for little_exif 0.6 or cargo-llvm-cov 0.6 dev-dep
 ]
 
 [licenses]
