@@ -22,11 +22,7 @@ pub fn batch_manager(props: &BatchManagerProps) -> Html {
         return html! {};
     }
 
-    let pct = if props.total > 0 {
-        (props.processed * 100) / props.total
-    } else {
-        0
-    };
+    let pct = (props.processed * 100) / props.total;
 
     html! {
         <div style="background:#eef5ff;border:1px solid #cfe2ff;border-radius:6px;padding:12px;margin:16px 0;" data-testid="batch-progress">
